@@ -10,7 +10,7 @@ app.get("/", function (req,res) {
 	res.status(200);
 	res.setHeader('Content-Type', 'text/html');
 
-  let dims = [60, 40];
+  let dims = [50, 25];
   let tableBoard = "";
   for (let i = 0; i < dims[1]; i++) {
     tableBoard += "<tr>";
@@ -24,7 +24,7 @@ app.get("/", function (req,res) {
 	let html = `<!DOCTYPE html>
 				<html>
 					<head>
-						<title>HW4</title>
+						<title>Conway's Game of Death</title>
 					</head>
 					<style>
 						table {

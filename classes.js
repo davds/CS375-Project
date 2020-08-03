@@ -1,8 +1,11 @@
 class Player {
-	constructor(id, skin, strength=0) {
+	constructor(id, style, strength=0) {
 		this.id = id;
-		this.skin = skin;
+		this.style = style;
 		this.strength = strength;
+	}
+	getStyle() {
+		return this.style;
 	}
 	setStrength(strength) {
 		this.strength = strength;
@@ -21,6 +24,9 @@ class ActivePiece {
 		return this.owner.getStyle();
 	}
 	getPos() {
-		return pos;
+		return this.pos;
 	}
 }
+
+exports.Player = Player;
+exports.ActivePiece = ActivePiece;

@@ -2,13 +2,17 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const hostname = "localhost";
-const classes = require("./classes.js")
+const {Player, ActivePiece} = require("./classes.js");
 
 app.use(express.json());
 app.use(express.static("public_html"));
 
 //Representation of game board
-let activePieces = [];
+let testPlayer = new Player("test", "background-color: black");
+let testPiece = new ActivePiece([0,0], testPlayer);
+let testPlayer2 = new Player("test2", "background-color: red");
+let testPiece2 = new ActivePiece([0,0], testPlayer2);
+let activePieces = [testPiece, testPiece2];
 
 //Precondish: duble with x, y coords of a cell
 //Postcondish: If cell is alive, return owner, otherwise returns Null
@@ -83,7 +87,12 @@ function makeCell(pos, player) {
 
 //GET handler for sending client a JSON body of active cell objects
 app.get("/cells", function(req, res) {
-
+  let resActivePieces = [];
+  for (i in activePieces) {
+    resActivePieces.push({ "pos": activePieces[i].getPos(), "style": activePieces[i].getStyle() });
+  }
+  res.status(200);
+  res.json(resActivePieces);
 });
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations

@@ -24,6 +24,9 @@ class ActivePiece {
 		return this.owner.getStyle();
 	}
 	getPos() {
-		return pos;
+		return this.pos;
 	}
 }
+
+exports.Player = Player;
+exports.ActivePiece = ActivePiece;

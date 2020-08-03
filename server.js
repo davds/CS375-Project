@@ -70,7 +70,6 @@ function countLiveNeighbors(pos, player) {
   return neighbors;
 }
 
-
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider, and a player object
 //Postcondish: doesn't return anything, adds appropriate active cells objects to active pieces array
 function makeGlider(gliderPos, orientation, player) {
@@ -116,6 +115,13 @@ function makeGlider(gliderPos, orientation, player) {
   for (let i = 0; i < newPositions.length; i++) {
     makeCell(newPositions[i], player);
   }
+}
+
+//Precondish: takes a duple with the x, y coords of a contested cell, an array with all the players contesting the cell
+//Postcondish: doesn't return anything, but checks the strength stat of all the players contesting the cell.
+//Whichever player has the highest strength stat becomes the owner of ALL the other players' cells. In the case of a tie, choose randomly based on (100/#_tied_players)% odds for each player to win.
+function checkCollision(pos, players) {
+
 }
 
 //Precondish: duble with x, y coords of a cell, an owner

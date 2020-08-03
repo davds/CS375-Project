@@ -14,8 +14,11 @@ class ActivePiece {
 		this.pos = pos;
 		this.owner = owner;
 	}
+	getOwner() {
+		return this.owner;
+	}
 	getStyle() {
-		this.owner.getStyle();
+		return this.owner.getStyle();
 	}
 	getPos() {
 		return pos;

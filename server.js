@@ -18,12 +18,18 @@ function nextGeneration(cells) {
 
 }
 
+//Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider, and a player object
+//Postcondish: doesn't return anything, adds appropriate active cells objects to active pieces array
+function makeGlider(gliderPos, orientation, player) {
+
+}
+
 //GET handler for sending client a JSON body of active cell objects
 app.get("/cells", function(req, res) {
 
 });
 
-//POST request for recieving a JSON body of center coordinates for gliders
+//POST request for recieving a JSON body of center coordinates for gliders and their orientations
 app.post("gliders", function(req, res) {
 
 });

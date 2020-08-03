@@ -15,7 +15,7 @@ let testPiece2 = new ActivePiece([0,0], testPlayer2);
 let activePieces = [testPiece, testPiece2];
 
 //Precondish: duble with x, y coords of a cell
-//Postcondish: If cell is alive, return owner, otherwise returns Null
+//Postcondish: if cell is alive, return owner, otherwise returns Null
 function isAlive(pos) {
   for (let i = 0; i < activePieces.length; i++) {
     if (activePieces[i].getPos()[0] == pos[0] && activePieces[i].getPos()[1] == pos[1]) {
@@ -25,11 +25,50 @@ function isAlive(pos) {
   return null;
 }
 
-//Precondish: array of current active cell objects
-//Postcondish: array of the next generation of active cell objects
-function nextGeneration(cells) {
-
+//Precondish: array of current active cell objects must be initialized
+//Postcondish: doesn't return anything, replaces the activePieces array with the next generation of living cells
+function nextGeneration() {
+  let tempCells = [];
+  for (let cell = 0; cell < activePieces.length; cell++) {
+    let xPos = activePieces[cell].getPos()[0];
+    let yPos = activePieces[cell].getPos()[1];
+    //Check the 3x3 box around each living cell if any dead cells will be alive in the next generation
+    for (let i = xPos - 1; i < xPos + 1; i++) {
+      for (let j = yPos - 1; j < yPos + 1; j++) {
+        if (isAlive([i,j]) == null) {
+          neighbors = countLiveNeighbors([i,j], activePieces[cell].getOwner());
+          if (neighbors == 3) {
+            let newCell = new ActivePiece([i,j], activePieces[cell].getOwner());
+            tempCells.push(newCell);
+          }
+        }
+      }
+    }
+    //Check if the current cell will be alive in the next generation
+    neighbors = countLiveNeighbors([xPos, yPos], activePieces[cell].getOwner());
+    if (neighbors == 2 || neighbors == 3) {
+      let newCell = new ActivePiece([xPos,yPos], activePieces[cell].getOwner());
+      tempCells.push(newCell);
+    }
+  }
+  activePieces = tempCells;
 }
+
+//Precondish: takes a duble with x, y coords of a cell, the owner of the cell
+//Postcondish: the number of live neighbors to the specified cell
+function countLiveNeighbors(pos, player) {
+  neighbors = 0;
+  for (let i = pos[0] - 1; i < pos[0] + 1; i++) {
+    for (let j = pos[1] - 1; j < pos[1] + 1; j++) {
+      //See if the cell has a neighbor that belongs to the same person, and is not itself.
+      if (isAlive([i,j]) == player && !(i == pos[0] && j == pos[1])) {
+        neighbors ++;
+      }
+    }
+  }
+  return neighbors;
+}
+
 
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider, and a player object
 //Postcondish: doesn't return anything, adds appropriate active cells objects to active pieces array

@@ -11,7 +11,7 @@ app.use(express.static("public_html"));
 let testPlayer = new Player("test", "background-color: black");
 let testPiece = new ActivePiece([0,0], testPlayer);
 let testPlayer2 = new Player("test2", "background-color: red");
-let testPiece2 = new ActivePiece([0,0], testPlayer2);
+let testPiece2 = new ActivePiece([0,1], testPlayer2);
 let activePieces = [testPiece, testPiece2];
 
 //Precondish: duble with x, y coords of a cell

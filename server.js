@@ -6,6 +6,28 @@ const hostname = "localhost";
 
 app.use(express.json());
 
+//Precondish: duble with x, y coords of a cell
+//Postcondish: b00lean of whether cell is currently alive
+function isAlive(pos) {
+
+}
+
+//Precondish: array of current active cell objects
+//Postcondish: array of the next generation of active cell objects
+function nextGeneration(cells) {
+
+}
+
+//GET handler for sending client a JSON body of active cell objects
+app.get("/cells", function(req, res) {
+
+});
+
+//POST request for recieving a JSON body of center coordinates for gliders
+app.post("gliders", function(req, res) {
+
+});
+
 app.get("/", function (req,res) {
 	res.status(200);
 	res.setHeader('Content-Type', 'text/html');
@@ -19,6 +41,7 @@ app.get("/", function (req,res) {
     }
     tableBoard += "</tr>";
   }
+
 
 
 	let html = `<!DOCTYPE html>

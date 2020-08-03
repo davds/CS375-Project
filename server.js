@@ -6,10 +6,18 @@ const hostname = "localhost";
 
 app.use(express.json());
 
-//Precondish: duble with x, y coords of a cell
-//Postcondish: b00lean of whether cell is currently alive
-function isAlive(pos) {
+//Representation of game board
+let activePieces = [];
 
+//Precondish: duble with x, y coords of a cell
+//Postcondish: If cell is alive, return owner, otherwise returns Null
+function isAlive(pos) {
+  for (let i = 0; i < activePieces.length; i++) {
+    if (activePieces[i].getPos()[0] == pos[0] && activePieces[i].getPos()[1] == pos[1]) {
+      return activePieces[i].getOwner()
+    }   
+  }
+  return Null
 }
 
 //Precondish: array of current active cell objects
@@ -29,8 +37,8 @@ app.get("/cells", function(req, res) {
 
 });
 
-//POST request for recieving a JSON body of center coordinates for gliders and their orientations
-app.post("gliders", function(req, res) {
+//POST handler for recieving a JSON body of center coordinates for gliders and their orientations
+app.post("/gliders", function(req, res) {
 
 });
 

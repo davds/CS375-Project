@@ -1,0 +1,22 @@
+{
+	"PlayerSkins": {
+		"Leo": {
+			"color": "#FFFFFF",
+			"outline": "",
+			"img": "./skins/leo.png"
+		},
+		"David": {
+			"color": "#9370DB",
+			"outline": "1px solid black",
+			"img": ""
+		}
+	},
+	"BoardSkins": {
+		"Default": {
+			"backgroundColor": "#FFFFFF"
+		},
+		"Dark": {
+			"backgroundColor": "#000000"
+		}
+	}
+}

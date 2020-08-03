@@ -67,7 +67,7 @@ class ActivePiece {
 		return pos;
 	}
 }
-
+/*
 let activePieces = [[],[],[],[]]
 
 get {
@@ -79,3 +79,4 @@ receive activePieces => draw them on Board;
 post { // handle placing pieces
 	put playerPiece => activePieces;
 }
+*/

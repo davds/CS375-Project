@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const hostname = "localhost";
-const classes = require("./classes.js")
+const classes = require("./classes.js");
 
 app.use(express.json());
 app.use(express.static("public_html"));

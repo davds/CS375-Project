@@ -30,7 +30,55 @@ function nextGeneration(cells) {
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider, and a player object
 //Postcondish: doesn't return anything, adds appropriate active cells objects to active pieces array
 function makeGlider(gliderPos, orientation, player) {
+  newPositions; 
+  switch(orientation) {
+    case "SE":
+      newPositions = [
+        [gliderPos[0], gliderPos[1] + 1],
+        [gliderPos[0] + 1, gliderPos[1]],
+        [gliderPos[0] - 1, gliderPos[1] - 1],
+        [gliderPos[0], gliderPos[1] - 1],
+        [gliderPos[0] + 1, gliderPos[1] + 1]
+      ];
+      break;
+    case "NE":
+      newPositions = [
+        [gliderPos[0], gliderPos[1] + 1],
+        [gliderPos[0] + 1, gliderPos[1] + 1],
+        [gliderPos[0] - 1, gliderPos[1]],
+        [gliderPos[0] + 1, gliderPos[1]],
+        [gliderPos[0] + 1, gliderPos[1] - 1]
+      ];
+      break;
+    case "NW":
+      newPositions = [
+        [gliderPos[0], gliderPos[1] + 1],
+        [gliderPos[0] + 1, gliderPos[1] + 1],
+        [gliderPos[0] - 1, gliderPos[1] + 1],
+        [gliderPos[0] - 1, gliderPos[1]],
+        [gliderPos[0], gliderPos[1] - 1]
+      ];
+      break;
+    case "SW":
+      newPositions = [
+        [gliderPos[0] - 1, gliderPos[1] + 1],
+        [gliderPos[0] - 1, gliderPos[1]],
+        [gliderPos[0] + 1, gliderPos[1]],
+        [gliderPos[0] - 1, gliderPos[1] - 1],
+        [gliderPos[0], gliderPos[1] - 1]
+      ];
+      break;
+  }
+  for (let i = 0; i < newPositions.length; i++) {
+    makeCell(newPositions[i], player);
+  }
+}
 
+//Precondish: duble with x, y coords of a cell, an owner
+//Postcondish: doesn't return anything, makes a new cell object and appends it to the activePieces array
+function makeCell(pos, player) {
+  let newCell = new ActivePiece(pos, player);
+  activePieces.push(newCell);
 }
 
 //GET handler for sending client a JSON body of active cell objects

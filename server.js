@@ -15,10 +15,10 @@ let activePieces = [];
 function isAlive(pos) {
   for (let i = 0; i < activePieces.length; i++) {
     if (activePieces[i].getPos()[0] == pos[0] && activePieces[i].getPos()[1] == pos[1]) {
-      return activePieces[i].getOwner()
+      return activePieces[i].getOwner();
     }   
   }
-  return Null
+  return null;
 }
 
 //Precondish: array of current active cell objects

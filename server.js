@@ -32,22 +32,23 @@ function nextGeneration() {
   for (let cell = 0; cell < activePieces.length; cell++) {
     let xPos = activePieces[cell].getPos()[0];
     let yPos = activePieces[cell].getPos()[1];
+    let owner = activePieces[cell].getOwner();
     //Check the 3x3 box around each living cell if any dead cells will be alive in the next generation
     for (let i = xPos - 1; i < xPos + 1; i++) {
       for (let j = yPos - 1; j < yPos + 1; j++) {
         if (isAlive([i,j]) == null) {
-          neighbors = countLiveNeighbors([i,j], activePieces[cell].getOwner());
+          neighbors = countLiveNeighbors([i,j], owner);
           if (neighbors == 3) {
-            let newCell = new ActivePiece([i,j], activePieces[cell].getOwner());
+            let newCell = new ActivePiece([i,j], owner);
             tempCells.push(newCell);
           }
         }
       }
     }
     //Check if the current cell will be alive in the next generation
-    neighbors = countLiveNeighbors([xPos, yPos], activePieces[cell].getOwner());
+    neighbors = countLiveNeighbors([xPos, yPos], owner);
     if (neighbors == 2 || neighbors == 3) {
-      let newCell = new ActivePiece([xPos,yPos], activePieces[cell].getOwner());
+      let newCell = new ActivePiece([xPos,yPos], owner);
       tempCells.push(newCell);
     }
   }

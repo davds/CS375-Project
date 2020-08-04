@@ -32,22 +32,23 @@ function nextGeneration() {
   for (let cell = 0; cell < activePieces.length; cell++) {
     let xPos = activePieces[cell].getPos()[0];
     let yPos = activePieces[cell].getPos()[1];
+    let owner = activePieces[cell].getOwner();
     //Check the 3x3 box around each living cell if any dead cells will be alive in the next generation
     for (let i = xPos - 1; i < xPos + 1; i++) {
       for (let j = yPos - 1; j < yPos + 1; j++) {
         if (isAlive([i,j]) == null) {
-          neighbors = countLiveNeighbors([i,j], activePieces[cell].getOwner());
+          neighbors = countLiveNeighbors([i,j], owner);
           if (neighbors == 3) {
-            let newCell = new ActivePiece([i,j], activePieces[cell].getOwner());
+            let newCell = new ActivePiece([i,j], owner);
             tempCells.push(newCell);
           }
         }
       }
     }
     //Check if the current cell will be alive in the next generation
-    neighbors = countLiveNeighbors([xPos, yPos], activePieces[cell].getOwner());
+    neighbors = countLiveNeighbors([xPos, yPos], owner);
     if (neighbors == 2 || neighbors == 3) {
-      let newCell = new ActivePiece([xPos,yPos], activePieces[cell].getOwner());
+      let newCell = new ActivePiece([xPos,yPos], owner);
       tempCells.push(newCell);
     }
   }
@@ -68,7 +69,6 @@ function countLiveNeighbors(pos, player) {
   }
   return neighbors;
 }
-
 
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider, and a player object
 //Postcondish: doesn't return anything, adds appropriate active cells objects to active pieces array
@@ -115,6 +115,13 @@ function makeGlider(gliderPos, orientation, player) {
   for (let i = 0; i < newPositions.length; i++) {
     makeCell(newPositions[i], player);
   }
+}
+
+//Precondish: takes a duple with the x, y coords of a contested cell, an array with all the players contesting the cell
+//Postcondish: doesn't return anything, but checks the strength stat of all the players contesting the cell.
+//Whichever player has the highest strength stat becomes the owner of ALL the other players' cells. In the case of a tie, choose randomly based on (100/#_tied_players)% odds for each player to win.
+function checkCollision(pos, players) {
+
 }
 
 //Precondish: duble with x, y coords of a cell, an owner

@@ -9,12 +9,13 @@ app.use(express.static("public_html"));
 
 //Representation of game board
 let testPlayer = new Player("test", "background-color: black");
-makeGlider([4,3], "NE", testPlayer);
+
 let testPiece = new ActivePiece([0,0], testPlayer);
 let testPlayer2 = new Player("test2", "background-color: red");
 let testPiece2 = new ActivePiece([0,1], testPlayer2);
 let activePieces = [testPiece, testPiece2];
-setInterval(nextGeneration, 1000);
+makeGlider([4,3], "NE", testPlayer);
+
 //Precondish: duble with x, y coords of a cell
 //Postcondish: if cell is alive, return owner, otherwise returns Null
 function isAlive(pos) {
@@ -35,8 +36,8 @@ function nextGeneration() {
     let yPos = activePieces[cell].getPos()[1];
     let owner = activePieces[cell].getOwner();
     //Check the 3x3 box around each living cell if any dead cells will be alive in the next generation
-    for (let i = xPos - 1; i < xPos + 1; i++) {
-      for (let j = yPos - 1; j < yPos + 1; j++) {
+    for (let i = xPos - 1; i <= xPos + 1; i++) {
+      for (let j = yPos - 1; j <= yPos + 1; j++) {
         if (isAlive([i,j]) == null) {
           neighbors = countLiveNeighbors([i,j], owner);
           if (neighbors == 3) {
@@ -60,21 +61,22 @@ function nextGeneration() {
 //Postcondish: the number of live neighbors to the specified cell
 function countLiveNeighbors(pos, player) {
   neighbors = 0;
-  for (let i = pos[0] - 1; i < pos[0] + 1; i++) {
-    for (let j = pos[1] - 1; j < pos[1] + 1; j++) {
+  for (let i = pos[0] - 1; i <= pos[0] + 1; i++) {
+    for (let j = pos[1] - 1; j <= pos[1] + 1; j++) {
       //See if the cell has a neighbor that belongs to the same person, and is not itself.
       if (isAlive([i,j]) == player && !(i == pos[0] && j == pos[1])) {
         neighbors ++;
       }
     }
   }
+  console.log(`Cell at pos: ${pos[0]}, ${pos[1]} has ${neighbors} live neighbors.`);
   return neighbors;
 }
 
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider, and a player object
 //Postcondish: doesn't return anything, adds appropriate active cells objects to active pieces array
 function makeGlider(gliderPos, orientation, player) {
-  newPositions; 
+  newPositions = []; 
   switch(orientation) {
     case "SE":
       newPositions = [
@@ -142,9 +144,15 @@ app.get("/cells", function(req, res) {
   res.json(resActivePieces);
 });
 
+app.get("/step", function(req, res) {
+  nextGeneration();
+  res.sendStatus(200);
+  console.log("Recieved request!")
+});
+
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
 app.post("/gliders", function(req, res) {
-
+  return
 });
 
 app.listen(port, hostname, function() {

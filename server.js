@@ -41,8 +41,22 @@ function nextGeneration() {
         if (isAlive([i,j]) == null) {
           neighbors = countLiveNeighbors([i,j], owner);
           if (neighbors == 3) {
-            let newCell = new ActivePiece([i,j], owner);
+            accounted = false;
+            //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
+            for (let k = 0; k < tempCells.length; k++) {
+              if (tempCells[k].getPos()[0] == i && tempCells[k].getPos()[1] == j) {
+                if (tempCells[k].getOwner() != owner) {
+                  checkCollision([i, j], owner);
+                }
+                else {
+                  accounted = true;
+                }
+              }
+            }
+            if (!accounted) {
+              newCell = new ActivePiece([i,j], owner);
             tempCells.push(newCell);
+            }
           }
         }
       }
@@ -50,13 +64,34 @@ function nextGeneration() {
     //Check if the current cell will be alive in the next generation
     neighbors = countLiveNeighbors([xPos, yPos], owner);
     if (neighbors == 2 || neighbors == 3) {
-      let newCell = new ActivePiece([xPos,yPos], owner);
-      tempCells.push(newCell);
+      //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
+      accounted = false;
+      for (let k = 0; k < tempCells.length; k++) {
+        if (tempCells[k].getPos()[0] == xPos && tempCells[k].getPos()[1] == yPos) {
+          if (tempCells[k].getOwner() != owner) {
+            checkCollision([xPos, yPos], owner);
+          }
+          else {
+            accounted = true;
+          }
+        }
+      }
+      if (!accounted) {
+        newCell = new ActivePiece([xPos,yPos], owner);
+        tempCells.push(newCell);
+      }
     }
   }
-  activePieces = tempCells;
+  //Delete all objects in the current (or, last?) generation, replace it with the next.
+  for (let i = 0; i < activePieces.length; i++) {
+    delete activePieces[i];
+  }
+  activePieces.length = 0;
+  for (let i = 0; i < tempCells.length; i++) {
+    activePieces.push(tempCells[i]);
+  }
+  console.log(activePieces);
 }
-
 //Precondish: takes a duble with x, y coords of a cell, the owner of the cell
 //Postcondish: the number of live neighbors to the specified cell
 function countLiveNeighbors(pos, player) {
@@ -69,7 +104,7 @@ function countLiveNeighbors(pos, player) {
       }
     }
   }
-  console.log(`Cell at pos: ${pos[0]}, ${pos[1]} has ${neighbors} live neighbors.`);
+  //console.log(`Cell at pos: ${pos[0]}, ${pos[1]} has ${neighbors} live neighbors.`);
   return neighbors;
 }
 
@@ -123,14 +158,14 @@ function makeGlider(gliderPos, orientation, player) {
 //Precondish: takes a duple with the x, y coords of a contested cell, an array with all the players contesting the cell
 //Postcondish: doesn't return anything, but checks the strength stat of all the players contesting the cell.
 //Whichever player has the highest strength stat becomes the owner of ALL the other players' cells. In the case of a tie, choose randomly based on (100/#_tied_players)% odds for each player to win.
-function checkCollision(pos, players) {
+function checkCollision(pos, player) {
 
 }
 
 //Precondish: duble with x, y coords of a cell, an owner
 //Postcondish: doesn't return anything, makes a new cell object and appends it to the activePieces array
 function makeCell(pos, player) {
-  let newCell = new ActivePiece(pos, player);
+  newCell = new ActivePiece(pos, player);
   activePieces.push(newCell);
 }
 
@@ -147,7 +182,6 @@ app.get("/cells", function(req, res) {
 app.get("/step", function(req, res) {
   nextGeneration();
   res.sendStatus(200);
-  console.log("Recieved request!")
 });
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations

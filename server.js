@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
-const port = 3000;
-const hostname = "localhost";
+const port = process.env.PORT || 3000;
 const {Player, ActivePiece} = require("./classes.js");
 
 app.use(express.json());
@@ -146,6 +145,6 @@ app.post("/gliders", function(req, res) {
 
 });
 
-app.listen(port, hostname, function() {
-  console.log(`Server listening on http://${hostname}:${port}`)
+app.listen(port, function() {
+  console.log(`Server listening on port ${port}`)
 });

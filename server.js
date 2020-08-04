@@ -14,7 +14,7 @@ let testPiece = new ActivePiece([0,0], testPlayer);
 let testPlayer2 = new Player("test2", "background-color: red");
 let testPiece2 = new ActivePiece([0,1], testPlayer2);
 let activePieces = [testPiece, testPiece2];
-
+setInterval(nextGeneration, 1000);
 //Precondish: duble with x, y coords of a cell
 //Postcondish: if cell is alive, return owner, otherwise returns Null
 function isAlive(pos) {

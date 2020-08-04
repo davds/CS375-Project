@@ -13,6 +13,9 @@ class Player {
 	getStrength() {
 		return this.strength;
 	}
+	getId() {
+		return this.id;
+	}
 }
 
 class ActivePiece {

@@ -31,25 +31,47 @@ function isAlive(pos) {
 //Precondish: takes a position and an array of cell objects
 //Postcondish: returns null if position not in list, otherwise returns array cells containing that position 
 function posExists(pos, L) {
-  indices = [];
+  cells = [];
   for (let i = 0; i < L.length; i++) {
-    if (L[i].getPos()[0] == pos[0] && L[i],getPos()[1] == pos[1]) {
-      indices.push(L[i]);
+    if (L[i].getPos()[0] == pos[0] && L[i].getPos()[1] == pos[1]) {
+      cells.push(L[i]);
     }
   }
-  if (indices.length == 0){
+  if (cells.length == 0){
     return null;
   }
   else {
-    return indices;
+    return cells;
   }
+}
+
+//Precondish: takes a duple of coords, an array of duple coords.
+//Postcondish: returns true if a duple with the same values is in the array
+function checkContested(pos, contested) {
+  for (let i = 0; i < contested.length; i++) {
+    if (contested[i][0] == pos[0] && contested[i][1] == pos[1]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+//Precondish: takes a plyer object, and a list of cells
+//Postcondish: returns true if one of the cells is owned by the specified player, false otherwise.
+function isOwned(owner, cells) {
+  for (let i = 0; i < cells.length; i++) {
+    if (cells[i].getOwner() == owner) {
+      return true;
+    }
+  }
+  return false;
 }
 
 //Precondish: array of current active cell objects must be initialized
 //Postcondish: doesn't return anything, replaces the activePieces array with the next generation of living cells
 function nextGeneration() {
   let tempCells = [];
-  let contestedCells = [];
+  let contestedPositions = [];
   for (let cell = 0; cell < activePieces.length; cell++) {
     let xPos = activePieces[cell].getPos()[0];
     let yPos = activePieces[cell].getPos()[1];
@@ -60,24 +82,15 @@ function nextGeneration() {
         if (isAlive([i,j]) == null) {
           neighbors = countLiveNeighbors([i,j], owner);
           if (neighbors == 3) {
-            accounted = false;
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
-            for (let k = 0; k < tempCells.length; k++) {
-              if (tempCells[k].getPos()[0] == i && tempCells[k].getPos()[1] == j) {
-                if (tempCells[k].getOwner() != owner) {
-                  newCell = new ActivePiece([i,j], owner);
-                  tempCells.push(newCell);
-                  if (posExists([i,j], contestedCells) == null) {
-                    contestedCells.push([i, j]);
-                  }
-                }
-                else {
-                  accounted = true;
-                }
+            stackedCells = posExists([i,j], tempCells);
+            if (stackedCells != null) {
+              if (!isOwned(owner, stackedCells)) {
+                contestedPositions.push([i,j]);
               }
             }
-            if (!accounted) {
-              newCell = new ActivePiece([i,j], owner);
+            else {
+              let newCell = new ActivePiece([i,j], owner);
               tempCells.push(newCell);
             }
           }
@@ -88,38 +101,22 @@ function nextGeneration() {
     neighbors = countLiveNeighbors([xPos, yPos], owner);
     if (neighbors == 2 || neighbors == 3) {
       //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
-      accounted = false;
-      for (let k = 0; k < tempCells.length; k++) {
-        if (tempCells[k].getPos()[0] == xPos && tempCells[k].getPos()[1] == yPos) {
-          if (tempCells[k].getOwner() != owner) {
-            newCell = new ActivePiece([i,j], owner);
-            tempCells.push(newCell);
-            if (posExists([i,j], contestedCells) == null) {
-              contestedCells.push([i, j]);
-            }
-          }
-          else {
-            accounted = true;
-          }
+      stackedCells = posExists([xPos,yPos], tempCells);
+      if (stackedCells != null) {
+        if (!isOwned(owner, stackedCells)) {
+          contestedPositions.push([i,j]);
         }
       }
-      if (!accounted) {
-        newCell = new ActivePiece([xPos,yPos], owner);
+      else {
+        let newCell = new ActivePiece([xPos,yPos], owner);
         tempCells.push(newCell);
       }
     }
   }
-  newCells = checkCollision(contestedCells, tempCells);
-  //Delete all objects in the current (or, last?) generation, replace it with the next.
-  for (let i = 0; i < activePieces.length; i++) {
-    delete activePieces[i];
-  }
-  activePieces.length = 0;
-  for (let i = 0; i < newCells.length; i++) {
-    if (newCells != null) {
-      activePieces.push(newCells[i]);
-    }
-  }
+  console.log(contestedPositions);
+  tempCells = checkCollision(contestedPositions, tempCells);
+  //Replace current generation with next.
+  activePieces = tempCells;
   setPlayerStats();
 }
 
@@ -198,11 +195,11 @@ function setPlayerStats() {
 //Precondish: takes a duple with the x, y coords of a contested cell, an array with all the players contesting the cell
 //Postcondish: returns finalized array of cells with correct ownership. The strength stat determines who wins a contested cell.
 //Whichever player has the highest strength stat becomes the owner of ALL the other players' cells. In the case of a tie, flip a coin.
-function checkCollision(contestedCells, cells) {
+function checkCollision(contestedPositions, cells) {
   //Find highest strength value
   winningStrength = 0;
-  for (let i = 0; i < contestedCells.length; i++) {
-    contestants = posExists(contestedCells[i], cells);
+  for (let i = 0; i < contestedPositions.length; i++) {
+    contestants = posExists(contestedPositions[i], cells);
     for (let j = 0; j < contestants.length; j++) {
       if (contestants[j].getStrength() > winningStrength) {
         winningStrength = contestants[j].getStrength();
@@ -211,7 +208,7 @@ function checkCollision(contestedCells, cells) {
     //Check for ties
     winners = [];
     winner = 0;
-    for (let i = 0; i < contestedCells.length; i++) {
+    for (let i = 0; i < contestedPositions.length; i++) {
       if (contestants[i].getStrength() == winningStrength) {
         winners.push(contestants[i]);
       }
@@ -265,3 +262,5 @@ app.post("/gliders", function(req, res) {
 app.listen(port, hostname, function() {
   console.log(`Server listening on http://${hostname}:${port}`)
 });
+
+t1 = new Player("t1", "background-color: purple");

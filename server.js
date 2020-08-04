@@ -9,6 +9,7 @@ app.use(express.static("public_html"));
 
 //Representation of game board
 let testPlayer = new Player("test", "background-color: black");
+makeGlider([4,3], "NE", testPlayer);
 let testPiece = new ActivePiece([0,0], testPlayer);
 let testPlayer2 = new Player("test2", "background-color: red");
 let testPiece2 = new ActivePiece([0,1], testPlayer2);

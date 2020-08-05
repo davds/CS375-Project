@@ -149,7 +149,7 @@ function nextGeneration() {
     //Check the 3x3 box around each living cell if any dead cells will be alive in the next generation
     for (let i = xPos - 1; i <= xPos + 1; i++) {
       for (let j = yPos - 1; j <= yPos + 1; j++) {
-        if (isAlive([i,j]) == null) {
+        if (isAlive([i,j]) != owner) {
           neighbors = countLiveNeighbors([i,j], owner);
           if (neighbors == 3) {
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
@@ -175,7 +175,7 @@ function nextGeneration() {
         tempCells[`${xPos}:${yPos}`] = new ActivePiece([xPos,yPos], owner);
       }
       else if (!(`${xPos}:${yPos}` in contestedPositions)){
-        contestedPositions[`${i}:${j}`] = {};
+        contestedPositions[`${xPos}:${yPos}`] = {};
         contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
       }
       else if (`${xPos}:${yPos}` in contestedPositions && !(owner.getId() in contestedPositions[`${xPos}:${yPos}`])) {
@@ -183,13 +183,13 @@ function nextGeneration() {
       }
     }
   }
-  if (contestedPositions.length != 0)
-    console.log(contestedPositions);
   tempCells = checkCollision(contestedPositions, tempCells);
   //Replace current generation with next.
   activePieces.length = 0;
   for (var pos in tempCells) {
-    activePieces.push(tempCells[pos]);
+    if (tempCells[pos] != null) {
+      activePieces.push(tempCells[pos]);
+    }
   }
   setPlayerStats();
 }
@@ -207,7 +207,7 @@ function countLiveNeighbors(pos, player) {
   for (let i = pos[0] - 1; i <= pos[0] + 1; i++) {
     for (let j = pos[1] - 1; j <= pos[1] + 1; j++) {
       //See if the cell has a neighbor that belongs to the same person, and is not itself.
-      if (isAlive([i,j]) != null && !(i == pos[0] && j == pos[1])) {
+      if (isAlive([i,j]) == player && !(i == pos[0] && j == pos[1])) {
         neighbors ++;
       }
     }

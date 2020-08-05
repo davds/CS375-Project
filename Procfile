@@ -1,1 +1,1 @@
-web: cd app & node server.js & wait -n
+web: sh -c 'cd ./app && node server.js'

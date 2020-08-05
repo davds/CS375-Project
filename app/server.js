@@ -1,7 +1,6 @@
 const pg = require("pg");
 const bcrypt = require("bcrypt");
 const express = require("express");
-const env = require("../env.json");
 const app = express();
 const {Player, ActivePiece} = require("./classes.js");
 const port = process.env.PORT || 3000;
@@ -9,7 +8,10 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static("../public_html"));
 
-
+let tempEnv = require("../env.json");
+if (process.env._ && process.env._.indexOf("heroku"))
+  tempEnv = require("../heroku.json");
+const env = tempEnv
 
 const Pool = pg.Pool;
 const pool = new Pool(env);

@@ -7,7 +7,7 @@ const {Player, ActivePiece} = require("./classes.js");
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static(__dirname + "/public_html"));
+app.use(express.static("../public_html"));
 
 
 

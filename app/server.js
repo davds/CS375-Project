@@ -83,6 +83,7 @@ let testPiece = new ActivePiece([0,0], testPlayer);
 let testPlayer2 = new Player("test2", "background-color: red");
 let testPiece2 = new ActivePiece([0,1], testPlayer2);
 let activePieces = [testPiece, testPiece2];
+let players = [testPlayer, testPlayer2];
 makeGlider([4,3], "NE", testPlayer);
 makeGlider([15,3], "NW", testPlayer2);
 
@@ -156,7 +157,8 @@ function nextGeneration() {
               tempCells[`${i}:${j}`] = new ActivePiece([i,j], owner);
             }
             else if (!(`${i}:${j}` in contestedPositions)){
-              contestedPositions[`${i}:${j}`][owner.getId()] = owner;  
+              contestedPositions[`${i}:${j}`] = {};
+              contestedPositions[`${i}:${j}`][owner.getId()] = owner;
             }
             else if (`${i}:${j}` in contestedPositions) {
               contestedPositions[`${i}:${j}`][owner.getId()] = owner;
@@ -173,6 +175,7 @@ function nextGeneration() {
         tempCells[`${xPos}:${yPos}`] = new ActivePiece([xPos,yPos], owner);
       }
       else if (!(`${xPos}:${yPos}` in contestedPositions)){
+        contestedPositions[`${i}:${j}`] = {};
         contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
       }
       else if (`${xPos}:${yPos}` in contestedPositions && !(owner.getId() in contestedPositions[`${xPos}:${yPos}`])) {
@@ -191,6 +194,12 @@ function nextGeneration() {
   setPlayerStats();
 }
 
+
+// ;)
+function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
+
 //Precondish: takes a duble with x, y coords of a cell, the owner of the cell
 //Postcondish: the number of live neighbors to the specified cell
 function countLiveNeighbors(pos, player) {
@@ -198,7 +207,7 @@ function countLiveNeighbors(pos, player) {
   for (let i = pos[0] - 1; i <= pos[0] + 1; i++) {
     for (let j = pos[1] - 1; j <= pos[1] + 1; j++) {
       //See if the cell has a neighbor that belongs to the same person, and is not itself.
-      if (isAlive([i,j]) == player && !(i == pos[0] && j == pos[1])) {
+      if (isAlive([i,j]) != null && !(i == pos[0] && j == pos[1])) {
         neighbors ++;
       }
     }
@@ -257,15 +266,20 @@ function makeGlider(gliderPos, orientation, player) {
 //Precondish: must be active cells in activePieces array
 //Postcondish: sets the strength stats for all players with active cells
 function setPlayerStats() {
-  for (let i = 0; i < activePieces.length; i++) {
-    cur = activePieces[i].getOwner().getStrength();
-    activePieces[i].getOwner().setStrength(cur + 1);
+  for (let i = 0; i < players.length; i++) {
+    strength = 0;
+    for (let j = 0; j < activePieces.length; j++) {
+      if (activePieces[j].getOwner() == players[i]) { 
+        strength ++;
+      }
+    }
+    players[i].setStrength(strength);
   }
 }
 
 //Precondish: takes a duple with the x, y coords of a contested cell, an array with all the players contesting the cell
 //Postcondish: returns finalized array of cells with correct ownership. The strength stat determines who wins a contested cell.
-//Whichever player has the highest strength stat becomes the owner of ALL the other players' cells. In the case of a tie, flip a coin.
+//Whichever player has the highest strength stat becomes the owner of the contested cell. In the case of a tie, flip a coin.
 function checkCollision(contestedPositions, cells) {
   for (var pos in contestedPositions) {
     let players = contestedPositions[pos];

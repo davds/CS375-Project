@@ -1,11 +1,61 @@
+const pg = require("pg");
+const bcrypt = require("bcrypt");
 const express = require("express");
+const env = require("../env.json");
 const app = express();
-const port = 3000;
-const hostname = "localhost";
 const {Player, ActivePiece} = require("./classes.js");
+const port = 3000;
 
 app.use(express.json());
 app.use(express.static("public_html"));
+
+
+
+const Pool = pg.Pool;
+const pool = newPool(env);
+pool.connect().then(() => {
+  console.log(`Connected to database ${env.database}`);
+});
+
+//POST handler for User Account creation
+app.post("/newUser", (req, res) => {
+  const username = req.body.username;
+  const plaintextPassword = req.body.plaintextPassword;
+  bcrypt.hash(plaintextPassword, saltRounds)
+  
+});
+
+//POST handler for User Account login
+app.post("/auth", (req, res) => {
+  const username = req.body.username;
+  const plaintextPassword = req.body.plaintextPassword;
+  
+  pool.query("SELECT hashed_password FROM users WHERE username = $1", [username]).then(res => {
+    if (res.rows.length === 0) {
+      return res.status(401).send();
+    }
+
+    const password = res.rows[0].password;
+    bcrypt.compare(plaintextPassword, password).then(match => {
+      if (match) {
+        console.log(`AUTHENTICATING USER '${username}'`);
+        res.status(200).send();
+      } else {
+        console.log(`INCORRECT PASSWORD PROVIDED FOR USER '${username}'`);
+        res.status(401).send();
+      }
+    }).catch(error => {
+      console.log(`BCRYPT FAILED VALIDATION FOR '${username}'\n` + error);
+      res.status(500).send();
+    });
+  }).catch(error => {
+    console.log(`AUTHENTICATION QUERY FAILED FOR '${username}'\n` + error);
+    res.status(500).send();
+  });
+});
+
+
+
 
 //Representation of game board
 let testPlayer = new Player("test", "background-color: black");
@@ -259,8 +309,10 @@ app.post("/gliders", function(req, res) {
   return
 });
 
-app.listen(port, hostname, function() {
-  console.log(`Server listening on http://${hostname}:${port}`)
+
+
+app.listen(port, function() {
+  console.log(`Server listening on post: ${port}`)
 });
 
 t1 = new Player("t1", "background-color: purple");

@@ -1,7 +1,7 @@
 const pg = require("pg");
 const bcrypt = require("bcrypt");
 const express = require("express");
-const env = require("./env.json");
+const env = require("../env.json");
 const app = express();
 const {Player, ActivePiece} = require("./classes.js");
 const port = process.env.PORT || 3000;

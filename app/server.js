@@ -78,16 +78,20 @@ app.post("/auth", (req, res) => {
 });
 
 
-
-//Representation of game board
-let testPlayer = new Player("test", "background-color: black");
-let testPiece = new ActivePiece([0,0], testPlayer);
-let testPlayer2 = new Player("test2", "background-color: red");
-let testPiece2 = new ActivePiece([0,1], testPlayer2);
-let activePieces = [testPiece, testPiece2];
-let players = [testPlayer, testPlayer2];
-makeGlider([4,3], "NE", testPlayer);
-makeGlider([15,3], "NW", testPlayer2);
+let activePieces = [];
+let players = [];
+function initTestBoard() {
+  //Representation of game board
+  let testPlayer = new Player("test", "background-color: black");
+  let testPiece = new ActivePiece([0,0], testPlayer);
+  let testPlayer2 = new Player("test2", "background-color: red");
+  let testPiece2 = new ActivePiece([0,1], testPlayer2);
+  activePieces = [testPiece, testPiece2];
+  players = [testPlayer, testPlayer2];
+  makeGlider([4,3], "NE", testPlayer);
+  makeGlider([15,3], "NW", testPlayer2);
+}
+initTestBoard()
 
 //Precondish: duble with x, y coords of a cell
 //Postcondish: if cell is alive, return owner, otherwise returns Null
@@ -328,6 +332,11 @@ app.get("/cells", function(req, res) {
 
 app.get("/step", function(req, res) {
   nextGeneration();
+  res.sendStatus(200);
+});
+
+app.get("/reset", function(req, res) {
+  initTestBoard()
   res.sendStatus(200);
 });
 

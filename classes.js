@@ -10,6 +10,12 @@ class Player {
 	setStrength(strength) {
 		this.strength = strength;
 	}
+	getStrength() {
+		return this.strength;
+	}
+	getId() {
+		return this.id;
+	}
 }
 
 class ActivePiece {
@@ -19,6 +25,9 @@ class ActivePiece {
 	}
 	getOwner() {
 		return this.owner;
+	}
+	setOwner(owner) {
+		this.owner = owner;
 	}
 	getStyle() {
 		return this.owner.getStyle();

@@ -1,0 +1,58 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <title>Register</title>
+
+</head>
+
+<body>
+  <a href="/home.html">home</a>
+  <a href="/login.html">already have an account? login</a>
+  <br><br><br>
+  <span>Username:</span><input type="text" id="username-input">
+  <br><br>
+  <span>Email:  </span><input type="email" id="email-input">
+  <br><br>
+  <span>Password: </span><input id="password-input" type="password">
+  <br><br>
+  <span>Confirm Password: </span><input id="cpassword-input" type="password">
+  <br><br>
+  <button id="register-button">Register</button>
+  <br><br>
+  <p id="status"></p>
+  <script>
+    let usernameInput = document.getElementById("username-input");
+    let emailInput = document.getElementById("email-input");
+    let passwordInput = document.getElementById("password-input");
+    let cpasswordInput = document.getElementById("cpassword-input");
+    let status = document.getElementById("status")
+    document.getElementById("register-button").addEventListener("click", function () {
+        if (passwordInput.value === cpasswordInput.value){
+            fetch("/newUser", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                username: usernameInput.value,
+                email: emailInput.value,
+                plaintextPassword: passwordInput.value,
+            })
+            }).then(function (response) {
+                if (response.status === 200) {
+                    status.textContent = "Successfully Registered Account.";
+                } else {
+                    status.textContent = "Failed.";
+                }
+            })
+        } else {
+            status.textContent = "Passwords do not match.";
+        }
+        
+    });
+  </script>
+</body>
+</html>

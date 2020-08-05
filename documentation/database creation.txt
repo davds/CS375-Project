@@ -1,0 +1,8 @@
+CREATE DATABASE cgod
+
+CREATE TABLE users (
+    username VARCHAR(20),
+    email VARCHAR(254),
+    password CHAR(60)
+);
+

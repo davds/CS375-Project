@@ -152,18 +152,14 @@ function nextGeneration() {
           neighbors = countLiveNeighbors([i,j], owner);
           if (neighbors == 3) {
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
-            if (!(`${xPos}:${yPos}` in tempCells)) {
-              tempCells[`${xPos}:${yPos}`] = new ActivePiece([i,j], owner);
+            if (!(`${i}:${j}` in tempCells)) {
+              tempCells[`${i}:${j}`] = new ActivePiece([i,j], owner);
             }
-            //console.log(stackedCells);
-            if (stackedCells != null) {
-              if (!isOwned(owner, stackedCells)) {
-                contestedPositions.push([i,j]);
-              }
+            else if (!(`${i}:${j}` in contestedPositions)){
+              contestedPositions[`${i}:${j}`][owner.getId()] = owner;  
             }
-            else {
-              let newCell = new ActivePiece([i,j], owner);
-              tempCells.push(newCell);
+            else if (`${i}:${j}` in contestedPositions) {
+              contestedPositions[`${i}:${j}`][owner.getId()] = owner;
             }
           }
         }
@@ -173,15 +169,14 @@ function nextGeneration() {
     neighbors = countLiveNeighbors([xPos, yPos], owner);
     if (neighbors == 2 || neighbors == 3) {
       //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
-      stackedCells = posExists([xPos,yPos], tempCells);
-      if (stackedCells != null) {
-        if (!isOwned(owner, stackedCells)) {
-          contestedPositions.push([i,j]);
-        }
+      if (!(`${xPos}:${yPos}` in tempCells)) {
+        tempCells[`${xPos}:${yPos}`] = new ActivePiece([xPos,yPos], owner);
       }
-      else {
-        let newCell = new ActivePiece([xPos,yPos], owner);
-        tempCells.push(newCell);
+      else if (!(`${xPos}:${yPos}` in contestedPositions)){
+        contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
+      }
+      else if (`${xPos}:${yPos}` in contestedPositions && !(owner.getId() in contestedPositions[`${xPos}:${yPos}`])) {
+        contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
       }
     }
   }
@@ -189,7 +184,10 @@ function nextGeneration() {
     console.log(contestedPositions);
   tempCells = checkCollision(contestedPositions, tempCells);
   //Replace current generation with next.
-  activePieces = tempCells;
+  activePieces.length = 0;
+  for (var pos in tempCells) {
+    activePieces.push(tempCells[pos]);
+  }
   setPlayerStats();
 }
 
@@ -269,38 +267,28 @@ function setPlayerStats() {
 //Postcondish: returns finalized array of cells with correct ownership. The strength stat determines who wins a contested cell.
 //Whichever player has the highest strength stat becomes the owner of ALL the other players' cells. In the case of a tie, flip a coin.
 function checkCollision(contestedPositions, cells) {
-  //Find highest strength value
-  winningStrength = 0;
-  for (let i = 0; i < contestedPositions.length; i++) {
-    contestants = posExists(contestedPositions[i], cells);
-    for (let j = 0; j < contestants.length; j++) {
-      if (contestants[j].getStrength() > winningStrength) {
-        winningStrength = contestants[j].getStrength();
+  for (var pos in contestedPositions) {
+    let players = contestedPositions[pos];
+    let winningStrength = 0;
+    //determine highest strength
+    for (var id in players) {
+      let contestant = players[id];
+      if (contestant.getStrength() > winningStrength) {
+        winningStrength = contestant.getStrength();
       }
     }
-    //Check for ties
+    //check for ties
     winners = [];
-    winner = 0;
-    for (let i = 0; i < contestedPositions.length; i++) {
-      if (contestants[i].getStrength() == winningStrength) {
-        winners.push(contestants[i]);
+    for (var id in players) {
+      let contestant = players[id];
+      if (contestant.getStrength() == winningStrength) {
+        winners.push(contestant);
       }
     }
-    if (winners.length > 1) {
-      winner = getRandomInt(winners.length);
-    }
-    //Convert all contestant cells to winners' cells
-    for (let i = 0; i < cells.length; i++) {
-      if (winners.includes(cells[i].getOwner()) && cells[i].getOwner() != winners[winner]) {
-        cells[i].setOwner(winners[winner]);
-      }
-    }
-    //Delete overlapping cells
-    for (let i = 0; i < contestants.length; i++) {
-      if (contestants[i].getOwner() != winners[winner]) {
-        delete contestants[i];
-      }
-    }
+    //Randomly determine winner
+    winner = winners[getRandomInt(winners.length)];
+    //Set cell at pos to winner
+    cells[pos].setOwner(winner);
   }
   return cells;
 }

@@ -4,7 +4,7 @@ const express = require("express");
 const env = require("./env.json");
 const app = express();
 const {Player, ActivePiece} = require("./classes.js");
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static("public_html"));

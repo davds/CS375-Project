@@ -7,7 +7,7 @@ const {Player, ActivePiece} = require("./classes.js");
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static("public_html"));
+app.use(express.static("../public_html"));
 
 
 
@@ -20,20 +20,20 @@ pool.connect().then(() => {
 //POST handler for User Account creation
 app.post("/newUser", (req, res) => {  
   if (!("username" in req.body) || !("plaintextPassword" in req.body))
-    res.status(401).send("Invalid user creation request.")
+    return res.status(401).send("Invalid user creation request.")
 
   const username = req.body.username;
   const plaintextPassword = req.body.plaintextPassword;
 
   if (plaintextPassword.length >= 60) 
-    res.status(401).send("Password exceeded maximum length (60).")
+    return res.status(401).send("Password exceeded maximum length (60).")
   else if (plaintextPassword.length < 6) 
-    res.status(401).send("Password did not meet minimum length (6).")
+    return res.status(401).send("Password did not meet minimum length (6).")
   else if (username.length > 20)
-    res.status(401).send("Password exceeded maximum length (20).")
+    return res.status(401).send("Password exceeded maximum length (20).")
   else if (username.length <= 0)
-    res.status(401).send("Username did not meet minimum length (1).")
-  console.log(username + " " + plaintextPassword)
+    return res.status(401).send("Username did not meet minimum length (1).")
+  //console.log(username + " " + plaintextPassword)
   bcrypt.hash(plaintextPassword, 10).then(password => {
     pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, "", password]).then(response => {
       res.status(200).send();

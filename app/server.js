@@ -139,8 +139,8 @@ function isOwned(owner, cells) {
 //Precondish: array of current active cell objects must be initialized
 //Postcondish: doesn't return anything, replaces the activePieces array with the next generation of living cells
 function nextGeneration() {
-  let tempCells = [];
-  let contestedPositions = [];
+  let tempCells = {};
+  let contestedPositions = {};
   for (let cell = 0; cell < activePieces.length; cell++) {
     let xPos = activePieces[cell].getPos()[0];
     let yPos = activePieces[cell].getPos()[1];
@@ -152,7 +152,10 @@ function nextGeneration() {
           neighbors = countLiveNeighbors([i,j], owner);
           if (neighbors == 3) {
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
-            stackedCells = posExists([i,j], tempCells);
+            if (!(`${xPos}:${yPos}` in tempCells)) {
+              tempCells[`${xPos}:${yPos}`] = new ActivePiece([i,j], owner);
+            }
+            //console.log(stackedCells);
             if (stackedCells != null) {
               if (!isOwned(owner, stackedCells)) {
                 contestedPositions.push([i,j]);
@@ -335,4 +338,3 @@ app.listen(port, function() {
   console.log(`Server listening on post: ${port}`)
 });
 
-t1 = new Player("t1", "background-color: purple");

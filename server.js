@@ -33,9 +33,9 @@ app.post("/newUser", (req, res) => {
     res.status(401).send("Password exceeded maximum length (20).")
   else if (username.length <= 0)
     res.status(401).send("Username did not meet minimum length (1).")
-
+  console.log(username + " " + plaintextPassword)
   bcrypt.hash(plaintextPassword, 10).then(password => {
-    pool.query("INSERT INTO user (username, password) VALUES ($1, $2)", [username, password]).then(res => {
+    pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, "", password]).then(response => {
       res.status(200).send();
     }).catch(error => {
       console.log(`FAILED TO CREATE USER ${username}\n` + error);
@@ -52,11 +52,11 @@ app.post("/auth", (req, res) => {
   const username = req.body.username;
   const plaintextPassword = req.body.plaintextPassword;
   
-  pool.query("SELECT hashed_password FROM users WHERE username = $1", [username]).then(res => {
-    if (res.rows.length === 0) {
+  pool.query("SELECT password FROM users WHERE username = $1", [username]).then(response => {
+    if (response.rows.length === 0) {
       return res.status(401).send();
     }
-    const password = res.rows[0].password;
+    const password = response.rows[0].password;
     bcrypt.compare(plaintextPassword, password).then(match => {
       if (match) {
         console.log(`AUTHENTICATING USER '${username}'`);
@@ -182,7 +182,8 @@ function nextGeneration() {
       }
     }
   }
-  console.log(contestedPositions);
+  if (contestedPositions.length != 0)
+    console.log(contestedPositions);
   tempCells = checkCollision(contestedPositions, tempCells);
   //Replace current generation with next.
   activePieces = tempCells;

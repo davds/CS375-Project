@@ -10,6 +10,37 @@
 
 <body>
   <a href="/home.html">home</a>
-  <script></script>
+  <a href="/register.html">register</a>
+  <br><br><br>
+  <span>Username:</span><input type="text" id="username-input">
+  <br><br>
+  <span>Password: </span><input id="password-input" type="password">
+  <br><br>
+  <button id="login-button">Login</button>
+  <br><br>
+  <p id="status"></p>
+  <script>
+    let usernameInput = document.getElementById("username-input");
+    let passwordInput = document.getElementById("password-input");
+    let status = document.getElementById("status")
+    document.getElementById("login-button").addEventListener("click", function () {
+      fetch("/auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username: usernameInput.value,
+          plaintextPassword: passwordInput.value,
+        })
+      }).then(function (response) {
+        if (response.status === 200) {
+          status.textContent = "Successfully logged in"
+        } else {
+          status.textContent = "Invalid username/password"
+        }
+      });
+    });
+  </script>
 </body>
 </html>

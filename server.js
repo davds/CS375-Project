@@ -1,7 +1,7 @@
 const pg = require("pg");
 const bcrypt = require("bcrypt");
 const express = require("express");
-const env = require("../env.json");
+const env = require("./env.json");
 const app = express();
 const {Player, ActivePiece} = require("./classes.js");
 const port = 3000;
@@ -12,17 +12,39 @@ app.use(express.static("public_html"));
 
 
 const Pool = pg.Pool;
-const pool = newPool(env);
+const pool = new Pool(env);
 pool.connect().then(() => {
   console.log(`Connected to database ${env.database}`);
 });
 
 //POST handler for User Account creation
-app.post("/newUser", (req, res) => {
+app.post("/newUser", (req, res) => {  
+  if (!("username" in req.body) || !("plaintextPassword" in req.body))
+    res.status(401).send("Invalid user creation request.")
+
   const username = req.body.username;
   const plaintextPassword = req.body.plaintextPassword;
-  bcrypt.hash(plaintextPassword, saltRounds)
-  
+
+  if (plaintextPassword.length >= 60) 
+    res.status(401).send("Password exceeded maximum length (60).")
+  else if (plaintextPassword.length < 6) 
+    res.status(401).send("Password did not meet minimum length (6).")
+  else if (username.length > 20)
+    res.status(401).send("Password exceeded maximum length (20).")
+  else if (username.length <= 0)
+    res.status(401).send("Username did not meet minimum length (1).")
+
+  bcrypt.hash(plaintextPassword, 10).then(password => {
+    pool.query("INSERT INTO user (username, password) VALUES ($1, $2)", [username, password]).then(res => {
+      res.status(200).send();
+    }).catch(error => {
+      console.log(`FAILED TO CREATE USER ${username}\n` + error);
+      res.status(500).send();
+    });
+  }).catch(error => {
+    console.log(`BCRYPT HASHING FAILED FOR ${username}\n` + error);
+    res.status(500).send();
+  });  
 });
 
 //POST handler for User Account login
@@ -34,18 +56,17 @@ app.post("/auth", (req, res) => {
     if (res.rows.length === 0) {
       return res.status(401).send();
     }
-
     const password = res.rows[0].password;
     bcrypt.compare(plaintextPassword, password).then(match => {
       if (match) {
         console.log(`AUTHENTICATING USER '${username}'`);
         res.status(200).send();
       } else {
-        console.log(`INCORRECT PASSWORD PROVIDED FOR USER '${username}'`);
+        console.log(`INCORRECT PASSWORD PROVIDED FOR '${username}'`);
         res.status(401).send();
       }
     }).catch(error => {
-      console.log(`BCRYPT FAILED VALIDATION FOR '${username}'\n` + error);
+      console.log(`BCRYPT VALIDATION FAILED FOR '${username}'\n` + error);
       res.status(500).send();
     });
   }).catch(error => {
@@ -56,10 +77,8 @@ app.post("/auth", (req, res) => {
 
 
 
-
 //Representation of game board
 let testPlayer = new Player("test", "background-color: black");
-
 let testPiece = new ActivePiece([0,0], testPlayer);
 let testPlayer2 = new Player("test2", "background-color: red");
 let testPiece2 = new ActivePiece([0,1], testPlayer2);

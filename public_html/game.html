@@ -71,7 +71,31 @@
         updateBoard();
       });
     }
+    function translateCoordinates(x, y) { //from (0, 0) being top left to (0,0) being bottom left.
+      let temp = x
+      let x = y
+      let y = temp
+    }
+    function showGlider(cell) {
+      console.log(cell.id)
+    }
+    function sendGlider(cell) { //TODO
+
+    }
+    function fakeGlider() {
+      let game = document.getElementById("game-of-life");
+      let rows = game.querySelectorAll("tr");
+      for (let i = 0; i < rows.length; i++) {
+        let cells = rows[i].querySelectorAll("td");
+        for (let j = 0; j < cells.length; j++) {
+          cells[j].onclick = function(e) {sendGlider(cells[j])}
+          cells[j].onmousemove = function(e){showGlider(cells[j])} 
+        }
+      }
+    }
     createBoard(25,25);
+    fakeGlider();
+
   </script>
 </body>
 </html>

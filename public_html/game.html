@@ -12,6 +12,12 @@
       border: 1px solid black;
       padding: 10px;
     }
+    .transparent {
+      border: 1px solid black;
+      background-color: black;
+      padding: 10px;
+      opacity: 0.5;
+    }
   </style>
 </head>
 <body>
@@ -24,6 +30,9 @@
   <input type="button" value="Next" onclick="nextGen()"/>
   <input type="button" value="Reset" onclick="resetBoard()"/>
   <script>
+    let boardWidth = 25;
+    let boardHeight = 25;
+    let prevCoordinate = null; //for showGlider
     function createBoard(r,c) {
       let board = document.getElementById("game-of-life");
       for (let i = 0; i < r; i++) {
@@ -71,16 +80,57 @@
         updateBoard();
       });
     }
-    function translateCoordinates(x, y) { //from (0, 0) being top left to (0,0) being bottom left.
-      let temp = x
-      let x = y
-      let y = temp
+    function swapCoordinates(coordinates) { //ex: [0, 1] to [1,0] or [15, 3] to [3, 15]
+      let newCoordinates = [];
+      let newX = coordinates[1];
+      let newY = coordinates[0];
+      newCoordinates[0] = newX;
+      newCoordinates[1] = newY;
+      return newCoordinates;
+    }
+    function areCoordinatesValid(coordinates) {
+      return coordinates[0]>=0 && coordinates[1]>=0 && coordinates[0]<boardWidth && coordinates[1]<boardHeight;
     }
     function showGlider(cell) {
-      console.log(cell.id)
+      if(prevCoordinate+"" === cell.id) { //turns array into string so that they can be directly compared.
+        return;
+      }
+      prevCoordinate = cell.id;
+      let transElements = document.querySelectorAll(".transparent"); //document.getElementsByClassName("transparent") didn't work for no reason.
+      console.log(transElements)
+   
+      let cellSt = cell.id;
+      let cellNumbers = cellSt.split(",");
+      let cellX = parseInt(cellNumbers[0]);
+      let cellY = parseInt(cellNumbers[1]);
+      let clientCoordinates = [cellX, cellY]; 
+      let gliderPos = swapCoordinates(clientCoordinates)
+      console.log(gliderPos);
+      let currentRotation = "NE" 
+      let newPositions = [
+        [gliderPos[0], gliderPos[1] + 1],
+        [gliderPos[0] + 1, gliderPos[1] + 1],
+        [gliderPos[0] - 1, gliderPos[1]],
+        [gliderPos[0] + 1, gliderPos[1]],
+        [gliderPos[0] + 1, gliderPos[1] - 1]
+      ];
+      for(i=0; i<newPositions.length; i++) { 
+        let coordinates = newPositions[i]//swapCoordinates(newPositions[i])
+         if (!areCoordinatesValid(coordinates)) {
+            return;
+         }
+      }
+      for(i=0; i<transElements.length; i++) {
+        transElements[i].classList.remove("transparent");
+      }
+      for(i=0; i<newPositions.length; i++) {
+        let coordinates = swapCoordinates(newPositions[i]);
+        let cell = document.getElementById(coordinates[0] + "," + coordinates[1]);
+        cell.classList.add("transparent");
+      }
     }
     function sendGlider(cell) { //TODO
-
+      
     }
     function fakeGlider() {
       let game = document.getElementById("game-of-life");
@@ -93,9 +143,8 @@
         }
       }
     }
-    createBoard(25,25);
+    createBoard(boardWidth, boardHeight);
     fakeGlider();
-
   </script>
 </body>
 </html>

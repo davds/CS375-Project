@@ -97,15 +97,12 @@
       }
       prevCoordinate = cell.id;
       let transElements = document.querySelectorAll(".transparent"); //document.getElementsByClassName("transparent") didn't work for no reason.
-      console.log(transElements)
-   
       let cellSt = cell.id;
       let cellNumbers = cellSt.split(",");
       let cellX = parseInt(cellNumbers[0]);
       let cellY = parseInt(cellNumbers[1]);
       let clientCoordinates = [cellX, cellY]; 
       let gliderPos = swapCoordinates(clientCoordinates)
-      console.log(gliderPos);
       let currentRotation = "NE" 
       let newPositions = [
         [gliderPos[0], gliderPos[1] + 1],

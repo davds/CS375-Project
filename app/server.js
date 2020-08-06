@@ -338,12 +338,17 @@ app.get("/step", function(req, res) {
 
 app.get("/reset", function(req, res) {
   initTestBoard()
-  res.sendStatus(200);
+  
 });
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
-app.post("/gliders", function(req, res) {
-  return
+app.get("/gliders", function(req, res) {
+  let x = req.query.x;
+  let y = req.query.y;
+  console.log("gliders sent: x = " + x + ", y = " + y);
+  let testPlayer = new Player("test", "background-color: black");
+  makeGlider([Number(x),Number(y)], "NE", testPlayer);
+  res.sendStatus(200);
 });
 
 

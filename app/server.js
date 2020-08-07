@@ -98,10 +98,18 @@ function initTestBoard() {
   let testPiece2 = new ActivePiece([0,1], testPlayer2);
   activePieces = [testPiece, testPiece2];
   players = [testPlayer, testPlayer2];
-  makeGlider([4,3], "NE", testPlayer);
-  makeGlider([15,3], "NW", testPlayer2);
+  makeGlider([4,20], "SE", testPlayer);
 }
 initTestBoard()
+
+let dimensions = {};
+function setDimensions(coords) {
+  dimensions["xMin"] = coords[0][0];
+  dimensions["xMax"] = coords[0][1];
+  dimensions["yMin"] = coords[1][0];
+  dimensions["yMax"] = coords[1][1];
+}
+setDimensions([[0,24],[0,24]]);
 
 //Precondish: duble with x, y coords of a cell
 //Postcondish: if cell is alive, return owner, otherwise returns Null
@@ -114,39 +122,11 @@ function isAlive(pos) {
   return null;
 }
 
-//Precondish: takes a position and an array of cell objects
-//Postcondish: returns null if position not in list, otherwise returns array cells containing that position 
-function posExists(pos, L) {
-  cells = [];
-  for (let i = 0; i < L.length; i++) {
-    if (L[i].getPos()[0] == pos[0] && L[i].getPos()[1] == pos[1]) {
-      cells.push(L[i]);
-    }
-  }
-  if (cells.length == 0){
-    return null;
-  }
-  else {
-    return cells;
-  }
-}
-
-//Precondish: takes a duple of coords, an array of duple coords.
-//Postcondish: returns true if a duple with the same values is in the array
-function checkContested(pos, contested) {
-  for (let i = 0; i < contested.length; i++) {
-    if (contested[i][0] == pos[0] && contested[i][1] == pos[1]) {
-      return true;
-    }
-  }
-  return false;
-}
-
-//Precondish: takes a plyer object, and a list of cells
-//Postcondish: returns true if one of the cells is owned by the specified player, false otherwise.
-function isOwned(owner, cells) {
-  for (let i = 0; i < cells.length; i++) {
-    if (cells[i].getOwner() == owner) {
+//Precondish: takes an x, y coordinate
+//Postcondish: returns true if this is a valid cell in bounds of the table
+function inBounds(xPos, yPos) {
+  if (xPos >= dimensions["xMin"] && xPos <= dimensions["xMax"]) {
+    if (yPos >= dimensions["yMin"] && yPos <= dimensions["yMax"]) {
       return true;
     }
   }
@@ -165,7 +145,7 @@ function nextGeneration() {
     //Check the 3x3 box around each living cell if any dead cells will be alive in the next generation
     for (let i = xPos - 1; i <= xPos + 1; i++) {
       for (let j = yPos - 1; j <= yPos + 1; j++) {
-        if (isAlive([i,j]) != owner) {
+        if (isAlive([i,j]) != owner && inBounds(i, j)) {
           neighbors = countLiveNeighbors([i,j], owner);
           if (neighbors == 3) {
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
@@ -184,18 +164,20 @@ function nextGeneration() {
       }
     }
     //Check if the current cell will be alive in the next generation
-    neighbors = countLiveNeighbors([xPos, yPos], owner);
-    if (neighbors == 2 || neighbors == 3) {
-      //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
-      if (!(`${xPos}:${yPos}` in tempCells)) {
-        tempCells[`${xPos}:${yPos}`] = new ActivePiece([xPos,yPos], owner);
-      }
-      else if (!(`${xPos}:${yPos}` in contestedPositions)){
-        contestedPositions[`${xPos}:${yPos}`] = {};
-        contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
-      }
-      else if (`${xPos}:${yPos}` in contestedPositions && !(owner.getId() in contestedPositions[`${xPos}:${yPos}`])) {
-        contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
+    if (inBounds(xPos, yPos)) {
+      neighbors = countLiveNeighbors([xPos, yPos], owner);
+      if (neighbors == 2 || neighbors == 3) {
+        //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
+        if (!(`${xPos}:${yPos}` in tempCells)) {
+          tempCells[`${xPos}:${yPos}`] = new ActivePiece([xPos,yPos], owner);
+        }
+        else if (!(`${xPos}:${yPos}` in contestedPositions)){
+          contestedPositions[`${xPos}:${yPos}`] = {};
+          contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
+        }
+        else if (`${xPos}:${yPos}` in contestedPositions && !(owner.getId() in contestedPositions[`${xPos}:${yPos}`])) {
+          contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
+        }
       }
     }
   }
@@ -239,38 +221,38 @@ function makeGlider(gliderPos, orientation, player) {
   switch(orientation) {
     case "SE":
       newPositions = [
-        [gliderPos[0], gliderPos[1] + 1],
+        [gliderPos[0], gliderPos[1] -1],
         [gliderPos[0] + 1, gliderPos[1]],
-        [gliderPos[0] - 1, gliderPos[1] - 1],
-        [gliderPos[0], gliderPos[1] - 1],
+        [gliderPos[0] - 1, gliderPos[1] + 1],
+        [gliderPos[0], gliderPos[1] + 1],
         [gliderPos[0] + 1, gliderPos[1] + 1]
       ];
       break;
     case "NE":
       newPositions = [
-        [gliderPos[0], gliderPos[1] + 1],
-        [gliderPos[0] + 1, gliderPos[1] + 1],
+        [gliderPos[0], gliderPos[1] - 1],
+        [gliderPos[0] + 1, gliderPos[1] - 1],
         [gliderPos[0] - 1, gliderPos[1]],
         [gliderPos[0] + 1, gliderPos[1]],
-        [gliderPos[0] + 1, gliderPos[1] - 1]
+        [gliderPos[0] + 1, gliderPos[1] + 1]
       ];
       break;
     case "NW":
       newPositions = [
-        [gliderPos[0], gliderPos[1] + 1],
-        [gliderPos[0] + 1, gliderPos[1] + 1],
-        [gliderPos[0] - 1, gliderPos[1] + 1],
+        [gliderPos[0], gliderPos[1] - 1],
+        [gliderPos[0] + 1, gliderPos[1] - 1],
+        [gliderPos[0] - 1, gliderPos[1] - 1],
         [gliderPos[0] - 1, gliderPos[1]],
-        [gliderPos[0], gliderPos[1] - 1]
+        [gliderPos[0], gliderPos[1] + 1]
       ];
       break;
     case "SW":
       newPositions = [
-        [gliderPos[0] - 1, gliderPos[1] + 1],
+        [gliderPos[0] - 1, gliderPos[1] - 1],
         [gliderPos[0] - 1, gliderPos[1]],
         [gliderPos[0] + 1, gliderPos[1]],
-        [gliderPos[0] - 1, gliderPos[1] - 1],
-        [gliderPos[0], gliderPos[1] - 1]
+        [gliderPos[0] - 1, gliderPos[1] + 1],
+        [gliderPos[0], gliderPos[1] + 1]
       ];
       break;
   }

@@ -8,6 +8,10 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static("../public_html"));
 
+app.get('/', function (req, res) {
+  res.redirect('/home.html')
+})
+
 let tempEnv = require("../env.json");
 if (process.env._ && process.env._.indexOf("heroku"))
   tempEnv = require("../heroku.json");

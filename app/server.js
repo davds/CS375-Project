@@ -9,6 +9,7 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static("../public_html"));
+app.use(express.static("./shared.js"))
 
 app.get('/', function (req, res) {
   res.redirect('/home.html');

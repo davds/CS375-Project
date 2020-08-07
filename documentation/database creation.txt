@@ -7,6 +7,8 @@ CREATE DATABASE cgod; // Create new database 'cgod'
 CREATE TABLE users ( 
     username VARCHAR(20),
     email VARCHAR(254),
-    password CHAR(60)
+    password CHAR(60),
+    PRIMARY KEY (username),
+    UNIQUE (email)
 );
-
+ 

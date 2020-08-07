@@ -3,13 +3,14 @@ const bcrypt = require("bcrypt");
 const express = require("express");
 const app = express();
 const {Player, ActivePiece} = require("./classes.js");
+const {makeGliderPos} = require("./shared.js");
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static("../public_html"));
 
 app.get('/', function (req, res) {
-  res.redirect('/home.html')
+  res.redirect('/home.html');
 })
 
 let tempEnv = require("../env.json");
@@ -26,20 +27,20 @@ pool.connect().then(() => {
 //POST handler for User Account creation
 app.post("/newUser", (req, res) => {  
   if (!("username" in req.body) || !("plaintextPassword" in req.body))
-    return res.status(401).send("Invalid user creation request.")
+    return res.status(401).send("Invalid user creation request.");
 
   const username = req.body.username;
   const plaintextPassword = req.body.plaintextPassword;
-  const email = req.body.email
+  const email = req.body.email;
 
   if (plaintextPassword.length >= 60) 
-    return res.status(401).send("Password exceeded maximum length (60).")
+    return res.status(401).send("Password exceeded maximum length (60).");
   else if (plaintextPassword.length < 6) 
-    return res.status(401).send("Password did not meet minimum length (6).")
+    return res.status(401).send("Password did not meet minimum length (6).");
   else if (username.length > 20)
-    return res.status(401).send("Password exceeded maximum length (20).")
+    return res.status(401).send("Password exceeded maximum length (20).");
   else if (username.length <= 0)
-    return res.status(401).send("Username did not meet minimum length (1).")
+    return res.status(401).send("Username did not meet minimum length (1).");
   //console.log(username + " " + plaintextPassword)
   bcrypt.hash(plaintextPassword, 10).then(password => {
     pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, email, password]).then(response => {
@@ -228,45 +229,7 @@ function countLiveNeighbors(pos, player) {
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider, and a player object
 //Postcondish: doesn't return anything, adds appropriate active cells objects to active pieces array
 function makeGlider(gliderPos, orientation, player) {
-  newPositions = []; 
-  switch(orientation) {
-    case "SE":
-      newPositions = [
-        [gliderPos[0], gliderPos[1] -1],
-        [gliderPos[0] + 1, gliderPos[1]],
-        [gliderPos[0] - 1, gliderPos[1] + 1],
-        [gliderPos[0], gliderPos[1] + 1],
-        [gliderPos[0] + 1, gliderPos[1] + 1]
-      ];
-      break;
-    case "NE":
-      newPositions = [
-        [gliderPos[0], gliderPos[1] - 1],
-        [gliderPos[0] + 1, gliderPos[1] - 1],
-        [gliderPos[0] - 1, gliderPos[1]],
-        [gliderPos[0] + 1, gliderPos[1]],
-        [gliderPos[0] + 1, gliderPos[1] + 1]
-      ];
-      break;
-    case "NW":
-      newPositions = [
-        [gliderPos[0], gliderPos[1] - 1],
-        [gliderPos[0] + 1, gliderPos[1] - 1],
-        [gliderPos[0] - 1, gliderPos[1] - 1],
-        [gliderPos[0] - 1, gliderPos[1]],
-        [gliderPos[0], gliderPos[1] + 1]
-      ];
-      break;
-    case "SW":
-      newPositions = [
-        [gliderPos[0] - 1, gliderPos[1] - 1],
-        [gliderPos[0] - 1, gliderPos[1]],
-        [gliderPos[0] + 1, gliderPos[1]],
-        [gliderPos[0] - 1, gliderPos[1] + 1],
-        [gliderPos[0], gliderPos[1] + 1]
-      ];
-      break;
-  }
+  let newPositions = makeGliderPos(gliderPos, orientation);
   for (let i = 0; i < newPositions.length; i++) {
     makeCell(newPositions[i], player);
   }

@@ -92,7 +92,8 @@ function initTestBoard() {
   let testPiece2 = new ActivePiece([0,1], testPlayer2);
   activePieces = [testPiece, testPiece2];
   players = [testPlayer, testPlayer2];
-  makeGlider([4,20], "SE", testPlayer);
+  makeGlider([4,10], "SE", testPlayer);
+  makeGlider([9,10], "SW", testPlayer2);
 }
 initTestBoard()
 
@@ -148,10 +149,15 @@ function nextGeneration() {
             }
             else if (!(`${i}:${j}` in contestedPositions)){
               contestedPositions[`${i}:${j}`] = {};
-              contestedPositions[`${i}:${j}`][owner.getId()] = owner;
+              contestedPositions[`${i}:${j}`][tempCells[`${i}:${j}`].getOwner().getId()] = tempCells[`${i}:${j}`].getOwner();
+              if (!(owner.getId() in contestedPositions[`${i}:${j}`])) {
+                contestedPositions[`${i}:${j}`][owner.getId()] = owner;
+              }
             }
             else if (`${i}:${j}` in contestedPositions) {
-              contestedPositions[`${i}:${j}`][owner.getId()] = owner;
+              if (!(owner.getId() in contestedPositions[`${i}:${j}`])) {
+                contestedPositions[`${i}:${j}`][owner.getId()] = owner;
+              }
             }
           }
         }
@@ -161,17 +167,22 @@ function nextGeneration() {
     if (inBounds(xPos, yPos)) {
       neighbors = countLiveNeighbors([xPos, yPos], owner);
       if (neighbors == 2 || neighbors == 3) {
-        //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
-        if (!(`${xPos}:${yPos}` in tempCells)) {
-          tempCells[`${xPos}:${yPos}`] = new ActivePiece([xPos,yPos], owner);
-        }
-        else if (!(`${xPos}:${yPos}` in contestedPositions)){
-          contestedPositions[`${xPos}:${yPos}`] = {};
-          contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
-        }
-        else if (`${xPos}:${yPos}` in contestedPositions && !(owner.getId() in contestedPositions[`${xPos}:${yPos}`])) {
-          contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
-        }
+            //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
+            if (!(`${xPos}:${yPos}` in tempCells)) {
+              tempCells[`${xPos}:${yPos}`] = new ActivePiece([xPos,yPos], owner);
+            }
+            else if (!(`${xPos}:${yPos}` in contestedPositions)){
+              contestedPositions[`${xPos}:${yPos}`] = {};
+              contestedPositions[`${xPos}:${yPos}`][tempCells[`${xPos}:${yPos}`].getOwner().getId()] = tempCells[`${xPos}:${yPos}`].getOwner();
+              if (!(owner.getId() in contestedPositions[`${xPos}:${yPos}`])) {
+                contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
+              }
+            }
+            else if (`${xPos}:${yPos}` in contestedPositions) {
+              if (!(owner.getId() in contestedPositions[`${xPos}:${yPos}`])) {
+                contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
+              }
+            }
       }
     }
   }
@@ -275,6 +286,7 @@ function setPlayerStats() {
 function checkCollision(contestedPositions, cells) {
   for (var pos in contestedPositions) {
     let players = contestedPositions[pos];
+
     let winningStrength = 0;
     //determine highest strength
     for (var id in players) {

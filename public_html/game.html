@@ -1,6 +1,7 @@
 <!doctype html>
 
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <title>Game</title>
@@ -8,10 +9,12 @@
     table {
       border-collapse: collapse;
     }
+
     td {
       border: 1px solid black;
       padding: 10px;
     }
+
     .transparent {
       border: 1px solid black;
       background-color: black;
@@ -20,25 +23,26 @@
     }
   </style>
 </head>
+
 <body>
   <a href="/home.html">home</a>
   <h1>Test Table :D</h1>
   <table>
     <tbody id="game-of-life"></tbody>
   </table>
-  <input type="button" value="Update" onclick="updateBoard()"/>
-  <input type="button" value="Next" onclick="nextGen()"/>
-  <input type="button" value="Reset" onclick="resetBoard()"/>
+  <input type="button" value="Update" onclick="updateBoard()" />
+  <input type="button" value="Next" onclick="nextGen()" />
+  <input type="button" value="Reset" onclick="resetBoard()" />
   <script>
     let boardWidth = 25;
     let boardHeight = 25;
     let prevCoordinate = null; //for showGlider
-    function createBoard(r,c) {
+    function createBoard(r, c) {
       let board = document.getElementById("game-of-life");
       for (let i = 0; i < r; i++) {
         let row = document.createElement("tr");
         board.append(row);
-        for(let j = 0; j < c; j++) {
+        for (let j = 0; j < c; j++) {
           let col = document.createElement("td");
           col.id = `${i},${j}`;
           row.append(col);
@@ -49,13 +53,13 @@
       let game = document.getElementById("game-of-life");
       clearBoard();
       fetch("/cells").then(response => {
-          return response.json();
+        return response.json();
       }).then(cell => {
-          let rows = game.querySelectorAll("tr");
-          for (let i = 0; i < cell.length; i++) {    
-            let cells = rows[cell[i].pos[1]].querySelectorAll("td");
-            cells[cell[i].pos[0]].style.cssText = cell[i].style;
-          }
+        let rows = game.querySelectorAll("tr");
+        for (let i = 0; i < cell.length; i++) {
+          let cells = rows[cell[i].pos[1]].querySelectorAll("td");
+          cells[cell[i].pos[0]].style.cssText = cell[i].style;
+        }
       });
     }
     function clearBoard() {
@@ -89,10 +93,10 @@
       return newCoordinates;
     }
     function areCoordinatesValid(coordinates) {
-      return coordinates[0]>=0 && coordinates[1]>=0 && coordinates[0]<boardWidth && coordinates[1]<boardHeight;
+      return coordinates[0] >= 0 && coordinates[1] >= 0 && coordinates[0] < boardWidth && coordinates[1] < boardHeight;
     }
     function showGlider(cell) {
-      if(prevCoordinate+"" === cell.id) { //turns array into string so that they can be directly compared.
+      if (prevCoordinate + "" === cell.id) { //turns array into string so that they can be directly compared.
         return;
       }
       prevCoordinate = cell.id;
@@ -101,9 +105,9 @@
       let cellNumbers = cellSt.split(",");
       let cellX = parseInt(cellNumbers[0]);
       let cellY = parseInt(cellNumbers[1]);
-      let clientCoordinates = [cellX, cellY]; 
+      let clientCoordinates = [cellX, cellY];
       let gliderPos = swapCoordinates(clientCoordinates)
-      let currentRotation = "NE" 
+      let currentRotation = "NE"
       let newPositions = [
         [gliderPos[0], gliderPos[1] + 1],
         [gliderPos[0] + 1, gliderPos[1] + 1],
@@ -111,16 +115,16 @@
         [gliderPos[0] + 1, gliderPos[1]],
         [gliderPos[0] + 1, gliderPos[1] - 1]
       ];
-      for(i=0; i<newPositions.length; i++) { 
+      for (i = 0; i < newPositions.length; i++) {
         let coordinates = newPositions[i]//swapCoordinates(newPositions[i])
-         if (!areCoordinatesValid(coordinates)) {
-            return;
-         }
+        if (!areCoordinatesValid(coordinates)) {
+          return;
+        }
       }
-      for(i=0; i<transElements.length; i++) {
+      for (i = 0; i < transElements.length; i++) {
         transElements[i].classList.remove("transparent");
       }
-      for(i=0; i<newPositions.length; i++) {
+      for (i = 0; i < newPositions.length; i++) {
         let coordinates = swapCoordinates(newPositions[i]);
         let cell = document.getElementById(coordinates[0] + "," + coordinates[1]);
         cell.classList.add("transparent");
@@ -144,13 +148,33 @@
       for (let i = 0; i < rows.length; i++) {
         let cells = rows[i].querySelectorAll("td");
         for (let j = 0; j < cells.length; j++) {
-          cells[j].onclick = function(e) {sendGlider(cells[j])}
-          cells[j].onmousemove = function(e){showGlider(cells[j])} 
+          cells[j].onclick = function (e) { sendGlider(cells[j]) }
+          cells[j].onmousemove = function (e) { showGlider(cells[j]) }
         }
       }
     }
     createBoard(boardWidth, boardHeight);
     fakeGlider();
+    if (document.addEventListener) {
+      document.addEventListener('contextmenu', function (e) {
+        alert("You've tried to open context menu"); //here you draw your own menu
+        destroyGlider();
+        e.preventDefault();
+      }, false);
+    }
+
+    function destroyGlider(){
+      console.log("glider destroyed");
+      let game = document.getElementById("game-of-life");
+      let rows = game.querySelectorAll("tr");
+      for (let i = 0; i < rows.length; i++) {
+        let cells = rows[i].querySelectorAll("td");
+        for (let j = 0; j < cells.length; j++) {
+          cells[j].style = "";
+        }
+      }
+    }
   </script>
 </body>
+
 </html>

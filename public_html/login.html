@@ -34,12 +34,10 @@
           plaintextPassword: passwordInput.value,
         })
       }).then(function (response) {
-        if (response.status === 200) {
-          status.textContent = "Successfully logged in"
-        } else {
-          status.textContent = "Invalid username/password"
-        }
-      });
+          return response.text()
+      }).then(function (data) {
+          status.textContent = data
+      })
     });
   </script>
 </body>

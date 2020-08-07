@@ -30,6 +30,7 @@ app.post("/newUser", (req, res) => {
 
   const username = req.body.username;
   const plaintextPassword = req.body.plaintextPassword;
+  const email = req.body.email
 
   if (plaintextPassword.length >= 60) 
     return res.status(401).send("Password exceeded maximum length (60).")
@@ -41,15 +42,20 @@ app.post("/newUser", (req, res) => {
     return res.status(401).send("Username did not meet minimum length (1).")
   //console.log(username + " " + plaintextPassword)
   bcrypt.hash(plaintextPassword, 10).then(password => {
-    pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, "", password]).then(response => {
-      res.status(200).send();
+    pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, email, password]).then(response => {
+      res.status(200).send("Account created");
     }).catch(error => {
       console.log(`FAILED TO CREATE USER ${username}\n` + error);
-      res.status(500).send();
+      if (error.constraint === "users_email_key") {
+        res.status(500).send("Email in use");
+      } else {
+        res.status(500).send("Username taken");
+      }
+      
     });
   }).catch(error => {
     console.log(`BCRYPT HASHING FAILED FOR ${username}\n` + error);
-    res.status(500).send();
+    res.status(500).send(error);
   });  
 });
 
@@ -60,24 +66,24 @@ app.post("/auth", (req, res) => {
   
   pool.query("SELECT password FROM users WHERE username = $1", [username]).then(response => {
     if (response.rows.length === 0) {
-      return res.status(401).send();
+      return res.status(401).send("Invalid username/password");
     }
     const password = response.rows[0].password;
     bcrypt.compare(plaintextPassword, password).then(match => {
       if (match) {
         console.log(`AUTHENTICATING USER '${username}'`);
-        res.status(200).send();
+        res.status(200).send("Logged in");
       } else {
         console.log(`INCORRECT PASSWORD PROVIDED FOR '${username}'`);
-        res.status(401).send();
+        res.status(401).send("Invalid username/password");
       }
     }).catch(error => {
       console.log(`BCRYPT VALIDATION FAILED FOR '${username}'\n` + error);
-      res.status(500).send();
+      res.status(500).send(error);
     });
   }).catch(error => {
     console.log(`AUTHENTICATION QUERY FAILED FOR '${username}'\n` + error);
-    res.status(500).send();
+    res.status(500).send(error);
   });
 });
 

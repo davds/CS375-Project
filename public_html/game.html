@@ -150,29 +150,22 @@
         for (let j = 0; j < cells.length; j++) {
           cells[j].onclick = function (e) { sendGlider(cells[j]) }
           cells[j].onmousemove = function (e) { showGlider(cells[j]) }
+          
+          
         }
       }
     }
     createBoard(boardWidth, boardHeight);
     fakeGlider();
-    if (document.addEventListener) {
-      document.addEventListener('contextmenu', function (e) {
-        alert("You've tried to open context menu"); //here you draw your own menu
-        destroyGlider();
-        e.preventDefault();
-      }, false);
-    }
 
-    function destroyGlider(){
-      console.log("glider destroyed");
-      let game = document.getElementById("game-of-life");
-      let rows = game.querySelectorAll("tr");
-      for (let i = 0; i < rows.length; i++) {
-        let cells = rows[i].querySelectorAll("td");
-        for (let j = 0; j < cells.length; j++) {
-          cells[j].style = "";
-        }
-      }
+    if (document.addEventListener) {
+            document.addEventListener('contextmenu', function (e) {
+              alert("You've tried to open context menu"); //here you draw your own menu
+              destroyGlider(cells[j]);
+              //e.preventDefault();
+            }, false)};
+    function destroyGlider(cell) {
+      console.log(cell + "destroyed");
     }
   </script>
 </body>

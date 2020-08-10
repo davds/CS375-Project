@@ -4,10 +4,15 @@ const bcrypt = require("bcrypt");
 const express = require("express");
 const app = express();
 const {Player, ActivePiece} = require("./classes.js");
+const {makeGliderPos} = require("../public_html/shared.js");
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static("../public_html"));
+
+app.get('/', function (req, res) {
+  res.redirect('/home.html');
+})
 
 let tempEnv = require("../env.json");
 if (process.env._ && process.env._.indexOf("heroku"))
@@ -23,30 +28,36 @@ pool.connect().then(() => {
 //POST handler for User Account creation
 app.post("/newUser", (req, res) => {  
   if (!("username" in req.body) || !("plaintextPassword" in req.body))
-    return res.status(401).send("Invalid user creation request.")
+    return res.status(401).send("Invalid user creation request.");
 
   const username = req.body.username;
   const plaintextPassword = req.body.plaintextPassword;
+  const email = req.body.email;
 
   if (plaintextPassword.length >= 60) 
-    return res.status(401).send("Password exceeded maximum length (60).")
+    return res.status(401).send("Password exceeded maximum length (60).");
   else if (plaintextPassword.length < 6) 
-    return res.status(401).send("Password did not meet minimum length (6).")
+    return res.status(401).send("Password did not meet minimum length (6).");
   else if (username.length > 20)
-    return res.status(401).send("Password exceeded maximum length (20).")
+    return res.status(401).send("Password exceeded maximum length (20).");
   else if (username.length <= 0)
-    return res.status(401).send("Username did not meet minimum length (1).")
+    return res.status(401).send("Username did not meet minimum length (1).");
   //console.log(username + " " + plaintextPassword)
   bcrypt.hash(plaintextPassword, 10).then(password => {
-    pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, "", password]).then(response => {
-      res.status(200).send();
+    pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, email, password]).then(response => {
+      res.status(200).send("Account created");
     }).catch(error => {
       console.log(`FAILED TO CREATE USER ${username}\n` + error);
-      res.status(500).send();
+      if (error.constraint === "users_email_key") {
+        res.status(500).send("Email in use");
+      } else {
+        res.status(500).send("Username taken");
+      }
+      
     });
   }).catch(error => {
     console.log(`BCRYPT HASHING FAILED FOR ${username}\n` + error);
-    res.status(500).send();
+    res.status(500).send(error);
   });  
 });
 
@@ -57,24 +68,24 @@ app.post("/auth", (req, res) => {
   
   pool.query("SELECT password FROM users WHERE username = $1", [username]).then(response => {
     if (response.rows.length === 0) {
-      return res.status(401).send();
+      return res.status(401).send("Invalid username/password");
     }
     const password = response.rows[0].password;
     bcrypt.compare(plaintextPassword, password).then(match => {
       if (match) {
         console.log(`AUTHENTICATING USER '${username}'`);
-        res.status(200).send();
+        res.status(200).send("Logged in");
       } else {
         console.log(`INCORRECT PASSWORD PROVIDED FOR '${username}'`);
-        res.status(401).send();
+        res.status(401).send("Invalid username/password");
       }
     }).catch(error => {
       console.log(`BCRYPT VALIDATION FAILED FOR '${username}'\n` + error);
-      res.status(500).send();
+      res.status(500).send(error);
     });
   }).catch(error => {
     console.log(`AUTHENTICATION QUERY FAILED FOR '${username}'\n` + error);
-    res.status(500).send();
+    res.status(500).send(error);
   });
 });
 
@@ -89,10 +100,19 @@ function initTestBoard() {
   let testPiece2 = new ActivePiece([0,1], testPlayer2);
   activePieces = [testPiece, testPiece2];
   players = [testPlayer, testPlayer2];
-  makeGlider([4,3], "NE", testPlayer);
-  makeGlider([15,3], "NW", testPlayer2);
+  makeGlider([4,10], "SE", testPlayer);
+  makeGlider([9,10], "SW", testPlayer2);
 }
 initTestBoard()
+
+let dimensions = {};
+function setDimensions(coords) {
+  dimensions["xMin"] = coords[0][0];
+  dimensions["xMax"] = coords[0][1];
+  dimensions["yMin"] = coords[1][0];
+  dimensions["yMax"] = coords[1][1];
+}
+setDimensions([[0,24],[0,24]]);
 
 //Precondish: duble with x, y coords of a cell
 //Postcondish: if cell is alive, return owner, otherwise returns Null
@@ -105,39 +125,11 @@ function isAlive(pos) {
   return null;
 }
 
-//Precondish: takes a position and an array of cell objects
-//Postcondish: returns null if position not in list, otherwise returns array cells containing that position 
-function posExists(pos, L) {
-  cells = [];
-  for (let i = 0; i < L.length; i++) {
-    if (L[i].getPos()[0] == pos[0] && L[i].getPos()[1] == pos[1]) {
-      cells.push(L[i]);
-    }
-  }
-  if (cells.length == 0){
-    return null;
-  }
-  else {
-    return cells;
-  }
-}
-
-//Precondish: takes a duple of coords, an array of duple coords.
-//Postcondish: returns true if a duple with the same values is in the array
-function checkContested(pos, contested) {
-  for (let i = 0; i < contested.length; i++) {
-    if (contested[i][0] == pos[0] && contested[i][1] == pos[1]) {
-      return true;
-    }
-  }
-  return false;
-}
-
-//Precondish: takes a plyer object, and a list of cells
-//Postcondish: returns true if one of the cells is owned by the specified player, false otherwise.
-function isOwned(owner, cells) {
-  for (let i = 0; i < cells.length; i++) {
-    if (cells[i].getOwner() == owner) {
+//Precondish: takes an x, y coordinate
+//Postcondish: returns true if this is a valid cell in bounds of the table
+function inBounds(xPos, yPos) {
+  if (xPos >= dimensions["xMin"] && xPos <= dimensions["xMax"]) {
+    if (yPos >= dimensions["yMin"] && yPos <= dimensions["yMax"]) {
       return true;
     }
   }
@@ -156,7 +148,7 @@ function nextGeneration() {
     //Check the 3x3 box around each living cell if any dead cells will be alive in the next generation
     for (let i = xPos - 1; i <= xPos + 1; i++) {
       for (let j = yPos - 1; j <= yPos + 1; j++) {
-        if (isAlive([i,j]) != owner) {
+        if (isAlive([i,j]) != owner && inBounds(i, j)) {
           neighbors = countLiveNeighbors([i,j], owner);
           if (neighbors == 3) {
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
@@ -165,28 +157,40 @@ function nextGeneration() {
             }
             else if (!(`${i}:${j}` in contestedPositions)){
               contestedPositions[`${i}:${j}`] = {};
-              contestedPositions[`${i}:${j}`][owner.getId()] = owner;
+              contestedPositions[`${i}:${j}`][tempCells[`${i}:${j}`].getOwner().getId()] = tempCells[`${i}:${j}`].getOwner();
+              if (!(owner.getId() in contestedPositions[`${i}:${j}`])) {
+                contestedPositions[`${i}:${j}`][owner.getId()] = owner;
+              }
             }
             else if (`${i}:${j}` in contestedPositions) {
-              contestedPositions[`${i}:${j}`][owner.getId()] = owner;
+              if (!(owner.getId() in contestedPositions[`${i}:${j}`])) {
+                contestedPositions[`${i}:${j}`][owner.getId()] = owner;
+              }
             }
           }
         }
       }
     }
     //Check if the current cell will be alive in the next generation
-    neighbors = countLiveNeighbors([xPos, yPos], owner);
-    if (neighbors == 2 || neighbors == 3) {
-      //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
-      if (!(`${xPos}:${yPos}` in tempCells)) {
-        tempCells[`${xPos}:${yPos}`] = new ActivePiece([xPos,yPos], owner);
-      }
-      else if (!(`${xPos}:${yPos}` in contestedPositions)){
-        contestedPositions[`${xPos}:${yPos}`] = {};
-        contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
-      }
-      else if (`${xPos}:${yPos}` in contestedPositions && !(owner.getId() in contestedPositions[`${xPos}:${yPos}`])) {
-        contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
+    if (inBounds(xPos, yPos)) {
+      neighbors = countLiveNeighbors([xPos, yPos], owner);
+      if (neighbors == 2 || neighbors == 3) {
+            //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
+            if (!(`${xPos}:${yPos}` in tempCells)) {
+              tempCells[`${xPos}:${yPos}`] = new ActivePiece([xPos,yPos], owner);
+            }
+            else if (!(`${xPos}:${yPos}` in contestedPositions)){
+              contestedPositions[`${xPos}:${yPos}`] = {};
+              contestedPositions[`${xPos}:${yPos}`][tempCells[`${xPos}:${yPos}`].getOwner().getId()] = tempCells[`${xPos}:${yPos}`].getOwner();
+              if (!(owner.getId() in contestedPositions[`${xPos}:${yPos}`])) {
+                contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
+              }
+            }
+            else if (`${xPos}:${yPos}` in contestedPositions) {
+              if (!(owner.getId() in contestedPositions[`${xPos}:${yPos}`])) {
+                contestedPositions[`${xPos}:${yPos}`][owner.getId()] = owner;
+              }
+            }
       }
     }
   }
@@ -226,45 +230,7 @@ function countLiveNeighbors(pos, player) {
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider, and a player object
 //Postcondish: doesn't return anything, adds appropriate active cells objects to active pieces array
 function makeGlider(gliderPos, orientation, player) {
-  newPositions = []; 
-  switch(orientation) {
-    case "SE":
-      newPositions = [
-        [gliderPos[0], gliderPos[1] + 1],
-        [gliderPos[0] + 1, gliderPos[1]],
-        [gliderPos[0] - 1, gliderPos[1] - 1],
-        [gliderPos[0], gliderPos[1] - 1],
-        [gliderPos[0] + 1, gliderPos[1] + 1]
-      ];
-      break;
-    case "NE":
-      newPositions = [
-        [gliderPos[0], gliderPos[1] + 1],
-        [gliderPos[0] + 1, gliderPos[1] + 1],
-        [gliderPos[0] - 1, gliderPos[1]],
-        [gliderPos[0] + 1, gliderPos[1]],
-        [gliderPos[0] + 1, gliderPos[1] - 1]
-      ];
-      break;
-    case "NW":
-      newPositions = [
-        [gliderPos[0], gliderPos[1] + 1],
-        [gliderPos[0] + 1, gliderPos[1] + 1],
-        [gliderPos[0] - 1, gliderPos[1] + 1],
-        [gliderPos[0] - 1, gliderPos[1]],
-        [gliderPos[0], gliderPos[1] - 1]
-      ];
-      break;
-    case "SW":
-      newPositions = [
-        [gliderPos[0] - 1, gliderPos[1] + 1],
-        [gliderPos[0] - 1, gliderPos[1]],
-        [gliderPos[0] + 1, gliderPos[1]],
-        [gliderPos[0] - 1, gliderPos[1] - 1],
-        [gliderPos[0], gliderPos[1] - 1]
-      ];
-      break;
-  }
+  let newPositions = makeGliderPos(gliderPos, orientation);
   for (let i = 0; i < newPositions.length; i++) {
     makeCell(newPositions[i], player);
   }
@@ -290,6 +256,7 @@ function setPlayerStats() {
 function checkCollision(contestedPositions, cells) {
   for (var pos in contestedPositions) {
     let players = contestedPositions[pos];
+
     let winningStrength = 0;
     //determine highest strength
     for (var id in players) {
@@ -345,9 +312,10 @@ app.get("/reset", function(req, res) {
 app.get("/gliders", function(req, res) {
   let x = req.query.x;
   let y = req.query.y;
+  let orientation = req.query.orientation;
   console.log("gliders sent: x = " + x + ", y = " + y);
   let testPlayer = new Player("test", "background-color: black");
-  makeGlider([Number(x),Number(y)], "NE", testPlayer);
+  makeGlider([Number(x),Number(y)], orientation, testPlayer);
   res.sendStatus(200);
 });
 

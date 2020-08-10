@@ -33,10 +33,14 @@
   <input type="button" value="Update" onclick="updateBoard()" />
   <input type="button" value="Next" onclick="nextGen()" />
   <input type="button" value="Reset" onclick="resetBoard()" />
+  <input type="button" value="Rotate" onclick="rotateGlider()" />
+  <script src="./shared.js"></script>
   <script>
     let boardWidth = 25;
     let boardHeight = 25;
-    let prevCoordinate = null; //for showGlider
+    let prevCell = null; //for showGlider
+    let orientations = ["NW", "NE", "SE", "SW"];
+    let curOrientation = 0;
     function createBoard(r, c) {
       let board = document.getElementById("game-of-life");
       for (let i = 0; i < r; i++) {
@@ -95,28 +99,27 @@
     function areCoordinatesValid(coordinates) {
       return coordinates[0] >= 0 && coordinates[1] >= 0 && coordinates[0] < boardWidth && coordinates[1] < boardHeight;
     }
-    function showGlider(cell) {
-      if (prevCoordinate + "" === cell.id) { //turns array into string so that they can be directly compared.
+    function rotateGlider() {
+      if (curOrientation < 3)
+        curOrientation++;
+      else
+        curOrientation = 0;
+    }
+    function showGlider(cell, refresh) {
+      if (prevCell + "" === cell.id && !refresh) { //turns array into string so that they can be directly compared.
         return;
       }
-      prevCoordinate = cell.id;
+      prevCell = cell;
       let transElements = document.querySelectorAll(".transparent"); //document.getElementsByClassName("transparent") didn't work for no reason.
       let cellSt = cell.id;
       let cellNumbers = cellSt.split(",");
       let cellX = parseInt(cellNumbers[0]);
       let cellY = parseInt(cellNumbers[1]);
       let clientCoordinates = [cellX, cellY];
-      let gliderPos = swapCoordinates(clientCoordinates)
-      let currentRotation = "NE"
-      let newPositions = [
-        [gliderPos[0], gliderPos[1] + 1],
-        [gliderPos[0] + 1, gliderPos[1] + 1],
-        [gliderPos[0] - 1, gliderPos[1]],
-        [gliderPos[0] + 1, gliderPos[1]],
-        [gliderPos[0] + 1, gliderPos[1] - 1]
-      ];
+      let gliderPos = swapCoordinates(clientCoordinates);      
+      let newPositions = shared.makeGliderPos(gliderPos, orientations[curOrientation]);
       for (i = 0; i < newPositions.length; i++) {
-        let coordinates = newPositions[i]//swapCoordinates(newPositions[i])
+        let coordinates = newPositions[i]; //swapCoordinates(newPositions[i])
         if (!areCoordinatesValid(coordinates)) {
           return;
         }
@@ -138,7 +141,7 @@
       let y = idArray[0];
       console.log("x: " + x + " y: " + y);
       //let cells = rows[i].querySelectorAll("td");
-      fetch("/gliders?x=" + x + "&y=" + y).then(response => {
+      fetch("/gliders?x=" + x + "&y=" + y + "&orientation=" + orientations[curOrientation]).then(response => {
         updateBoard();
       });
     }
@@ -156,9 +159,9 @@
     createBoard(boardWidth, boardHeight);
     fakeGlider();
     if (document.addEventListener) {
-      document.addEventListener('contextmenu', function (e) {
-        alert("You've tried to open context menu"); //here you draw your own menu
-        destroyGlider();
+      document.addEventListener('contextmenu', function (e) {        
+        rotateGlider();
+        showGlider(prevCell, true);
         e.preventDefault();
       }, false);
     }

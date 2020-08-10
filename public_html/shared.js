@@ -1,6 +1,7 @@
-//Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider
-//Postcondish: returns positions of cells needed to make glider
-function makeGliderPos(gliderPos, orientation) {
+(function (exports) { // https://caolan.uk/articles/writing-for-node-and-the-browser/
+  //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider
+  //Postcondish: returns positions of cells needed to make glider
+  function makeGliderPos(gliderPos, orientation) {
     newPositions = []; 
     switch(orientation) {
       case "SE":
@@ -42,5 +43,6 @@ function makeGliderPos(gliderPos, orientation) {
     }
     return newPositions;
   }
+  exports.makeGliderPos = makeGliderPos;
 
-exports.makeGliderPos = makeGliderPos;
+})(typeof exports === 'undefined'? this['shared']={}: exports);

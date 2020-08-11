@@ -177,23 +177,20 @@
       console.log(cell);
       let id = cell.id;
       idArray = id.split(',');
-      let x = idArray[0];
-      let y = idArray[1];
+      let x = parseInt(idArray[0]);
+      let y = parseInt(idArray[1]);
       console.log(x,y);
       let game = document.getElementById("game-of-life");
       let rows = game.querySelectorAll("tr");
-      console.log(game.rows[x-1].cells[y]);
-      console.log(game.rows[x-1].cells[y-1]);
-      console.log(game.rows[x-1].cells[y+1]);//undefined
-      // game.rows[x-1].cells[y-1].style="";
-      // game.rows[x-1].cells[y].style="";
-      // game.rows[x-1].cells[y+1].style="";
-      // game.rows[x].cells[y-1].style="";
-      // game.rows[x].cells[y].style="";
-      // game.rows[x].cells[y+1].style="";
-      // game.rows[x+1].cells[y-1].style="";
-      // game.rows[x+1].cells[y].style="";
-      // game.rows[x+1].cells[y+1].style="";
+      game.rows[x-1].cells[y-1].style="";
+      game.rows[x-1].cells[y].style="";
+      game.rows[x-1].cells[y+1].style="";
+      game.rows[x].cells[y-1].style="";
+      game.rows[x].cells[y].style="";
+      game.rows[x].cells[y+1].style="";
+      game.rows[x+1].cells[y-1].style="";
+      game.rows[x+1].cells[y].style="";
+      game.rows[x+1].cells[y+1].style="";
     }
 
     if (document.addEventListener) {

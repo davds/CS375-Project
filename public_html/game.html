@@ -116,7 +116,7 @@
       let cellX = parseInt(cellNumbers[0]);
       let cellY = parseInt(cellNumbers[1]);
       let clientCoordinates = [cellX, cellY];
-      let gliderPos = swapCoordinates(clientCoordinates);      
+      let gliderPos = swapCoordinates(clientCoordinates);
       let newPositions = shared.makeGliderPos(gliderPos, orientations[curOrientation]);
       for (i = 0; i < newPositions.length; i++) {
         let coordinates = newPositions[i]; //swapCoordinates(newPositions[i])
@@ -134,7 +134,7 @@
       }
     }
     function sendGlider(cell) { //TODO
-      console.log(cell);
+      //console.log(cell);
       let id = cell.id;
       idArray = id.split(',');
       let x = idArray[1];
@@ -143,6 +143,10 @@
       //let cells = rows[i].querySelectorAll("td");
       fetch("/gliders?x=" + x + "&y=" + y + "&orientation=" + orientations[curOrientation]).then(response => {
         updateBoard();
+        return response.json();
+      }).then(data => {
+        cell.classList.add(data.orientation);
+        console.log(data);
       });
     }
     function fakeGlider() {
@@ -153,30 +157,73 @@
         for (let j = 0; j < cells.length; j++) {
           cells[j].onclick = function (e) { sendGlider(cells[j]) }
           cells[j].onmousemove = function (e) { showGlider(cells[j]) }
-          
-          
         }
       }
     }
     createBoard(boardWidth, boardHeight);
     fakeGlider();
+
+    function hasGlider(cell) {
+      let orientation = cell.className;
+      if (orientation === "NW" || orientation === "NE" || orientation === "SW" || orientation === "SE") {
+        return true;
+      } else {
+        return false;
+      }
+      //console.log(orientation);
+    }
+
+    function destroyGlider(cell) {
+      console.log(cell);
+      let id = cell.id;
+      idArray = id.split(',');
+      let x = idArray[0];
+      let y = idArray[1];
+      console.log(x,y);
+      let game = document.getElementById("game-of-life");
+      let rows = game.querySelectorAll("tr");
+      console.log(game.rows[x-1].cells[y]);
+      console.log(game.rows[x-1].cells[y-1]);
+      console.log(game.rows[x-1].cells[y+1]);//undefined
+      // game.rows[x-1].cells[y-1].style="";
+      // game.rows[x-1].cells[y].style="";
+      // game.rows[x-1].cells[y+1].style="";
+      // game.rows[x].cells[y-1].style="";
+      // game.rows[x].cells[y].style="";
+      // game.rows[x].cells[y+1].style="";
+      // game.rows[x+1].cells[y-1].style="";
+      // game.rows[x+1].cells[y].style="";
+      // game.rows[x+1].cells[y+1].style="";
+    }
+
     if (document.addEventListener) {
-      document.addEventListener('contextmenu', function (e) {        
-        rotateGlider();
-        showGlider(prevCell, true);
+      document.addEventListener('contextmenu', function (e) {
+        if (hasGlider(prevCell)) {
+          destroyGlider(prevCell);
+        } else {
+          rotateGlider();
+          showGlider(prevCell, true);
+        }
         e.preventDefault();
       }, false);
     }
 
-    if (document.addEventListener) {
-            document.addEventListener('contextmenu', function (e) {
-              alert("You've tried to open context menu"); //here you draw your own menu
-              destroyGlider(cells[j]);
-              //e.preventDefault();
-            }, false)};
-    function destroyGlider(cell) {
-      console.log(cell + "destroyed");
-    }
+    // if (document.addEventListener) {
+    //         document.addEventListener('contextmenu', function (e) {
+    //           alert("You've tried to open context menu"); //here you draw your own menu
+    //           destroyGlider(cells[j]);
+    //           //e.preventDefault();
+    //         }, false)};
+    // function destroyGlider(cell) {
+    //   console.log(cell + "destroyed");
+    // }
+    // window.addEventListener("contextmenu", function(e) {
+    //   event.preventDefault();
+    //   var contextElement = document.getElementById("context-menu");
+    //   contextElement.style.top = e.offsetY + "px";
+    //   contextElement.style.left = e.offsetX + "px";
+    //   contextElement.classList.add("active");
+    // })
   </script>
 </body>
 

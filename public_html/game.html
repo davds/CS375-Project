@@ -22,6 +22,7 @@
   </table>
   <input type="button" value="Update" onclick="updateBoard()"/>
   <input type="button" value="Next" onclick="nextGen()"/>
+  <input type="button" value="Reset" onclick="resetBoard()"/>
   <script>
     function createBoard(r,c) {
       let board = document.getElementById("game-of-life");
@@ -43,8 +44,8 @@
       }).then(cell => {
           let rows = game.querySelectorAll("tr");
           for (let i = 0; i < cell.length; i++) {    
-            let cells = rows[cell[i].pos[0]].querySelectorAll("td");
-            cells[cell[i].pos[1]].style.cssText = cell[i].style;
+            let cells = rows[cell[i].pos[1]].querySelectorAll("td");
+            cells[cell[i].pos[0]].style.cssText = cell[i].style;
           }
       });
     }
@@ -57,6 +58,11 @@
           cells[j].style = "";
         }
       }
+    }
+    function resetBoard() {
+      fetch("/reset").then(response => {
+        updateBoard();
+      });
     }
     //testing (for now)
     function nextGen() {

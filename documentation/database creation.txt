@@ -1,8 +1,14 @@
-CREATE DATABASE cgod
+psql --username YOUR_USERNAME // Login to PostgreSQL
 
-CREATE TABLE users (
+CREATE DATABASE cgod; // Create new database 'cgod'
+
+\c cgod // Load database cgod
+
+CREATE TABLE users ( 
     username VARCHAR(20),
     email VARCHAR(254),
-    password CHAR(60)
+    password CHAR(60),
+    PRIMARY KEY (username),
+    UNIQUE (email)
 );
-
+ 

@@ -13,6 +13,28 @@
   <a href="/game.html">play</a>
   <a href="/login.html">login</a>
   <a href="/memoir.html">memoir</a>
-  <script></script>
+  <br><br>
+  <div id="account">
+    <p id="message"></p>
+    <p>Username: <strong id="username"></strong></p>
+    <p>Email: <b id="email"></b></p>
+    
+  </div>
+  <script>
+    let message = document.getElementById("message")
+    let username = document.getElementById("username")
+    let email = document.getElementById("email")
+    fetch("/home").then(function (response) {
+                return response.json()
+            }).then(function (data) {
+              console.log(data)
+              if (data.hasOwnProperty("message")){
+                message.textContent = data.message;
+              } else {
+                username.textContent = data.username;
+                //email.textContent = data.email
+              }
+            });
+  </script>
 </body>
 </html>

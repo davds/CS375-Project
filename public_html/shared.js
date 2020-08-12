@@ -46,5 +46,3 @@
   exports.makeGliderPos = makeGliderPos;
 
 })(typeof exports === 'undefined'? this['shared']={}: exports);
-
-

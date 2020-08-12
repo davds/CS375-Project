@@ -128,7 +128,7 @@
     //precondition: cell.id, which is a string with two coordinates separated by ","
     //postcondition: cell position array of two integers [x, y]. NOTE: this needs to be swapped using the swapCoordinates function later since cells are currently positioned as [y, x] in the cell id.
     function getCoordinatesFromCell(cellId) { 
-      let cellNumbers = cellSt.split(",");
+      let cellNumbers = cellId.split(",");
       let cellX = parseInt(cellNumbers[0]);
       let cellY = parseInt(cellNumbers[1]);
       let clientCoordinates = [cellX, cellY];
@@ -140,8 +140,8 @@
       if (prevCell != null && prevCell.id === cell.id && !refresh) {  
         return;
       }
-      let cellSt = cell.id;
-      let clientCoordinates = getCoordinatesFromCell(cellSt);
+      let cellId = cell.id;
+      let clientCoordinates = getCoordinatesFromCell(cellId);
       let gliderPos = swapCoordinates(clientCoordinates);       
       let newPositions = shared.makeGliderPos(gliderPos, orientations[curOrientation]);
       prevCell = cell;
@@ -188,9 +188,6 @@
         }
       }
     }
-    createBoard(boardWidth, boardHeight);
-    fakeGlider();
-
     function hasGlider(cell) {
       let orientation = cell.className;
       if (orientation === "NW" || orientation === "NE" || orientation === "SW" || orientation === "SE") {

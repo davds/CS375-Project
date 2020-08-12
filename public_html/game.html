@@ -147,7 +147,7 @@
     //precondition: cell.id, which is a string with two coordinates separated by ","
     //postcondition: cell position array of two integers [x, y]. NOTE: this needs to be swapped using the swapCoordinates function later since cells are currently positioned as [y, x] in the cell id.
     function getCoordinatesFromCell(cellId) { 
-      let cellNumbers = cellSt.split(",");
+      let cellNumbers = cellId.split(",");
       let cellX = parseInt(cellNumbers[0]);
       let cellY = parseInt(cellNumbers[1]);
       let clientCoordinates = [cellX, cellY];
@@ -159,8 +159,8 @@
       if (prevCell != null && prevCell.id === cell.id && !refresh) {  
         return;
       }
-      let cellSt = cell.id;
-      let clientCoordinates = getCoordinatesFromCell(cellSt);
+      let cellId = cell.id;
+      let clientCoordinates = getCoordinatesFromCell(cellId);
       let gliderPos = swapCoordinates(clientCoordinates);       
       let newPositions = shared.makeGliderPos(gliderPos, orientations[curOrientation]);
       prevCell = cell;
@@ -180,12 +180,12 @@
 
     function placeGlider(cell) {
       console.log("glider placed");
-      let id = cell.id;
-      idArray = id.split(',');
-      let x = idArray[1];
-      let y = idArray[0];
-      let testPlayer = new Player("test", "background-color: black");
-      shared.makeGlider([Number(x), Number(y)], orientations[curOrientation], testPlayer);
+      // let id = cell.id;
+      // idArray = id.split(',');
+      // let x = idArray[1];
+      // let y = idArray[0];
+      // let testPlayer = new Player("test", "background-color: black");
+      // shared.makeGlider([Number(x), Number(y)], orientations[curOrientation], testPlayer);
     }
 
     function sendGlider(cell) { //from server
@@ -213,13 +213,13 @@
       for (let i = 0; i < rows.length; i++) {
         let cells = rows[i].querySelectorAll("td");
         for (let j = 0; j < cells.length; j++) {
-          cells[j].onclick = function (e) { placeGlider(cells[j]) }
+          cells[j].onclick = function (e) { sendGlider(cells[j]) }
           cells[j].onmousemove = function (e) { showGlider(cells[j]) }
         }
       }
     }
     createBoard(boardWidth, boardHeight);
-    fakeGlider();
+    allowPlacement();
 
     function hasGlider(cell) {
       let orientation = cell.className;

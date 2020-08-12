@@ -218,9 +218,6 @@
         }
       }
     }
-    createBoard(boardWidth, boardHeight);
-    allowPlacement();
-
     function hasGlider(cell) {
       let orientation = cell.className;
       if (orientation === "NW" || orientation === "NE" || orientation === "SW" || orientation === "SE") {
@@ -264,7 +261,6 @@
     }
     createBoard(boardWidth, boardHeight);
     allowPlacement();
-
     // if (document.addEventListener) {
     //         document.addEventListener('contextmenu', function (e) {
     //           alert("You've tried to open context menu"); //here you draw your own menu

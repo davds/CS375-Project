@@ -7,6 +7,11 @@ const {Player, ActivePiece} = require("./classes.js");
 const {makeGliderPos} = require("../public_html/shared.js");
 const hostname = "localhost";
 const port = process.env.PORT || 3000;
+const server = require('http').createServer(app);
+const options = {
+  perMessageDeflate: false,
+};
+const io = require('socket.io')(server, options);
 
 app.use(express.json());
 app.use(express.static("../public_html"));

@@ -5,6 +5,7 @@ const express = require("express");
 const app = express();
 const {Player, ActivePiece} = require("./classes.js");
 const {makeGliderPos} = require("../public_html/shared.js");
+const hostname = "localhost";
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -316,12 +317,14 @@ app.get("/gliders", function(req, res) {
   console.log("gliders sent: x = " + x + ", y = " + y);
   let testPlayer = new Player("test", "background-color: black");
   makeGlider([Number(x),Number(y)], orientation, testPlayer);
-  res.sendStatus(200);
+  console.log({"orientation": orientation});
+  res.status(200);
+  res.json({"orientation": orientation});
 });
 
 
 
 app.listen(port, function() {
-  console.log(`Server listening on post: ${port}`)
+  console.log(`Server listening on post: http://${hostname}:${port}`)
 });
 

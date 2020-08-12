@@ -159,7 +159,7 @@
       }
     }
     function sendGlider(cell) { //TODO
-      console.log(cell);
+      //console.log(cell);
       let id = cell.id;
       idArray = id.split(',');
       let x = idArray[1];
@@ -169,6 +169,10 @@
       //let cells = rows[i].querySelectorAll("td");
       fetch("/gliders?x=" + x + "&y=" + y + "&orientation=" + orientations[curOrientation]).then(response => {
         updateBoard();
+        return response.json();
+      }).then(data => {
+        cell.classList.add(data.orientation);
+        console.log(data);
       });
     }
     //precondition: gamestate is such that the gliders should be placed.
@@ -184,28 +188,69 @@
         }
       }
     }
-    //overrides right click context menu to allow gliders to be rotated with right click.
+    createBoard(boardWidth, boardHeight);
+    fakeGlider();
+
+    function hasGlider(cell) {
+      let orientation = cell.className;
+      if (orientation === "NW" || orientation === "NE" || orientation === "SW" || orientation === "SE") {
+        return true;
+      } else {
+        return false;
+      }
+      //console.log(orientation);
+    }
+
+    function destroyGlider(cell) {
+      console.log(cell);
+      let id = cell.id;
+      idArray = id.split(',');
+      let x = parseInt(idArray[0]);
+      let y = parseInt(idArray[1]);
+      console.log(x,y);
+      let game = document.getElementById("game-of-life");
+      let rows = game.querySelectorAll("tr");
+      game.rows[x-1].cells[y-1].style="";
+      game.rows[x-1].cells[y].style="";
+      game.rows[x-1].cells[y+1].style="";
+      game.rows[x].cells[y-1].style="";
+      game.rows[x].cells[y].style="";
+      game.rows[x].cells[y+1].style="";
+      game.rows[x+1].cells[y-1].style="";
+      game.rows[x+1].cells[y].style="";
+      game.rows[x+1].cells[y+1].style="";
+    }
+
     if (document.addEventListener) {
-      document.addEventListener('contextmenu', function (e) {        
-        rotateGlider();
-        showGlider(prevCell, true);
+      document.addEventListener('contextmenu', function (e) {
+        if (hasGlider(prevCell)) {
+          destroyGlider(prevCell);
+        } else {
+          rotateGlider();
+          showGlider(prevCell, true);
+        }
         e.preventDefault();
       }, false);
     }
-    //destroys client sided gliders.
-    function destroyGlider(){
-      console.log("glider destroyed");
-      let game = document.getElementById("game-of-life");
-      let rows = game.querySelectorAll("tr");
-      for (let i = 0; i < rows.length; i++) {
-        let cells = rows[i].querySelectorAll("td");
-        for (let j = 0; j < cells.length; j++) {
-          cells[j].style = "";
-        }
-      }
-    }
     createBoard(boardWidth, boardHeight);
     allowPlacement();
+
+    // if (document.addEventListener) {
+    //         document.addEventListener('contextmenu', function (e) {
+    //           alert("You've tried to open context menu"); //here you draw your own menu
+    //           destroyGlider(cells[j]);
+    //           //e.preventDefault();
+    //         }, false)};
+    // function destroyGlider(cell) {
+    //   console.log(cell + "destroyed");
+    // }
+    // window.addEventListener("contextmenu", function(e) {
+    //   event.preventDefault();
+    //   var contextElement = document.getElementById("context-menu");
+    //   contextElement.style.top = e.offsetY + "px";
+    //   contextElement.style.left = e.offsetX + "px";
+    //   contextElement.classList.add("active");
+    // })
   </script>
 </body>
 

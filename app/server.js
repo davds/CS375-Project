@@ -34,8 +34,16 @@ app.get('/', function (req, res) {
   res.redirect('/home.html');
 })
 
+app.get('/home', (req, res) => {
+  if (req.session.loggedin) {
+    res.json({username: req.session.username})
+  } else {
+    res.json({message: "No user logged in"})
+  }
+})
+
 let tempEnv = require("../env.json");
-const { request } = require("express");
+const { request, response } = require("express");
 if (process.env._ && process.env._.indexOf("heroku"))
   tempEnv = require("../heroku.json");
 const env = tempEnv

@@ -36,6 +36,25 @@
   <input type="button" value="Rotate" onclick="rotateGlider()" />
   <script src="./shared.js"></script>
   <script>
+    class Player {
+      constructor(id, style, strength = 0) {
+        this.id = id;
+        this.style = style;
+        this.strength = strength;
+      }
+      getStyle() {
+        return this.style;
+      }
+      setStrength(strength) {
+        this.strength = strength;
+      }
+      getStrength() {
+        return this.strength;
+      }
+      getId() {
+        return this.id;
+      }
+    }
     let boardWidth = 25;
     let boardHeight = 25;
     let prevCell = null; //for showGlider
@@ -158,7 +177,18 @@
         cell.classList.add("transparent");
       }
     }
-    function sendGlider(cell) { //TODO
+
+    function placeGlider(cell) {
+      console.log("glider placed");
+      let id = cell.id;
+      idArray = id.split(',');
+      let x = idArray[1];
+      let y = idArray[0];
+      let testPlayer = new Player("test", "background-color: black");
+      shared.makeGlider([Number(x), Number(y)], orientations[curOrientation], testPlayer);
+    }
+
+    function sendGlider(cell) { //from server
       //console.log(cell);
       let id = cell.id;
       idArray = id.split(',');
@@ -183,8 +213,8 @@
       for (let i = 0; i < rows.length; i++) {
         let cells = rows[i].querySelectorAll("td");
         for (let j = 0; j < cells.length; j++) {
-          cells[j].onclick = function (e) {sendGlider(cells[j])}
-          cells[j].onmousemove = function (e) {showGlider(cells[j])}
+          cells[j].onclick = function (e) { placeGlider(cells[j]) }
+          cells[j].onmousemove = function (e) { showGlider(cells[j]) }
         }
       }
     }
@@ -204,18 +234,18 @@
       idArray = id.split(',');
       let x = parseInt(idArray[0]);
       let y = parseInt(idArray[1]);
-      console.log(x,y);
+      console.log(x, y);
       let game = document.getElementById("game-of-life");
       let rows = game.querySelectorAll("tr");
-      game.rows[x-1].cells[y-1].style="";
-      game.rows[x-1].cells[y].style="";
-      game.rows[x-1].cells[y+1].style="";
-      game.rows[x].cells[y-1].style="";
-      game.rows[x].cells[y].style="";
-      game.rows[x].cells[y+1].style="";
-      game.rows[x+1].cells[y-1].style="";
-      game.rows[x+1].cells[y].style="";
-      game.rows[x+1].cells[y+1].style="";
+      game.rows[x - 1].cells[y - 1].style = "";
+      game.rows[x - 1].cells[y].style = "";
+      game.rows[x - 1].cells[y + 1].style = "";
+      game.rows[x].cells[y - 1].style = "";
+      game.rows[x].cells[y].style = "";
+      game.rows[x].cells[y + 1].style = "";
+      game.rows[x + 1].cells[y - 1].style = "";
+      game.rows[x + 1].cells[y].style = "";
+      game.rows[x + 1].cells[y + 1].style = "";
     }
 
     if (document.addEventListener) {

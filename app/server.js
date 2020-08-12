@@ -1,9 +1,11 @@
+//leo was here
 const pg = require("pg");
 const bcrypt = require("bcrypt");
 const express = require("express");
 const app = express();
 const {Player, ActivePiece} = require("./classes.js");
-const {makeGliderPos} = require("./shared.js");
+const {makeGliderPos} = require("../public_html/shared.js");
+const hostname = "localhost";
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -304,17 +306,25 @@ app.get("/step", function(req, res) {
 
 app.get("/reset", function(req, res) {
   initTestBoard()
-  res.sendStatus(200);
+  
 });
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
-app.post("/gliders", function(req, res) {
-  return
+app.get("/gliders", function(req, res) {
+  let x = req.query.x;
+  let y = req.query.y;
+  let orientation = req.query.orientation;
+  console.log("gliders sent: x = " + x + ", y = " + y);
+  let testPlayer = new Player("test", "background-color: black");
+  makeGlider([Number(x),Number(y)], orientation, testPlayer);
+  console.log({"orientation": orientation});
+  res.status(200);
+  res.json({"orientation": orientation});
 });
 
 
 
 app.listen(port, function() {
-  console.log(`Server listening on post: ${port}`)
+  console.log(`Server listening on post: http://${hostname}:${port}`)
 });
 

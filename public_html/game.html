@@ -159,8 +159,8 @@
       if (prevCell != null && prevCell.id === cell.id && !refresh) {  
         return;
       }
-      let cellSt = cell.id;
-      let clientCoordinates = getCoordinatesFromCell(cellSt);
+      let cellId = cell.id;
+      let clientCoordinates = getCoordinatesFromCell(cellId);
       let gliderPos = swapCoordinates(clientCoordinates);       
       let newPositions = shared.makeGliderPos(gliderPos, orientations[curOrientation]);
       prevCell = cell;

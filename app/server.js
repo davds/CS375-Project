@@ -18,12 +18,12 @@ app.use(express.static("../public_html"));
 
 app.get('/', function (req, res) {
   res.redirect('/home.html');
-})
+});
 
 let tempEnv = require("../env.json");
 if (process.env._ && process.env._.indexOf("heroku"))
   tempEnv = require("../heroku.json");
-const env = tempEnv
+const env = tempEnv;
 
 const Pool = pg.Pool;
 const pool = new Pool(env);

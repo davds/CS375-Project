@@ -11,7 +11,7 @@ const server = require('http').createServer(app);
 const options = {
   perMessageDeflate: false,
 };
-const io = require('socket.io')(server, options);
+const io = require('socket.io').listen(server, options);
 
 app.use(express.json());
 app.use(express.static("../public_html"));
@@ -93,6 +93,10 @@ app.post("/auth", (req, res) => {
     console.log(`AUTHENTICATION QUERY FAILED FOR '${username}'\n` + error);
     res.status(500).send(error);
   });
+});
+
+io.on("connect", socket => {
+  console.log("Connected!");
 });
 
 
@@ -329,7 +333,7 @@ app.get("/gliders", function(req, res) {
 
 
 
-app.listen(port, function() {
+server.listen(port, function() {
   console.log(`Server listening on post: http://${hostname}:${port}`)
 });
 

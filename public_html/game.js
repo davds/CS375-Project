@@ -18,8 +18,6 @@ class Player {
     }
 }
 
-const socket = io();
-
 let boardWidth = 25;
 let boardHeight = 25;
 let prevCell = null; //for showGlider

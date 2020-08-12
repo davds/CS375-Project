@@ -34,26 +34,17 @@
   <input type="button" value="Next" onclick="nextGen()" />
   <input type="button" value="Reset" onclick="resetBoard()" />
   <input type="button" value="Rotate" onclick="rotateGlider()" />
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="./shared.js"></script>
   <script src="game.js"></script>
   <script>
     
+    const socket = io();
 
-    // if (document.addEventListener) {
-    //         document.addEventListener('contextmenu', function (e) {
-    //           alert("You've tried to open context menu"); //here you draw your own menu
-    //           destroyGlider(cells[j]);
-    //           //e.preventDefault();
-    //         }, false)};
-    // function destroyGlider(cell) {
-    //   console.log(cell + "destroyed");
-    // }
-    // window.addEventListener("contextmenu", function(e) {
-    //   event.preventDefault();
-    //   var contextElement = document.getElementById("context-menu");
-    //   contextElement.style.top = e.offsetY + "px";
-    //   contextElement.style.left = e.offsetX + "px";
-    //   contextElement.classList.add("active");
-    // })
+    socket.on("connect", function(data) {
+        socket.emit("join", "hello");
+    });
+
   </script>
 </body>
 

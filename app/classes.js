@@ -61,12 +61,7 @@ class GameSession {
 		delete players[id];
 	}
 	playerIn(id) {
-		if (id in players) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return (id in this.players);
 	}
 	getActivePieces() {
 		return this.activePieces;

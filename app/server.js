@@ -204,7 +204,7 @@ function nextGeneration(room) {
       }
     }
   }
-  tempCells = checkCollision(contestedPositions, tempCells);
+  tempCells = checkCollision(contestedPositions, tempCells, room);
   //Replace current generation with next.
   gameSessions[room].clearActivePieces();
   for (var pos in tempCells) {

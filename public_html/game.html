@@ -41,8 +41,13 @@
     
     const socket = io();
 
-    socket.on("connect", function(data) {
-        socket.emit("join", "hello");
+    socket.on('connect', () => {
+      console.log("Connected");
+    });
+
+    socket.on('next', (data) => {
+      console.log("Event Recieved.");
+      updateBoard();
     });
 
   </script>

@@ -95,11 +95,6 @@ app.post("/auth", (req, res) => {
   });
 });
 
-io.on("connect", socket => {
-  console.log("Connected!");
-});
-
-
 let activePieces = [];
 let players = [];
 function initTestBoard() {
@@ -331,7 +326,10 @@ app.get("/gliders", function(req, res) {
   res.json({"orientation": orientation});
 });
 
-
+io.on("connect", socket => {
+  console.log("Connected!");
+  socket.emit('next', 'hello');
+});
 
 server.listen(port, function() {
   console.log(`Server listening on post: http://${hostname}:${port}`)

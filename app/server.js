@@ -27,7 +27,7 @@ app.get("/login_test", (req, res) => {
 app.get("/logout", (req, res) => {
   req.session.loggedin = false;
   req.session.username = "";
-  res.status(200).send();
+  res.status(200).send('Logged out');
 });
 
 app.get('/', function (req, res) {

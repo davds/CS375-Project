@@ -13,6 +13,7 @@
   <a href="/game.html">play</a>
   <a href="/login.html">login</a>
   <a href="/memoir.html">memoir</a>
+  <a id="logout" hidden="true" href="/logout">logout</a>
   <br><br>
   <div id="account">
     <p id="message"></p>
@@ -32,6 +33,7 @@
                 message.textContent = data.message;
               } else {
                 username.textContent = data.username;
+                document.getElementById("logout").hidden = false;
                 //email.textContent = data.email
               }
             });

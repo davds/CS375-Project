@@ -334,14 +334,13 @@ function phaseOne(room) {
   io.to(room).emit('phaseOne', room);
 }
 
-
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
 app.post("/gliders", function(req, res) {
   let user = req.body.id;
   let gliders = req.body.gliders;
   let room = req.body.room;
   if (gameSessions[room].playerIn(user)) {
-    makeGliderPos(gliders, user, room);
+    makeGliders(gliders, user, room);
     res.send(200);
   }
   else {

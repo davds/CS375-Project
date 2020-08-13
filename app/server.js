@@ -3,7 +3,7 @@ const pg = require("pg");
 const bcrypt = require("bcrypt");
 const express = require("express");
 const app = express();
-const {Player, ActivePiece} = require("./classes.js");
+const {Player, ActivePiece, GameSession} = require("./classes.js");
 const {makeGliderPos} = require("../public_html/shared.js");
 const hostname = "localhost";
 const port = process.env.PORT || 3000;
@@ -12,6 +12,7 @@ const options = {
   perMessageDeflate: false,
 };
 const io = require('socket.io').listen(server, options);
+let gameSessions = {};
 
 app.use(express.json());
 app.use(express.static("../public_html"));
@@ -94,6 +95,27 @@ app.post("/auth", (req, res) => {
     res.status(500).send(error);
   });
 });
+
+function addPlayer(username, style) {
+  //Create player object
+  let player = new Player(username, style);
+  //See if a game session exists
+  if (gameSessions.length == 0) {
+    let session = new GameSession('room1');
+    session.addPlayer(player);
+    gameSessions[session.getRoom()] = session;
+
+  }
+  //See if a new session needs to be made
+  else if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4){
+    let session = new GameSession(`room${gameSessions.length + 1}`);
+    session.addPlayer(player);
+    gameSessions[session.getRoom()] = session;
+  }
+  else {
+    gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].addPlayer(player);
+  }
+}
 
 let activePieces = [];
 let players = [];

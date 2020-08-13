@@ -38,9 +38,9 @@ class ActivePiece {
 }
 
 class GameSession {
-	constructor(roomName, player) {
+	constructor(roomName) {
 		this.roomName = roomName;
-		this.players = [player];
+		this.players = [];
 	}
 	getRoom() {
 		return this.roomName;

@@ -37,5 +37,31 @@ class ActivePiece {
 	}
 }
 
+class GameSession {
+	constructor(roomName, player) {
+		this.roomName = roomName;
+		this.players = [player];
+	}
+	getRoom() {
+		return this.roomName;
+	}
+	addPlayer(player) {
+		this.players.push(player);
+	}
+	getNumPlayers() {
+		return this.players.length;
+	}
+	removePlayer(id) {
+		for (let i = 0; i < this.getNumPlayers(); i++) {
+			if (this.players[i].getId() == id) {
+				this.players.splice(i,1);
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
 exports.Player = Player;
 exports.ActivePiece = ActivePiece;
+exports.GameSession = GameSession;

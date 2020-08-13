@@ -96,6 +96,8 @@ app.post("/auth", (req, res) => {
   });
 });
 
+//Precondish: takes a username and the css styling of their cells
+//Postcondish: adds the player to an existing session object or creates a new one for them
 function addPlayer(username, style) {
   //Create player object
   let player = new Player(username, style);
@@ -104,7 +106,6 @@ function addPlayer(username, style) {
     let session = new GameSession('room1');
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
-
   }
   //See if a new session needs to be made
   else if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4){
@@ -114,6 +115,9 @@ function addPlayer(username, style) {
   }
   else {
     gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].addPlayer(player);
+    if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4) {
+      startGame(Object.keys(gameSessions)[Object.keys(gameSessions).length-1]);
+    }
   }
 }
 
@@ -232,7 +236,6 @@ function nextGeneration() {
   setPlayerStats();
 }
 
-
 // ;)
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
@@ -335,17 +338,23 @@ app.get("/reset", function(req, res) {
   
 });
 
+function startGame(room) {
+  io.to(room).emit('countdown', room);
+  timer = setTimeout(phaseOne, 30000, room);
+}
+
+function phaseOne(room) {
+  io.to(room).emit('phaseOne', room);
+}
+
+
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
-app.get("/gliders", function(req, res) {
-  let x = req.query.x;
-  let y = req.query.y;
-  let orientation = req.query.orientation;
-  console.log("gliders sent: x = " + x + ", y = " + y);
-  let testPlayer = new Player("test", "background-color: black");
-  makeGlider([Number(x),Number(y)], orientation, testPlayer);
-  console.log({"orientation": orientation});
-  res.status(200);
-  res.json({"orientation": orientation});
+app.post("/gliders", function(req, res) {
+  let user = req.body.id;
+  let gliders = req.body.gliders;
+  let room = req.body.room;
+  
+
 });
 
 io.on("connect", socket => {

@@ -23,6 +23,7 @@ app.get("/user", (req, res) => {
 app.get("/logout", (req, res) => {
   req.session.loggedin = false;
   req.session.username = null;  
+  req.session.email = null; 
   res.redirect('/home.html');
 });
 
@@ -32,9 +33,9 @@ app.get('/', function (req, res) {
 
 app.get('/home', (req, res) => {
   if (req.session.loggedin) {
-    res.json({username: req.session.username})
+    res.json({username: req.session.username, email: req.session.email});
   } else {
-    res.json({message: "No user logged in"})
+    res.json({message: "No user logged in"});
   }
 })
 
@@ -91,16 +92,18 @@ app.post("/auth", (req, res) => {
   const username = req.body.username;
   const plaintextPassword = req.body.plaintextPassword;
   
-  pool.query("SELECT password FROM users WHERE username = $1", [username]).then(response => {
+  pool.query("SELECT password, email FROM users WHERE username = $1", [username]).then(response => {
     if (response.rows.length === 0) {
       return res.status(401).send("Invalid username/password");
     }
     const password = response.rows[0].password;
+    const email = response.rows[0].email;
     bcrypt.compare(plaintextPassword, password).then(match => {
       if (match) {
         console.log(`AUTHENTICATING USER '${username}'`);
         req.session.loggedin = true;
         req.session.username = username;
+        req.session.email = email;
         res.status(200).send("Logged in");
       } else {
         console.log(`INCORRECT PASSWORD PROVIDED FOR '${username}'`);

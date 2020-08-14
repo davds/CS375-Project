@@ -45,8 +45,8 @@
       console.log("Connected");
     });
 
-    socket.on('next', (data) => {
-      console.log("Event Recieved.");
+    socket.on('phaseOne', (data) => {
+      console.log("Phase One Starting.");
       updateBoard();
     });
 

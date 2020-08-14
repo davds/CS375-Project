@@ -306,6 +306,8 @@ function makeCell(pos, player, room) {
 
 //GET handler for sending client a JSON body of active cell objects
 app.get("/cells", function(req, res) {
+  let room = req.query.room;
+  let activePieces = gameSessions[room].getActivePieces();
   let resActivePieces = [];
   for (i in activePieces) {
     resActivePieces.push({ "pos": activePieces[i].getPos(), "style": activePieces[i].getStyle() });

@@ -23,17 +23,43 @@ let boardHeight = 25;
 let prevCell = null; //for showGlider
 let orientations = ["NW", "NE", "SE", "SW"];
 let curOrientation = 0;
+
+
+//precondition: the board has not been made yet.
+//postcondition: a horizontal and vertical line appear on the board.
+function createQuadrantLines() {
+    let board = document.getElementById("game-of-life");
+    let padding = 10 //cell padding
+    //vertical line
+    let vl = document.createElement("div");
+    vl.classList.add("vl");
+    let height = (padding*2+1)*boardHeight; //each cell extends (2*10)px high from padding + 1px from border. 
+    let xPos = padding*boardWidth; 
+    vl.style.height = height+"px";
+    vl.style["margin-left"] = xPos + "px";
+    //horizontal line
+    let hr = document.createElement("hr");
+    let width = (padding*2+1)*boardWidth;
+    let yPos = padding*boardHeight
+    hr.style["width"] = width + "px"
+    hr.style["margin-top"] = yPos + "px";
+    board.append(vl);
+    board.append(hr);
+}
 function createBoard(r, c) {
     let board = document.getElementById("game-of-life");
+    createQuadrantLines();
     for (let i = 0; i < r; i++) {
         let row = document.createElement("tr");
         board.append(row);
         for (let j = 0; j < c; j++) {
-        let col = document.createElement("td");
-        col.id = `${i},${j}`;
-        row.append(col);
+            let col = document.createElement("td");
+            col.id = `${i},${j}`;
+            row.append(col);
         }
     }
+    //creates quadrant lines
+
 }
 
 function updateBoard() {
@@ -44,8 +70,8 @@ function updateBoard() {
     }).then(cell => {
         let rows = game.querySelectorAll("tr");
         for (let i = 0; i < cell.length; i++) {
-        let cells = rows[cell[i].pos[1]].querySelectorAll("td");
-        cells[cell[i].pos[0]].style.cssText = cell[i].style;
+            let cells = rows[cell[i].pos[1]].querySelectorAll("td");
+            cells[cell[i].pos[0]].style.cssText = cell[i].style;
         }
     });
 }
@@ -56,7 +82,7 @@ function clearBoard() {
     for (let i = 0; i < rows.length; i++) {
         let cells = rows[i].querySelectorAll("td");
         for (let j = 0; j < cells.length; j++) {
-        cells[j].style = "";
+            cells[j].style = "";
         }
     }
 }
@@ -138,7 +164,7 @@ function showGlider(cell, refresh) {
     for (i = 0; i < newPositions.length; i++) { 
         let coordinates = newPositions[i]; 
         if (!areCoordinatesValid(coordinates)) {
-        return;
+            return;
         }
     }
     for (i = 0; i < newPositions.length; i++) {
@@ -184,8 +210,8 @@ function allowPlacement() {
     for (let i = 0; i < rows.length; i++) {
         let cells = rows[i].querySelectorAll("td");
         for (let j = 0; j < cells.length; j++) {
-        cells[j].onclick = function (e) { sendGlider(cells[j]) }
-        cells[j].onmousemove = function (e) { showGlider(cells[j]) }
+            cells[j].onclick = function (e) { sendGlider(cells[j]) }
+            cells[j].onmousemove = function (e) { showGlider(cells[j]) }
         }
     }
 }

@@ -18,8 +18,57 @@ class Player {
     }
 }
 
-let boardWidth = 25;
-let boardHeight = 25;
+//linked list nodes for cycling through orientations
+class Orientation {
+    constructor(orientation, next = null) {
+        this.orientation = orientation;
+        this.next = next;
+    }
+    getOrientation() {
+        return this.orientation;
+    }
+    getNext() {
+        return this.next;
+    }
+    setNext(next) {
+        this.next = next;
+    }
+}
+
+let orientations = {
+    "SW": new Orientation("SW"),
+    "SE": new Orientation("SE", SW),
+    "NE": new Orientation("NE", SE),
+    "NW": new Orientation("NW", NW)
+}
+orientations["SW"].setNext(NW);
+
+class Glider {
+    constructor(centerPos, orientation) {
+        this.centerPos = centerPos;
+        this.orientation = orientation;
+    }
+    changeOrientation() {
+        this.orientation = orientation.getNext();
+    }
+    getOrientation() {
+        return orientation.getOrientation();
+    }
+    getCenterPos() {
+        return this.centerPos;
+    }
+}
+
+
+let allowBoardInput = false;
+let baseTableDim = [99,99];
+let gameBoard = document.getElementById("game-of-life");
+let boardCells = {};
+for (let i = 0; i < baseTableDim[0]; i++) {
+    for (let j = 0; j < baseTableDim[1]; j++) {
+        boardCells[`${i}:${j}`] = {"style": "", "inBounds": true};
+    }
+}
 let prevCell = null; //for showGlider
 let orientations = ["NW", "NE", "SE", "SW"];
 let curOrientation = 0;
@@ -62,28 +111,33 @@ function createBoard(r, c) {
 
 }
 
-function updateBoard() {
-    let game = document.getElementById("game-of-life");
+function getBoard(room) {
     clearBoard();
-    fetch("/cells").then(response => {
+    fetch(`/cells?room=${room}`).then(response => {
         return response.json();
-    }).then(cell => {
-        let rows = game.querySelectorAll("tr");
-        for (let i = 0; i < cell.length; i++) {
-            let cells = rows[cell[i].pos[1]].querySelectorAll("td");
-            cells[cell[i].pos[0]].style.cssText = cell[i].style;
+    }).then(data => {
+        for (let i = 0; i < data.length; i++) {
+            let x = data[i].pos[0];
+            let y = data[i].pos[1];
+            boardCells[`${x}:${y}`].style = data[i].style;
         }
+        drawBoard();
     });
 }
 
-function clearBoard() {
-    let game = document.getElementById("game-of-life");
-    let rows = game.querySelectorAll("tr");
-    for (let i = 0; i < rows.length; i++) {
+function drawBoard() {
+    let rows = gameBoard.querySelectorAll("tr");
+    for (let i = 0; i < baseTableDim[0].length; i++) {
         let cells = rows[i].querySelectorAll("td");
-        for (let j = 0; j < cells.length; j++) {
-            cells[j].style = "";
+        for (let j = 0; j < baseTableDim[1].length; j++) {
+            cells[j].style = boardCells[`${i}:${j}`].style
         }
+    }
+}
+
+function clearBoard() {
+    for (let coord in boardCells) {
+        boardCells[coord].style = "";
     }
 }
 
@@ -184,7 +238,7 @@ function placeGlider(cell) {
     // shared.makeGlider([Number(x), Number(y)], orientations[curOrientation], testPlayer);
 }
 
-function sendGlider(cell) { //from server
+function sendGliders() { //from server
     //console.log(cell);
     let id = cell.id;
     idArray = id.split(',');

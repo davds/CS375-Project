@@ -38,27 +38,48 @@ class ActivePiece {
 }
 
 class GameSession {
-	constructor(roomName) {
+	constructor(roomName, coords=[[0,99],[0,99]]) {
 		this.roomName = roomName;
-		this.players = [];
+		this.players = {};
+		this.activePieces = [];
+		this.dimensions = {};
+		this.setDimensions(coords);
 	}
 	getRoom() {
 		return this.roomName;
 	}
+	getPlayers() {
+		return this.players;
+	}
 	addPlayer(player) {
-		this.players.push(player);
+		this.players[player.getId()] = player;
 	}
 	getNumPlayers() {
 		return this.players.length;
 	}
 	removePlayer(id) {
-		for (let i = 0; i < this.getNumPlayers(); i++) {
-			if (this.players[i].getId() == id) {
-				this.players.splice(i,1);
-				return true;
-			}
-		}
-		return false;
+		delete players[id];
+	}
+	playerIn(id) {
+		return (id in this.players);
+	}
+	getActivePieces() {
+		return this.activePieces;
+	}
+	addActivePiece(cell) {
+		this.activePieces.push(cell);
+	}
+	clearActivePieces(cells) {
+		this.activePieces.length = 0;
+	}
+	setDimensions(coords) {
+		this.dimensions["xMin"] = coords[0][0];
+		this.dimensions["xMax"] = coords[0][1];
+		this.dimensions["yMin"] = coords[1][0];
+		this.dimensions["yMax"] = coords[1][1];
+	}
+	getDimensions() {
+		return this.dimensions;
 	}
 }
 

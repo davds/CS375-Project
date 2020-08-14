@@ -96,6 +96,8 @@ app.post("/auth", (req, res) => {
   });
 });
 
+//Precondish: takes a username and the css styling of their cells
+//Postcondish: adds the player to an existing session object or creates a new one for them
 function addPlayer(username, style) {
   //Create player object
   let player = new Player(username, style);
@@ -104,7 +106,6 @@ function addPlayer(username, style) {
     let session = new GameSession('room1');
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
-
   }
   //See if a new session needs to be made
   else if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4){
@@ -114,36 +115,16 @@ function addPlayer(username, style) {
   }
   else {
     gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].addPlayer(player);
+    if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4) {
+      startGame(Object.keys(gameSessions)[Object.keys(gameSessions).length-1]);
+    }
   }
 }
 
-let activePieces = [];
-let players = [];
-function initTestBoard() {
-  //Representation of game board
-  let testPlayer = new Player("test", "background-color: black");
-  let testPiece = new ActivePiece([0,0], testPlayer);
-  let testPlayer2 = new Player("test2", "background-color: red");
-  let testPiece2 = new ActivePiece([0,1], testPlayer2);
-  activePieces = [testPiece, testPiece2];
-  players = [testPlayer, testPlayer2];
-  makeGlider([4,10], "SE", testPlayer);
-  makeGlider([9,10], "SW", testPlayer2);
-}
-initTestBoard()
-
-let dimensions = {};
-function setDimensions(coords) {
-  dimensions["xMin"] = coords[0][0];
-  dimensions["xMax"] = coords[0][1];
-  dimensions["yMin"] = coords[1][0];
-  dimensions["yMax"] = coords[1][1];
-}
-setDimensions([[0,24],[0,24]]);
-
 //Precondish: duble with x, y coords of a cell
 //Postcondish: if cell is alive, return owner, otherwise returns Null
-function isAlive(pos) {
+function isAlive(pos, room) {
+  let activePieces = gameSessions[room].getActivePieces();
   for (let i = 0; i < activePieces.length; i++) {
     if (activePieces[i].getPos()[0] == pos[0] && activePieces[i].getPos()[1] == pos[1]) {
       return activePieces[i].getOwner();
@@ -154,7 +135,8 @@ function isAlive(pos) {
 
 //Precondish: takes an x, y coordinate
 //Postcondish: returns true if this is a valid cell in bounds of the table
-function inBounds(xPos, yPos) {
+function inBounds(xPos, yPos, room) {
+  let dimensions = gameSessions[room].getDimensions();
   if (xPos >= dimensions["xMin"] && xPos <= dimensions["xMax"]) {
     if (yPos >= dimensions["yMin"] && yPos <= dimensions["yMax"]) {
       return true;
@@ -165,7 +147,8 @@ function inBounds(xPos, yPos) {
 
 //Precondish: array of current active cell objects must be initialized
 //Postcondish: doesn't return anything, replaces the activePieces array with the next generation of living cells
-function nextGeneration() {
+function nextGeneration(room) {
+  let activePieces = gameSessions[room].getActivePieces();
   let tempCells = {};
   let contestedPositions = {};
   for (let cell = 0; cell < activePieces.length; cell++) {
@@ -175,7 +158,7 @@ function nextGeneration() {
     //Check the 3x3 box around each living cell if any dead cells will be alive in the next generation
     for (let i = xPos - 1; i <= xPos + 1; i++) {
       for (let j = yPos - 1; j <= yPos + 1; j++) {
-        if (isAlive([i,j]) != owner && inBounds(i, j)) {
+        if (isAlive([i,j]) != owner && inBounds(i, j, room)) {
           neighbors = countLiveNeighbors([i,j], owner);
           if (neighbors == 3) {
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
@@ -199,7 +182,7 @@ function nextGeneration() {
       }
     }
     //Check if the current cell will be alive in the next generation
-    if (inBounds(xPos, yPos)) {
+    if (inBounds(xPos, yPos, room)) {
       neighbors = countLiveNeighbors([xPos, yPos], owner);
       if (neighbors == 2 || neighbors == 3) {
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
@@ -221,17 +204,16 @@ function nextGeneration() {
       }
     }
   }
-  tempCells = checkCollision(contestedPositions, tempCells);
+  tempCells = checkCollision(contestedPositions, tempCells, room);
   //Replace current generation with next.
-  activePieces.length = 0;
+  gameSessions[room].clearActivePieces();
   for (var pos in tempCells) {
     if (tempCells[pos] != null) {
-      activePieces.push(tempCells[pos]);
+      gameSessions[room].addActivePiece(tempCells[pos]);
     }
   }
   setPlayerStats();
 }
-
 
 // ;)
 function getRandomInt(max) {
@@ -256,24 +238,31 @@ function countLiveNeighbors(pos, player) {
 
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider, and a player object
 //Postcondish: doesn't return anything, adds appropriate active cells objects to active pieces array
-function makeGlider(gliderPos, orientation, player) {
-  let newPositions = makeGliderPos(gliderPos, orientation);
-  for (let i = 0; i < newPositions.length; i++) {
-    makeCell(newPositions[i], player);
+function makeGliders(gliders, player, room) {
+  for (let i = 0; i < gliders.length; i++) {
+    pos = gliders[i].pos;
+    orinetation = gliders[i].orientation;
+    let newPositions = makeGliderPos(pos, orientation);
+    for (let j = 0; j < newPositions.length; j++) {
+      makeCell(newPositions[j], player, room);
+    }
   }
 }
 
 //Precondish: must be active cells in activePieces array
 //Postcondish: sets the strength stats for all players with active cells
-function setPlayerStats() {
-  for (let i = 0; i < players.length; i++) {
+function setPlayerStats(room) {
+  let players = gameSessions[room].getPlayers();
+  let activePieces = gameSessions[room].getActivePieces();
+  for (let id in players) {
+    player = players[id];
     strength = 0;
-    for (let j = 0; j < activePieces.length; j++) {
-      if (activePieces[j].getOwner() == players[i]) { 
+    for (let i = 0; i < activePieces.length; i++) {
+      if (activePieces[j].getOwner() == id) { 
         strength ++;
       }
     }
-    players[i].setStrength(strength);
+    player.setStrength(strength);
   }
 }
 
@@ -309,14 +298,16 @@ function checkCollision(contestedPositions, cells) {
 }
 
 //Precondish: duble with x, y coords of a cell, an owner
-//Postcondish: doesn't return anything, makes a new cell object and appends it to the activePieces array
-function makeCell(pos, player) {
+//Postcondish: doesn't return anything, makes a new cell object and appends it to the activePieces array for the corresponding game session
+function makeCell(pos, player, room) {
   newCell = new ActivePiece(pos, player);
-  activePieces.push(newCell);
+  gameSessions[room].addActivePiece(newCell);
 }
 
 //GET handler for sending client a JSON body of active cell objects
 app.get("/cells", function(req, res) {
+  let room = req.query.room;
+  let activePieces = gameSessions[room].getActivePieces();
   let resActivePieces = [];
   for (i in activePieces) {
     resActivePieces.push({ "pos": activePieces[i].getPos(), "style": activePieces[i].getStyle() });
@@ -335,17 +326,31 @@ app.get("/reset", function(req, res) {
   
 });
 
+//Sequence of game events
+function startGame(room) {
+  io.to(room).emit('countdown', room);
+  timer = setTimeout(phaseOne, 30000, room);
+}
+
+function phaseOne(room) {
+  io.to(room).emit('phaseOne', room);
+}
+
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
-app.get("/gliders", function(req, res) {
-  let x = req.query.x;
-  let y = req.query.y;
-  let orientation = req.query.orientation;
-  console.log("gliders sent: x = " + x + ", y = " + y);
-  let testPlayer = new Player("test", "background-color: black");
-  makeGlider([Number(x),Number(y)], orientation, testPlayer);
-  console.log({"orientation": orientation});
-  res.status(200);
-  res.json({"orientation": orientation});
+app.post("/gliders", function(req, res) {
+  let user = req.body.id;
+  let gliders = req.body.gliders;
+  let room = req.body.room;
+  if (gameSessions[room].playerIn(user)) {
+    makeGliders(gliders, user, room);
+    res.send(200);
+  }
+  else {
+    res.send(404);
+  }
+}).catch(function(error) {
+  console.log(error);
+  res.send(501);
 });
 
 io.on("connect", socket => {

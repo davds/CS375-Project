@@ -16,18 +16,14 @@ app.use(session({ //https://codeshack.io/basic-login-system-nodejs-express-mysql
   saveUninitialized: true
 }));
 
-app.get("/login_test", (req, res) => {
-  if (req.session.loggedin) {
-    res.send("User '" + req.session.username + "' is currently logged in.");
-  } else {
-    res.send("No user is currently logged in.");
-  }
+app.get("/user", (req, res) => {
+  res.json({ loggedIn: req.session.loggedin, username: req.session.username });
 });
 
 app.get("/logout", (req, res) => {
   req.session.loggedin = false;
-  req.session.username = "";
-  res.status(200).send('Logged out');
+  req.session.username = null;  
+  res.redirect('/home.html');
 });
 
 app.get('/', function (req, res) {

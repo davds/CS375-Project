@@ -57,22 +57,22 @@ class Glider {
     getCenterPos() {
         return this.centerPos;
     }
-    getActiveCells() {
+    getActiveCoordinates() {
         return shared.makeGliderPos(this.centerPos, this.orientation);
     }
-    getOccupyingCells() { //3x3 grid, 9 cells total that cannot have other cells on it.
-        let cells = [];
+    getOccupyingCoordinates() { //3x3 grid, 9 cells total that cannot have other cells on it.
+        let coordinates = [];
         let cp = this.getCenterPos();
-        cells.push([cp[0], cp[1]]);
-        cells.push([cp[0]+1, cp[1]]);
-        cells.push([cp[0]-1, cp[1]]);
-        cells.push([cp[0], cp[1]+1]);
-        cells.push([cp[0], cp[1]-1]);
-        cells.push([cp[0]+1, cp[1]+1]);
-        cells.push([cp[0]+1, cp[1]-1]);
-        cells.push([cp[0]-1, cp[1]+1]);
-        cells.push([cp[0]-1, cp[1]-1]); 
-        return cells;
+        coordinates.push([cp[0], cp[1]]);
+        coordinates.push([cp[0]+1, cp[1]]);
+        coordinates.push([cp[0]-1, cp[1]]);
+        coordinates.push([cp[0], cp[1]+1]);
+        coordinates.push([cp[0], cp[1]-1]);
+        coordinates.push([cp[0]+1, cp[1]+1]);
+        coordinates.push([cp[0]+1, cp[1]-1]);
+        coordinates.push([cp[0]-1, cp[1]+1]);
+        coordinates.push([cp[0]-1, cp[1]-1]); 
+        return coordinates;
     }
 }
 

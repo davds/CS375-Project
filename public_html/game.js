@@ -57,9 +57,26 @@ class Glider {
     getCenterPos() {
         return this.centerPos;
     }
+    getActiveCells() {
+        return shared.makeGliderPos(this.centerPos, this.orientation);
+    }
+    getOccupyingCells() { //3x3 grid, 9 cells total that cannot have other cells on it.
+        let cells = [];
+        let cp = this.getCenterPos();
+        cells.push([cp[0], cp[1]]);
+        cells.push([cp[0]+1, cp[1]]);
+        cells.push([cp[0]-1, cp[1]]);
+        cells.push([cp[0], cp[1]+1]);
+        cells.push([cp[0], cp[1]-1]);
+        cells.push([cp[0]+1, cp[1]+1]);
+        cells.push([cp[0]+1, cp[1]-1]);
+        cells.push([cp[0]-1, cp[1]+1]);
+        cells.push([cp[0]-1, cp[1]-1]); 
+        return cells;
+    }
 }
 
-
+let placedGliders = []; //a table of placed Glider class objects
 let allowBoardInput = false;
 let baseTableDim = [99,99];
 let gameBoard = document.getElementById("game-of-life");
@@ -75,10 +92,10 @@ let curOrientation = 0;
 
 
 //precondition: the board has not been made yet.
-//postcondition: a horizontal and vertical line appear on the board.
+//postcondition: a horizontal and vertical line appear centered on the board.
 function createQuadrantLines() {
     let board = document.getElementById("game-of-life");
-    let padding = 10 //cell padding
+    let padding = 10; //cell padding
     //vertical line
     let vl = document.createElement("div");
     vl.classList.add("vl");
@@ -89,12 +106,13 @@ function createQuadrantLines() {
     //horizontal line
     let hr = document.createElement("hr");
     let width = (padding*2+1)*boardWidth;
-    let yPos = padding*boardHeight
-    hr.style["width"] = width + "px"
+    let yPos = padding*boardHeight;
+    hr.style["width"] = width + "px";
     hr.style["margin-top"] = yPos + "px";
     board.append(vl);
     board.append(hr);
 }
+
 function createBoard(r, c) {
     let board = document.getElementById("game-of-life");
     createQuadrantLines();
@@ -107,8 +125,6 @@ function createBoard(r, c) {
             row.append(col);
         }
     }
-    //creates quadrant lines
-
 }
 
 function getBoard(room) {
@@ -165,19 +181,19 @@ function swapCoordinates(coordinates) { //ex: [0, 1] becomes [1,0]; or [15, 3] b
     return newCoordinates;
 }
 
-//precondition: cell position array of two integers [x, y] 
+//precondition: cell position array of two integers [x, y], boundary of the x quadrant, boundary of the y quadrant. 
 //postcondition: boolean that is true if the given coordinates are in bounds and false otherwise.
-function areCoordinatesValid(coordinates) {
-    return coordinates[0] >= 0 && coordinates[1] >= 0 && coordinates[0] < boardWidth && coordinates[1] < boardHeight;
+function areCoordinatesValid(coordinates, bX, bY) {
+    if (!doesExist(bX)) {
+        bX = boardWidth;
     }
-    function rotateGlider() {
-    if (curOrientation < 3)
-        curOrientation++;
-    else
-        curOrientation = 0;
-    }[]
+    if (!doesExist(bY)) {
+        bY = boardHeight;
+    }
+    return coordinates[0] >= 0 && coordinates[1] >= 0 && coordinates[0] < bX && coordinates[1] < bY;
+}
     //removes all transparent cells from board (fake gliders).
-    function removeFakeGliders() { 
+function removeFakeGliders() { 
     let transElements = document.querySelectorAll(".transparent"); //document.getElementsByClassName("transparent") didn't work for no reason.
     for (i = 0; i < transElements.length; i++) {
         transElements[i].classList.remove("transparent");
@@ -204,6 +220,7 @@ function getCoordinatesFromCell(cellId) {
 }
 
 //precondition: center cell (td) of glider. optional: refresh boolean that creates a fake glider even if the mouse is still on the same cell (used for rotation).
+//postcondition: a transparent glider appears centered on the mouse's current location.
 //runs everytime the mouse moves to a new cell and creates transparent glider.
 function showGlider(cell, refresh) {
     if (prevCell != null && prevCell.id === cell.id && !refresh) {  

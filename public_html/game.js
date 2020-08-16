@@ -252,10 +252,13 @@ function showGlider(cell, refresh, style = "transparent") {
     prevCell = cell;
     let coordinates = swapCoordinates(getCoordinatesFromCell(cell.id));
     if (transGlider === null) {
+        if(!isCenterPosValid(coordinates)) {
+            return;
+        }
         transGlider = new Glider(coordinates, orientations["SW"]);
     }
     transGlider.setCenterPos(coordinates);
-    let activeCells = transGlider.getActiveCoordinates()
+    let activeCells = transGlider.getActiveCoordinates();
     removeTransCells();
     for (i = 0; i < activeCells.length; i++) {
         let cellId = swapCoordinates(activeCells[i]);

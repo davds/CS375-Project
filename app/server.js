@@ -241,7 +241,7 @@ function countLiveNeighbors(pos, player) {
 function makeGliders(gliders, player, room) {
   for (let i = 0; i < gliders.length; i++) {
     pos = gliders[i].pos;
-    orinetation = gliders[i].orientation;
+    orientation = gliders[i].orientation;
     let newPositions = makeGliderPos(pos, orientation);
     for (let j = 0; j < newPositions.length; j++) {
       makeCell(newPositions[j], player, room);

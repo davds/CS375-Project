@@ -45,7 +45,7 @@ orientations["SW"].setNext(NW);
 
 class Glider {
     constructor(centerPos, orientation) {
-        this.centerPos = centerPos;
+        this.centerPos = centerPos; //currently centerPos must be a valid coordinate when created
         this.orientation = orientation;
     }
     changeOrientation() {
@@ -57,8 +57,13 @@ class Glider {
     getCenterPos() {
         return this.centerPos;
     }
+    setCenterPos(pos, bX = boardWidth, bY = boardHeight) { //TODO: get boundaries of quadrant instead of entire board.
+        if (isCenterPosValid(pos)) {
+            this.centerPos = coordinate;
+        }
+    }
     getActiveCoordinates() {
-        return shared.makeGliderPos(this.centerPos, this.orientation);
+        return shared.makeGliderPos(this.getCenterPos(), this.getOrientation());
     }
     getOccupyingCoordinates() { //3x3 grid, 9 cells total that cannot have other cells on it.
         let coordinates = [];
@@ -71,12 +76,13 @@ class Glider {
         coordinates.push([cp[0]+1, cp[1]+1]);
         coordinates.push([cp[0]+1, cp[1]-1]);
         coordinates.push([cp[0]-1, cp[1]+1]);
-        coordinates.push([cp[0]-1, cp[1]-1]); 
+        coordinates.push([cp[0]-1, cp[1]-1]);
         return coordinates;
     }
 }
 
-let placedGliders = []; //a table of placed Glider class objects
+let placedGliders = []; //a table of placed Glider class objects.
+let transGlider = null 
 let allowBoardInput = false;
 let baseTableDim = [99,99];
 let gameBoard = document.getElementById("game-of-life");
@@ -99,14 +105,14 @@ function createQuadrantLines() {
     //vertical line
     let vl = document.createElement("div");
     vl.classList.add("vl");
-    let height = (padding*2+1)*boardHeight; //each cell extends (2*10)px high from padding + 1px from border. 
-    let xPos = padding*boardWidth; 
+    let height = (padding*2+1)*baseTableDim[1]; //each cell extends (2*10)px high from padding + 1px from border. 
+    let xPos = padding*baseTableDim[0]; 
     vl.style.height = height+"px";
     vl.style["margin-left"] = xPos + "px";
     //horizontal line
     let hr = document.createElement("hr");
-    let width = (padding*2+1)*boardWidth;
-    let yPos = padding*boardHeight;
+    let width = (padding*2+1)*baseTableDim[1];
+    let yPos = padding*baseTableDim[0];
     hr.style["width"] = width + "px";
     hr.style["margin-top"] = yPos + "px";
     board.append(vl);
@@ -183,17 +189,11 @@ function swapCoordinates(coordinates) { //ex: [0, 1] becomes [1,0]; or [15, 3] b
 
 //precondition: cell position array of two integers [x, y], boundary of the x quadrant, boundary of the y quadrant. 
 //postcondition: boolean that is true if the given coordinates are in bounds and false otherwise.
-function areCoordinatesValid(coordinates, bX, bY) {
-    if (!doesExist(bX)) {
-        bX = boardWidth;
-    }
-    if (!doesExist(bY)) {
-        bY = boardHeight;
-    }
-    return coordinates[0] >= 0 && coordinates[1] >= 0 && coordinates[0] < bX && coordinates[1] < bY;
+function isCenterPosValid(pos, bX = boardWidth, bY = boardHeight) {
+    return coordinate[0] > 0 && coordinate[1] > 0 && coordinate[0] < (bX -1) && coordinate[1] < (bY-1)
 }
     //removes all transparent cells from board (fake gliders).
-function removeFakeGliders() { 
+function removeTransCells() { 
     let transElements = document.querySelectorAll(".transparent"); //document.getElementsByClassName("transparent") didn't work for no reason.
     for (i = 0; i < transElements.length; i++) {
         transElements[i].classList.remove("transparent");
@@ -223,24 +223,43 @@ function getCoordinatesFromCell(cellId) {
 //postcondition: a transparent glider appears centered on the mouse's current location.
 //runs everytime the mouse moves to a new cell and creates transparent glider.
 function showGlider(cell, refresh) {
+    // if (prevCell != null && prevCell.id === cell.id && !refresh) {  
+    //     return;
+    // }
+    // let cellId = cell.id;
+    // let clientCoordinates = getCoordinatesFromCell(cellId);
+    // let gliderPos = swapCoordinates(clientCoordinates);       
+    // let newPositions = shared.makeGliderPos(gliderPos, orientations[curOrientation]);
+    // prevCell = cell;
+    // removeFakeGliders();
+    // for (i = 0; i < newPositions.length; i++) { 
+    //     let coordinates = newPositions[i]; 
+    //     if (!areCoordinatesValid(coordinates)) {
+    //         return;
+    //     }
+    // }
+    // for (i = 0; i < newPositions.length; i++) {
+    //     let coordinates = swapCoordinates(newPositions[i]);
+    //     let cell = document.getElementById(coordinates[0] + "," + coordinates[1]);
+    //     cell.classList.add("transparent");
+    // }
+}
+
+function showGlider(cell) {
     if (prevCell != null && prevCell.id === cell.id && !refresh) {  
         return;
     }
-    let cellId = cell.id;
-    let clientCoordinates = getCoordinatesFromCell(cellId);
-    let gliderPos = swapCoordinates(clientCoordinates);       
-    let newPositions = shared.makeGliderPos(gliderPos, orientations[curOrientation]);
     prevCell = cell;
-    removeFakeGliders();
-    for (i = 0; i < newPositions.length; i++) { 
-        let coordinates = newPositions[i]; 
-        if (!areCoordinatesValid(coordinates)) {
-            return;
-        }
+    let coordinates = swapCoordinates(getCoordinatesFromCell(cell.id));
+    if (transGlider === null) {
+        transGlider = new Glider(coordinates, orientations["SW"]);
     }
-    for (i = 0; i < newPositions.length; i++) {
-        let coordinates = swapCoordinates(newPositions[i]);
-        let cell = document.getElementById(coordinates[0] + "," + coordinates[1]);
+    transGlider.setCenterPos(coordinates);
+    let activeCells = transGlider.getActiveCoordinates()
+    removeTransCells();
+    for (i = 0; i < activeCells.length; i++) {
+        let cellId = swapCoordinates(activeCells[i]);
+        let cell = document.getElementById(cellId[0] + "," + cellId[1]);
         cell.classList.add("transparent");
     }
 }
@@ -257,6 +276,7 @@ function placeGlider(cell) {
 
 function sendGliders() { //from server
     //console.log(cell);
+
     let id = cell.id;
     idArray = id.split(',');
     let x = idArray[1];

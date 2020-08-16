@@ -245,7 +245,7 @@ function showGlider(cell, refresh) {
     // }
 }
 
-function showGlider(cell) {
+function showGlider(cell, refresh, style = "transparent") {
     if (prevCell != null && prevCell.id === cell.id && !refresh) {  
         return;
     }
@@ -260,7 +260,7 @@ function showGlider(cell) {
     for (i = 0; i < activeCells.length; i++) {
         let cellId = swapCoordinates(activeCells[i]);
         let cell = document.getElementById(cellId[0] + "," + cellId[1]);
-        cell.classList.add("transparent");
+        cell.classList.add(style);
     }
 }
 

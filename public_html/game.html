@@ -11,26 +11,61 @@
     }
 
     td {
-      border: 1px solid black;
-      padding: 10px;
+      border: 1px solid rgba(0, 0, 0, .5);
+      width: 6px;
+      height: 6px;
     }
 
     .transparent {
-      border: 1px solid black;
+      border: 1px solid rgba(0, 0, 0, .6);
       background-color: black;
-      padding: 10px;
       opacity: 0.5;
+    }
+    
+    .game-header {
+      background-color: grey;
+      height: 70px;
+      margin: auto;
+      width: 611px;
+    }
+    .game-header #message {
+      display: inline-block;
+      width: 50%;
+    }
+    .game-header #times {
+      display: inline-block;
+    }
+
+    .game-board {
+      border: 5px solid grey;
+      border-radius: 0 0 5px 5px;
+      margin: auto;
+      width: fit-content;
     }
   </style>
 </head>
 
 <body>
   <div id="header"></div>
-  <table>
-    <tbody id="game-of-life"></tbody>
-  </table>
+  <div class="game-header">
+    <div id="message"></div>
+    <div id="times">
+      <div id="phase">
+        <h3>Phase:</h3>
+      </div>    
+      <div id="generations">      
+        <h3>Generations:</h3>
+      </div>
+    </div>        
+  </div>
+  <div class="game-board">
+    <table>
+      <tbody id="game-of-life"></tbody>
+    </table>
+  </div>
+  
   <input type="button" value="Update" onclick="updateBoard()" />
-  <input type="button" value="Next" onclick="nextGen()" />
+  <input type="button" value="Next" onclick="start()" />
   <input type="button" value="Reset" onclick="resetBoard()" />
   <input type="button" value="Rotate" onclick="rotateGlider()" />
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -40,8 +75,8 @@
   <script src="./client.js"></script>
   <script>
     $("#header").load("header.html");
-    let boardWidth = 25;
-    let boardHeight = 25;
+    let boardWidth = 100;
+    let boardHeight = 100;
     let prevCell = null; //for showGlider
     let orientations = ["NW", "NE", "SE", "SW"];
     let curOrientation = 0;
@@ -52,6 +87,7 @@
         board.append(row);
         for (let j = 0; j < c; j++) {
           let col = document.createElement("td");
+          col.className = "cell";
           col.id = `${i},${j}`;
           row.append(col);
         }
@@ -71,14 +107,7 @@
       });
     }
     function clearBoard() {
-      let game = document.getElementById("game-of-life");
-      let rows = game.querySelectorAll("tr");
-      for (let i = 0; i < rows.length; i++) {
-        let cells = rows[i].querySelectorAll("td");
-        for (let j = 0; j < cells.length; j++) {
-          cells[j].style = "";
-        }
-      }
+      $(".empty").css("background-color", "white");
     }
     function resetBoard() {
       fetch("/reset").then(response => {
@@ -86,6 +115,10 @@
       });
     }
     //testing (for now)
+    function start() {
+      var test = setInterval(nextGen, 100);
+    }
+
     function nextGen() {
       console.log("clicked");
       fetch("/step").then(response => {
@@ -148,8 +181,9 @@
       fetch("/gliders?x=" + x + "&y=" + y + "&orientation=" + orientations[curOrientation]).then(response => {
         updateBoard();
       });
-    }
-    function fakeGlider() {
+    }    
+    
+    /*function fakeGlider() {
       let game = document.getElementById("game-of-life");
       let rows = game.querySelectorAll("tr");
       for (let i = 0; i < rows.length; i++) {
@@ -159,9 +193,9 @@
           cells[j].onmousemove = function (e) { showGlider(cells[j]) }
         }
       }
-    }
+    }*/
     createBoard(boardWidth, boardHeight);
-    fakeGlider();
+    //fakeGlider();
     if (document.addEventListener) {
       document.addEventListener('contextmenu', function (e) {        
         rotateGlider();
@@ -181,6 +215,13 @@
         }
       }
     }
+
+
+    window.onload = () => {
+      $(".cell").on("mouseover", (e) => { // Replaces "fakeGlider()"
+        showGlider(e.target);
+      })
+    };
   </script>
 </body>
 

@@ -139,7 +139,7 @@ function setDimensions(coords) {
   dimensions["yMin"] = coords[1][0];
   dimensions["yMax"] = coords[1][1];
 }
-setDimensions([[0,24],[0,24]]);
+setDimensions([[0,99],[0,99]]);
 
 //Precondish: duble with x, y coords of a cell
 //Postcondish: if cell is alive, return owner, otherwise returns Null

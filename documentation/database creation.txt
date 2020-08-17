@@ -5,10 +5,12 @@ CREATE DATABASE cgod; // Create new database 'cgod'
 \c cgod // Load database cgod
 
 CREATE TABLE users ( 
+    id SERIAL,
     username VARCHAR(20),
-    email VARCHAR(254),
+    email VARCHAR(255),
     password CHAR(60),
-    PRIMARY KEY (username),
+    PRIMARY KEY (id),
+    UNIQUE (username),
     UNIQUE (email)
 );
  

@@ -2,6 +2,7 @@
 const pg = require("pg");
 const bcrypt = require("bcrypt");
 const express = require("express");
+const session = require("express-session");
 const app = express();
 const {Player, ActivePiece, GameSession} = require("./classes.js");
 const {makeGliderPos} = require("../public_html/shared.js");
@@ -16,12 +17,36 @@ let gameSessions = {};
 
 app.use(express.json());
 app.use(express.static("../public_html"));
+app.use(session({ //https://codeshack.io/basic-login-system-nodejs-express-mysql/
+  secret: 'secret',
+  resave: true,
+  saveUninitialized: true
+}));
+
+app.get("/user", (req, res) => {
+  res.json({ loggedIn: req.session.loggedin, username: req.session.username });
+});
+
+app.get("/logout", (req, res) => {
+  req.session.loggedin = false;
+  req.session.username = null;  
+  res.redirect('/home.html');
+});
 
 app.get('/', function (req, res) {
   res.redirect('/home.html');
 });
 
+app.get('/home', (req, res) => {
+  if (req.session.loggedin) {
+    res.json({username: req.session.username})
+  } else {
+    res.json({message: "No user logged in"})
+  }
+})
+
 let tempEnv = require("../env.json");
+const { request, response } = require("express");
 if (process.env._ && process.env._.indexOf("heroku"))
   tempEnv = require("../heroku.json");
 const env = tempEnv;
@@ -81,6 +106,8 @@ app.post("/auth", (req, res) => {
     bcrypt.compare(plaintextPassword, password).then(match => {
       if (match) {
         console.log(`AUTHENTICATING USER '${username}'`);
+        req.session.loggedin = true;
+        req.session.username = username;
         res.status(200).send("Logged in");
       } else {
         console.log(`INCORRECT PASSWORD PROVIDED FOR '${username}'`);

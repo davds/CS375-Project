@@ -3,16 +3,39 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!--link rel="stylesheet" type="text/css" href="style.css"-->
   <title>Home</title>
-
 </head>
 
 <body>
-  <h1>Conway's Game of Death</h1>
-  <a href="/game.html">play</a>
-  <a href="/login.html">login</a>
-  <a href="/memoir.html">memoir</a>
-  <script></script>
+  <div id="header"></div>
+  <div id="account">
+    <p id="message"></p>
+    <p>Username: <strong id="username"></strong></p>
+    <p>Email: <b id="email"></b></p>    
+  </div>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="./client.js"></script>
+  <script>  
+    $("#header").load("header.html");    
+    let message = document.getElementById("message")
+    let username = document.getElementById("username")
+    let email = document.getElementById("email")
+    fetch("/home").then(function (response) {
+                return response.json()
+            }).then(function (data) {
+              console.log(data)
+              if (data.hasOwnProperty("message")){
+                message.textContent = data.message;
+              } else {
+                username.textContent = data.username;
+                document.getElementById("logout").hidden = false;
+                //email.textContent = data.email
+              }
+            });
+  </script>
 </body>
 </html>

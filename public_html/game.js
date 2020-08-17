@@ -55,7 +55,7 @@ class Glider {
         this.orientation = orientation;
     }
     changeOrientation() {
-        this.orientation = orientation.getNext();
+        this.orientation = this.orientation.getNext();
     }
     getOrientation() {
         return this.orientation.getOrientation();
@@ -63,10 +63,8 @@ class Glider {
     getCenterPos() {
         return this.centerPos;
     }
-    setCenterPos(pos, bX = boardWidth, bY = boardHeight) { //TODO: get boundaries of quadrant instead of entire board.
-        if (isCenterPosValid(pos)) {
-            this.centerPos = pos;
-        }
+    setCenterPos(pos) { //TODO: get boundaries of quadrant instead of entire board.
+        this.centerPos = pos;
     }
     getActiveCoordinates() {
         return shared.makeGliderPos(this.getCenterPos(), this.getOrientation());
@@ -91,7 +89,10 @@ class Glider {
 
 //#region Global Variables
 
+const gliderLimit = 3;
 let placedGliders = []; //a table of placed Glider class objects.
+let curGlider = new Glider([0,0], NW);
+
 let transGlider = null 
 let allowBoardInput = false;
 let baseTableDim = [99, 99];
@@ -192,113 +193,89 @@ function doesExist(val) {
 
 //precondition: cell.id, which is a string with two coordinates separated by ","
 //postcondition: cell position array of two integers [x, y]. NOTE: this needs to be swapped using the swapCoordinates function later since cells are currently positioned as [y, x] in the cell id.
-function getCoordinatesFromCell(cellId) {
-    let cellNumbers = cellId.split(",");
+function getCellCoords(cell) {
+    let cellNumbers = cell.id.split(",");
     let cellX = parseInt(cellNumbers[0]);
     let cellY = parseInt(cellNumbers[1]);
     let clientCoordinates = [cellX, cellY];
     return clientCoordinates;
 }
 
+function previewGlider() {
+    let cells = curGlider.getActiveCoordinates();
+    $("td").removeClass("transparent");
 
-function showGlider(cell, refresh, className="transparent") {
-    if (prevCell != null && prevCell.id === cell.id && !refresh) {  
-        return;
-    }
-    prevCell = cell;
-    let coordinates = getCoordinatesFromCell(cell.id);
-    if (transGlider === null) {
-        if(!isCenterPosValid(coordinates)) {
-            return;
-        }
-        transGlider = new Glider(coordinates, orientations["SW"]);
-    }
-    transGlider.setCenterPos(coordinates);
-    let activeCells = transGlider.getActiveCoordinates();
-    removeTransCells();
-    for (i = 0; i < activeCells.length; i++) {
-        let cellId = activeCells[i];
+    for (i = 0; i < cells.length; i++) {
+        let cellId = cells[i];
         let cell = document.getElementById(cellId[0] + "," + cellId[1]);
-        cell.classList.add(className);
+        console.log(cell);
+        if (cell == null) {
+            $("td").removeClass("transparent");
+            break;
+        }
+
+        cell.classList.add("transparent");        
     }
 }
 
 //place glider at where the mouse is clicked on the board on the client side
 function placeGlider(cell) {
     console.log("glider placed");
-    showGlider(cell, true, "solid");
+    placedGliders.push(new Glider(curGlider.getCenterPos(), curGlider.getOrientation()));
+    if (placedGliders.length > gliderLimit)
+        placedGliders.shift();
+    console.log(placedGliders);
 }
 
-function sendGliders() { //send glider info to server    
-    /*let id = cell.id;
-    idArray = id.split(',');
-    let x = idArray[1];
-    let y = idArray[0];
-    console.log("x: " + x + " y: " + y);
-    removeFakeGliders();
-    //let cells = rows[i].querySelectorAll("td");*/
-    
+function sendGliders() { 
     fetch("/gliders").then({
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(gliders)
-    }).then(data => {
-        cell.classList.add(data.orientation);
+        body: JSON.stringify({ 
+            gliders: [ 
+                { pos: placedGliders[0].getCenterPos(), orientation: placedGliders[0].getOrientation() },
+                { pos: placedGliders[1].getCenterPos(), orientation: placedGliders[1].getOrientation() },
+                { pos: placedGliders[2].getCenterPos(), orientation: placedGliders[2].getOrientation() },
+            ],
+            room: "test"
+        })
+    }).then(data => {        
         console.log(data);
     });
 }
 
-//precondition: gamestate is such that the gliders should be placed.
-//postcondition: onclick and onmousemove events are connected, which lets users see transparent gliders where their mouse is and click to place them.
-function allowPlacement() {
-    let game = document.getElementById("game-of-life");
-    let rows = game.querySelectorAll("tr");
-    for (let i = 0; i < rows.length; i++) {
-        let cells = rows[i].querySelectorAll("td");
-        for (let j = 0; j < cells.length; j++) {
-            cells[j].onclick = function (e) {
-                placeGlider(cells[j]);
-                cells[j].classList.add(true);
-            }
-            cells[j].onmousemove = function (e) { showGlider(cells[j]) }
-        }
-    }
-}
 createBoard(baseTableDim[0], baseTableDim[1]);
-allowPlacement();
-
-function destroyGlider(cell) {
-    console.log(cell);
-    let id = cell.id;
-    idArray = id.split(',');
-    let x = parseInt(idArray[0]);
-    let y = parseInt(idArray[1]);
-    console.log(x, y);
-    let game = document.getElementById("game-of-life");
-    let rows = game.querySelectorAll("tr");
-    game.rows[x - 1].cells[y - 1].style = "";
-    game.rows[x - 1].cells[y].style = "";
-    game.rows[x - 1].cells[y + 1].style = "";
-    game.rows[x].cells[y - 1].style = "";
-    game.rows[x].cells[y].style = "";
-    game.rows[x].cells[y + 1].style = "";
-    game.rows[x + 1].cells[y - 1].style = "";
-    game.rows[x + 1].cells[y].style = "";
-    game.rows[x + 1].cells[y + 1].style = "";
-}
 
 function rotateGlider() {
-    
+    curGlider.changeOrientation();
+    console.log(curGlider);
 }
 
-document.addEventListener('contextmenu', function (e) {
-    if (hasGlider(prevCell)) {
-        destroyGlider(prevCell);
-    } else {
+
+$(document).ready(() => {
+    $("#game-of-life td").on("click", cell => {
+        curGlider.setCenterPos(getCellCoords(cell.target));
+        placeGlider(cell.target);
+    });
+
+    $("#game-of-life td").on("mouseover", cell => {
+        curGlider.setCenterPos(getCellCoords(cell.target))
+        previewGlider();
+    });
+
+    $("#game-of-life").on("contextmenu", cell => {
+        curGlider.setCenterPos(getCellCoords(cell.target))
         rotateGlider();
-        showGlider(prevCell, true);
-    }
+        previewGlider();
+        cell.preventDefault();
+    });
+})
+
+
+/*document.addEventListener('contextmenu', function (e) {
+    rotateGlider();
+    showGlider(prevCell, true);
     e.preventDefault();
-}, false);
+}, false);*/

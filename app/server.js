@@ -364,7 +364,7 @@ function phaseOne(room) {
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
 app.post("/gliders", function(req, res) {
-  let user = req.body.id;
+  let user = req.session.username;
   let gliders = req.body.gliders;
   let room = req.body.room;
   if (gameSessions[room].playerIn(user)) {
@@ -374,10 +374,7 @@ app.post("/gliders", function(req, res) {
   else {
     res.send(404);
   }
-})/*.catch(function(error) {
-  console.log(error);
-  res.send(501);
-})*/;
+});
 
 io.on("connect", socket => {
   console.log("Connected!");

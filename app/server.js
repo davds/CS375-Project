@@ -375,10 +375,10 @@ app.post("/gliders", function(req, res) {
   else {
     res.send(404);
   }
-}).catch(function(error) {
+})/*.catch(function(error) {
   console.log(error);
   res.send(501);
-});
+})*/;
 
 io.on("connect", socket => {
   console.log("Connected!");

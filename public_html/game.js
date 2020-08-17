@@ -222,7 +222,7 @@ function getCoordinatesFromCell(cellId) {
 //precondition: center cell (td) of glider. optional: refresh boolean that creates a fake glider even if the mouse is still on the same cell (used for rotation).
 //postcondition: a transparent glider appears centered on the mouse's current location.
 //runs everytime the mouse moves to a new cell and creates transparent glider.
-function showGlider(cell, refresh) {
+//function showGlider(cell, refresh) {
     // if (prevCell != null && prevCell.id === cell.id && !refresh) {  
     //     return;
     // }
@@ -243,7 +243,7 @@ function showGlider(cell, refresh) {
     //     let cell = document.getElementById(coordinates[0] + "," + coordinates[1]);
     //     cell.classList.add("transparent");
     // }
-}
+//}
 
 function showGlider(cell, refresh, style = "transparent") {
     if (prevCell != null && prevCell.id === cell.id && !refresh) {  

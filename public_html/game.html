@@ -8,6 +8,8 @@
   <style>
     table {
       border-collapse: collapse;
+      border: 0px;
+      position:relative;
     }
 
     td {
@@ -21,6 +23,25 @@
       background-color: black;
       opacity: 0.5;
     }
+    .vl {
+      border-left: 5px solid purple;
+      height: 500px;
+      width: 5px;
+      z-index: 1;
+      position: absolute;
+      margin-left: 100px;
+    }
+    hr {
+      border: 5px solid purple;
+      border-width: 3px; 
+      position:absolute;
+      z-index: 1;
+    }
+
+    .solid {
+      border: 1px solid black;
+      background-color: black;
+      padding: 10px;
     
     .game-header {
       background-color: grey;
@@ -73,156 +94,21 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="./shared.js"></script>
   <script src="./client.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="./shared.js"></script>
+  <script src="game.js"></script>
   <script>
     $("#header").load("header.html");
-    let boardWidth = 100;
-    let boardHeight = 100;
-    let prevCell = null; //for showGlider
-    let orientations = ["NW", "NE", "SE", "SW"];
-    let curOrientation = 0;
-    function createBoard(r, c) {
-      let board = document.getElementById("game-of-life");
-      for (let i = 0; i < r; i++) {
-        let row = document.createElement("tr");
-        board.append(row);
-        for (let j = 0; j < c; j++) {
-          let col = document.createElement("td");
-          col.className = "cell";
-          col.id = `${i},${j}`;
-          row.append(col);
-        }
-      }
-    }
-    function updateBoard() {
-      let game = document.getElementById("game-of-life");
-      clearBoard();
-      fetch("/cells").then(response => {
-        return response.json();
-      }).then(cell => {
-        let rows = game.querySelectorAll("tr");
-        for (let i = 0; i < cell.length; i++) {
-          let cells = rows[cell[i].pos[1]].querySelectorAll("td");
-          cells[cell[i].pos[0]].style.cssText = cell[i].style;
-        }
-      });
-    }
-    function clearBoard() {
-      $(".empty").css("background-color", "white");
-    }
-    function resetBoard() {
-      fetch("/reset").then(response => {
-        updateBoard();
-      });
-    }
-    //testing (for now)
-    function start() {
-      var test = setInterval(nextGen, 100);
-    }
+    const socket = io();
 
-    function nextGen() {
-      console.log("clicked");
-      fetch("/step").then(response => {
-        updateBoard();
-      });
-    }
-    function swapCoordinates(coordinates) { //ex: [0, 1] to [1,0] or [15, 3] to [3, 15]
-      let newCoordinates = [];
-      let newX = coordinates[1];
-      let newY = coordinates[0];
-      newCoordinates[0] = newX;
-      newCoordinates[1] = newY;
-      return newCoordinates;
-    }
-    function areCoordinatesValid(coordinates) {
-      return coordinates[0] >= 0 && coordinates[1] >= 0 && coordinates[0] < boardWidth && coordinates[1] < boardHeight;
-    }
-    function rotateGlider() {
-      if (curOrientation < 3)
-        curOrientation++;
-      else
-        curOrientation = 0;
-    }
-    function showGlider(cell, refresh) {
-      if (prevCell + "" === cell.id && !refresh) { //turns array into string so that they can be directly compared.
-        return;
-      }
-      prevCell = cell;
-      let transElements = document.querySelectorAll(".transparent"); //document.getElementsByClassName("transparent") didn't work for no reason.
-      let cellSt = cell.id;
-      let cellNumbers = cellSt.split(",");
-      let cellX = parseInt(cellNumbers[0]);
-      let cellY = parseInt(cellNumbers[1]);
-      let clientCoordinates = [cellX, cellY];
-      let gliderPos = swapCoordinates(clientCoordinates);      
-      let newPositions = shared.makeGliderPos(gliderPos, orientations[curOrientation]);
-      for (i = 0; i < newPositions.length; i++) {
-        let coordinates = newPositions[i]; //swapCoordinates(newPositions[i])
-        if (!areCoordinatesValid(coordinates)) {
-          return;
-        }
-      }
-      for (i = 0; i < transElements.length; i++) {
-        transElements[i].classList.remove("transparent");
-      }
-      for (i = 0; i < newPositions.length; i++) {
-        let coordinates = swapCoordinates(newPositions[i]);
-        let cell = document.getElementById(coordinates[0] + "," + coordinates[1]);
-        cell.classList.add("transparent");
-      }
-    }
-    function sendGlider(cell) { //TODO
-      console.log(cell);
-      let id = cell.id;
-      idArray = id.split(',');
-      let x = idArray[1];
-      let y = idArray[0];
-      console.log("x: " + x + " y: " + y);
-      //let cells = rows[i].querySelectorAll("td");
-      fetch("/gliders?x=" + x + "&y=" + y + "&orientation=" + orientations[curOrientation]).then(response => {
-        updateBoard();
-      });
-    }    
-    
-    /*function fakeGlider() {
-      let game = document.getElementById("game-of-life");
-      let rows = game.querySelectorAll("tr");
-      for (let i = 0; i < rows.length; i++) {
-        let cells = rows[i].querySelectorAll("td");
-        for (let j = 0; j < cells.length; j++) {
-          cells[j].onclick = function (e) { sendGlider(cells[j]) }
-          cells[j].onmousemove = function (e) { showGlider(cells[j]) }
-        }
-      }
-    }*/
-    createBoard(boardWidth, boardHeight);
-    //fakeGlider();
-    if (document.addEventListener) {
-      document.addEventListener('contextmenu', function (e) {        
-        rotateGlider();
-        showGlider(prevCell, true);
-        e.preventDefault();
-      }, false);
-    }
+    socket.on('connect', () => {
+      console.log("Connected");
+    });
 
-    function destroyGlider(){
-      console.log("glider destroyed");
-      let game = document.getElementById("game-of-life");
-      let rows = game.querySelectorAll("tr");
-      for (let i = 0; i < rows.length; i++) {
-        let cells = rows[i].querySelectorAll("td");
-        for (let j = 0; j < cells.length; j++) {
-          cells[j].style = "";
-        }
-      }
-    }
-
-
-    window.onload = () => {
-      $(".cell").on("mouseover", (e) => { // Replaces "fakeGlider()"
-        showGlider(e.target);
-      })
-    };
-  </script>
+    socket.on('phaseOne', (data) => {
+      console.log("Phase One Starting.");
+      updateBoard();
+    });`
 </body>
 
 </html>

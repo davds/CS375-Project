@@ -8,6 +8,8 @@
   <style>
     table {
       border-collapse: collapse;
+      border: 0px;
+      position:relative;
     }
 
     td {
@@ -20,6 +22,20 @@
       background-color: black;
       padding: 10px;
       opacity: 0.5;
+    }
+    .vl {
+      border-left: 5px solid purple;
+      height: 500px;
+      width: 5px;
+      z-index: 1;
+      position: absolute;
+      margin-left: 100px;
+    }
+    hr {
+      border: 5px solid purple;
+      border-width: 3px; 
+      position:absolute;
+      z-index: 1;
     }
 
     .solid {
@@ -40,274 +56,22 @@
   <input type="button" value="Next" onclick="nextGen()" />
   <input type="button" value="Reset" onclick="resetBoard()" />
   <input type="button" value="Rotate" onclick="rotateGlider()" />
+  <script src="/socket.io/socket.io.js"></script>
   <script src="./shared.js"></script>
+  <script src="game.js"></script>
   <script>
-    class Player {
-      constructor(id, style, strength = 0) {
-        this.id = id;
-        this.style = style;
-        this.strength = strength;
-      }
-      getStyle() {
-        return this.style;
-      }
-      setStrength(strength) {
-        this.strength = strength;
-      }
-      getStrength() {
-        return this.strength;
-      }
-      getId() {
-        return this.id;
-      }
-    }
-    let boardWidth = 25;
-    let boardHeight = 25;
-    let prevCell = null; //for showGlider
-    let orientations = ["NW", "NE", "SE", "SW"];
-    let curOrientation = 0;
-    function createBoard(r, c) {
-      let board = document.getElementById("game-of-life");
-      for (let i = 0; i < r; i++) {
-        let row = document.createElement("tr");
-        board.append(row);
-        for (let j = 0; j < c; j++) {
-          let col = document.createElement("td");
-          col.id = `${i},${j}`;
-          row.append(col);
-        }
-      }
-    }
-    function updateBoard() {
-      let game = document.getElementById("game-of-life");
-      clearBoard();
-      fetch("/cells").then(response => {
-        return response.json();
-      }).then(cell => {
-        let rows = game.querySelectorAll("tr");
-        for (let i = 0; i < cell.length; i++) {
-          let cells = rows[cell[i].pos[1]].querySelectorAll("td");
-          cells[cell[i].pos[0]].style.cssText = cell[i].style;
-        }
-      });
-    }
-    function clearBoard() {
-      let game = document.getElementById("game-of-life");
-      let rows = game.querySelectorAll("tr");
-      for (let i = 0; i < rows.length; i++) {
-        let cells = rows[i].querySelectorAll("td");
-        for (let j = 0; j < cells.length; j++) {
-          cells[j].style = "";
-        }
-      }
-    }
-    function resetBoard() {
-      fetch("/reset").then(response => {
-        updateBoard();
-      });
-    }
-    //testing (for now)
-    function nextGen() {
-      console.log("clicked");
-      fetch("/step").then(response => {
-        updateBoard();
-      });
-    }
+    
+    const socket = io();
 
-    //precondition: cell position array of two integers [y, x] 
-    //postcondition: cell position array of two integers [x, y]
-    function swapCoordinates(coordinates) { //ex: [0, 1] becomes [1,0]; or [15, 3] becomes [3, 15]
-      let newCoordinates = [];
-      let newX = coordinates[1];
-      let newY = coordinates[0];
-      newCoordinates[0] = newX;
-      newCoordinates[1] = newY;
-      return newCoordinates;
-    }
-    //precondition: cell position array of two integers [x, y] 
-    //postcondition: boolean that is true if the given coordinates are in bounds and false otherwise.
-    function areCoordinatesValid(coordinates) {
-      return coordinates[0] >= 0 && coordinates[1] >= 0 && coordinates[0] < boardWidth && coordinates[1] < boardHeight;
-    }
-    function rotateGlider() {
-      if (curOrientation < 3)
-        curOrientation++;
-      else
-        curOrientation = 0;
-    } []
-    //removes all transparent cells from board (fake gliders).
-    function removeFakeGliders() {
-      let transElements = document.querySelectorAll(".transparent"); //document.getElementsByClassName("transparent") didn't work for no reason.
-      for (i = 0; i < transElements.length; i++) {
-        transElements[i].classList.remove("transparent");
-      }
-    }
-    //precondition: any type of any object.
-    //postcondition: a boolean that is true if the object exists (not null and not undefined), false otherwise.
-    function doesExist(val) {
-      if (val != null && typeof val != 'undefined') {
-        return true
-      }
-      return false
-    }
-    //precondition: cell.id, which is a string with two coordinates separated by ","
-    //postcondition: cell position array of two integers [x, y]. NOTE: this needs to be swapped using the swapCoordinates function later since cells are currently positioned as [y, x] in the cell id.
-    function getCoordinatesFromCell(cellId) {
-      let cellNumbers = cellId.split(",");
-      let cellX = parseInt(cellNumbers[0]);
-      let cellY = parseInt(cellNumbers[1]);
-      let clientCoordinates = [cellX, cellY];
-      return clientCoordinates;
-    }
-    //precondition: center cell (td) of glider. optional: refresh boolean that creates a fake glider even if the mouse is still on the same cell (used for rotation).
-    //runs everytime the mouse moves to a new cell and creates transparent glider.
-    function showGlider(cell, refresh) {
-      if (prevCell != null && prevCell.id === cell.id && !refresh) {
-        return;
-      }
-      let cellId = cell.id;
-      let clientCoordinates = getCoordinatesFromCell(cellId);
-      let gliderPos = swapCoordinates(clientCoordinates);
-      let newPositions = shared.makeGliderPos(gliderPos, orientations[curOrientation]);
-      prevCell = cell;
-      removeFakeGliders();
-      for (i = 0; i < newPositions.length; i++) {
-        let coordinates = newPositions[i];
-        if (!areCoordinatesValid(coordinates)) {
-          return;
-        }
-      }
-      for (i = 0; i < newPositions.length; i++) {
-        let coordinates = swapCoordinates(newPositions[i]);
-        let cell = document.getElementById(coordinates[0] + "," + coordinates[1]);
-        cell.classList.add("transparent");
-      }
-    }
+    socket.on('connect', () => {
+      console.log("Connected");
+    });
 
-    function placeGlider(cell) {
-      console.log("glider placed");
-      // let id = cell.id;
-      // idArray = id.split(',');
-      // let x = idArray[1];
-      // let y = idArray[0];
-      // let testPlayer = new Player("test", "background-color: black");
-      // shared.makeGlider([Number(x), Number(y)], orientations[curOrientation], testPlayer);
-      let cellId = cell.id;
-      let clientCoordinates = getCoordinatesFromCell(cellId);
-      let gliderPos = swapCoordinates(clientCoordinates);
-      let newPositions = shared.makeGliderPos(gliderPos, orientations[curOrientation]);
-      prevCell = cell;
-      removeFakeGliders();
-      for (i = 0; i < newPositions.length; i++) {
-        let coordinates = newPositions[i];
-        if (!areCoordinatesValid(coordinates)) {
-          return;
-        }
-      }
-      for (i = 0; i < newPositions.length; i++) {
-        let coordinates = swapCoordinates(newPositions[i]);
-        let cell = document.getElementById(coordinates[0] + "," + coordinates[1]);
-        cell.classList.add("solid");
-      }
-    }
+    socket.on('phaseOne', (data) => {
+      console.log("Phase One Starting.");
+      updateBoard();
+    });
 
-    function sendGlider(cell) { //from server
-      //console.log(cell);
-      let id = cell.id;
-      idArray = id.split(',');
-      let x = idArray[1];
-      let y = idArray[0];
-      console.log("x: " + x + " y: " + y);
-      removeFakeGliders();
-      //let cells = rows[i].querySelectorAll("td");
-      fetch("/gliders?x=" + x + "&y=" + y + "&orientation=" + orientations[curOrientation]).then(response => {
-        updateBoard();
-        return response.json();
-      }).then(data => {
-        cell.classList.add(data.orientation);
-        console.log(data);
-      });
-    }
-    //precondition: gamestate is such that the gliders should be placed.
-    //postcondition: onclick and onmousemove events are connected, which lets users see transparent gliders where their mouse is and click to place them.
-    function allowPlacement() {
-      let game = document.getElementById("game-of-life");
-      let rows = game.querySelectorAll("tr");
-      for (let i = 0; i < rows.length; i++) {
-        let cells = rows[i].querySelectorAll("td");
-        for (let j = 0; j < cells.length; j++) {
-          cells[j].onclick = function (e) {
-            placeGlider(cells[j]);
-            cells[j].classList.add(true);
-          }
-          cells[j].onmousemove = function (e) { showGlider(cells[j]) }
-        }
-      }
-    }
-    createBoard(boardWidth, boardHeight);
-    allowPlacement();
-
-    function hasGlider(cell) {
-      let centered = cell.className;
-      if (centered) {
-        return true;
-      } else {
-        return false;
-      }
-      //console.log(orientation);
-    }
-
-    function destroyGlider(cell) {
-      console.log(cell);
-      let id = cell.id;
-      idArray = id.split(',');
-      let x = parseInt(idArray[0]);
-      let y = parseInt(idArray[1]);
-      console.log(x, y);
-      let game = document.getElementById("game-of-life");
-      let rows = game.querySelectorAll("tr");
-      game.rows[x - 1].cells[y - 1].classList.remove("solid");
-      game.rows[x - 1].cells[y].classList.remove("solid");
-      game.rows[x - 1].cells[y + 1].classList.remove("solid");
-      game.rows[x].cells[y - 1].classList.remove("solid");
-      game.rows[x].cells[y].classList.remove("solid");
-      game.rows[x].cells[y + 1].classList.remove("solid");
-      game.rows[x + 1].cells[y - 1].classList.remove("solid");
-      game.rows[x + 1].cells[y].classList.remove("solid");
-      game.rows[x + 1].cells[y + 1].classList.remove("solid");
-    }
-
-    if (document.addEventListener) {
-      document.addEventListener('contextmenu', function (e) {
-        console.log(hasGlider(prevCell));
-        if (hasGlider(prevCell)) {
-          destroyGlider(prevCell);
-        } else {
-          rotateGlider();
-          showGlider(prevCell, true);
-        }
-        e.preventDefault();
-      }, false);
-    }
-    createBoard(boardWidth, boardHeight);
-    allowPlacement();
-
-    // if (document.addEventListener) {
-    //         document.addEventListener('contextmenu', function (e) {
-    //           alert("You've tried to open context menu"); //here you draw your own menu
-    //           destroyGlider(cells[j]);
-    //           //e.preventDefault();
-    //         }, false)};
-    // function destroyGlider(cell) {
-    //   console.log(cell + "destroyed");
-    // }
-    // window.addEventListener("contextmenu", function(e) {
-    //   event.preventDefault();
-    //   var contextElement = document.getElementById("context-menu");
-    //   contextElement.style.top = e.offsetY + "px";
-    //   contextElement.style.left = e.offsetX + "px";
-    //   contextElement.classList.add("active");
-    // })
   </script>
 </body>
 

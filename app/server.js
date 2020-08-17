@@ -349,8 +349,7 @@ app.get("/step", function(req, res) {
 });
 
 app.get("/reset", function(req, res) {
-  initTestBoard()
-  
+  initTestBoard()  
 });
 
 //Sequence of game events

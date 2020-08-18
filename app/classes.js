@@ -51,6 +51,9 @@ class GameSession {
 	getPlayers() {
 		return this.players;
 	}
+	getPlayer(id) {
+		return this.players[id];
+	}
 	addPlayer(player) {
 		this.players[player.getId()] = player;
 	}

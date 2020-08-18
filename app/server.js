@@ -13,7 +13,9 @@ const options = {
   perMessageDeflate: false,
 };
 const io = require('socket.io').listen(server, options);
-let gameSessions = {};
+let gameSessions = {"test": new GameSession("test")};
+gameSessions["test"].addPlayer(new Player("davd", "background-color: purple;"));
+
 
 app.use(express.json());
 app.use(express.static("../public_html"));
@@ -185,8 +187,8 @@ function nextGeneration(room) {
     //Check the 3x3 box around each living cell if any dead cells will be alive in the next generation
     for (let i = xPos - 1; i <= xPos + 1; i++) {
       for (let j = yPos - 1; j <= yPos + 1; j++) {
-        if (isAlive([i,j]) != owner && inBounds(i, j, room)) {
-          neighbors = countLiveNeighbors([i,j], owner);
+        if (isAlive([i,j], room) != owner && inBounds(i, j, room)) {
+          neighbors = countLiveNeighbors([i,j], owner, room);
           if (neighbors == 3) {
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
             if (!(`${i}:${j}` in tempCells)) {
@@ -210,7 +212,7 @@ function nextGeneration(room) {
     }
     //Check if the current cell will be alive in the next generation
     if (inBounds(xPos, yPos, room)) {
-      neighbors = countLiveNeighbors([xPos, yPos], owner);
+      neighbors = countLiveNeighbors([xPos, yPos], owner, room);
       if (neighbors == 2 || neighbors == 3) {
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
             if (!(`${xPos}:${yPos}` in tempCells)) {
@@ -239,7 +241,7 @@ function nextGeneration(room) {
       gameSessions[room].addActivePiece(tempCells[pos]);
     }
   }
-  setPlayerStats();
+  setPlayerStats(room);
 }
 
 // ;)
@@ -249,12 +251,12 @@ function getRandomInt(max) {
 
 //Precondish: takes a duble with x, y coords of a cell, the owner of the cell
 //Postcondish: the number of live neighbors to the specified cell
-function countLiveNeighbors(pos, player) {
+function countLiveNeighbors(pos, player, room) {
   neighbors = 0;
   for (let i = pos[0] - 1; i <= pos[0] + 1; i++) {
     for (let j = pos[1] - 1; j <= pos[1] + 1; j++) {
       //See if the cell has a neighbor that belongs to the same person, and is not itself.
-      if (isAlive([i,j]) == player && !(i == pos[0] && j == pos[1])) {
+      if (isAlive([i,j], room) == player && !(i == pos[0] && j == pos[1])) {
         neighbors ++;
       }
     }
@@ -269,6 +271,7 @@ function makeGliders(gliders, player, room) {
   for (let i = 0; i < gliders.length; i++) {
     pos = gliders[i].pos;
     orientation = gliders[i].orientation;
+    console.log(pos + " " + orientation + " " + room);
     let newPositions = makeGliderPos(pos, orientation);
     for (let j = 0; j < newPositions.length; j++) {
       makeCell(newPositions[j], player, room);
@@ -285,7 +288,7 @@ function setPlayerStats(room) {
     player = players[id];
     strength = 0;
     for (let i = 0; i < activePieces.length; i++) {
-      if (activePieces[j].getOwner() == id) { 
+      if (activePieces[i].getOwner() == id) { 
         strength ++;
       }
     }
@@ -326,8 +329,8 @@ function checkCollision(contestedPositions, cells) {
 
 //Precondish: duble with x, y coords of a cell, an owner
 //Postcondish: doesn't return anything, makes a new cell object and appends it to the activePieces array for the corresponding game session
-function makeCell(pos, player, room) {
-  newCell = new ActivePiece(pos, player);
+function makeCell(pos, id, room) {
+  newCell = new ActivePiece(pos, gameSessions[room].getPlayer(id));
   gameSessions[room].addActivePiece(newCell);
 }
 
@@ -336,6 +339,7 @@ app.get("/cells", function(req, res) {
   let room = req.query.room;
   let activePieces = gameSessions[room].getActivePieces();
   let resActivePieces = [];
+  console.log(activePieces);
   for (i in activePieces) {
     resActivePieces.push({ "pos": activePieces[i].getPos(), "style": activePieces[i].getStyle() });
   }
@@ -344,7 +348,8 @@ app.get("/cells", function(req, res) {
 });
 
 app.get("/step", function(req, res) {
-  nextGeneration();
+  let room = req.query.room;
+  nextGeneration(room);
   res.sendStatus(200);
 });
 
@@ -364,15 +369,16 @@ function phaseOne(room) {
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
 app.post("/gliders", function(req, res) {
+  console.log("/gliders received post");
   let user = req.session.username;
   let gliders = req.body.gliders;
   let room = req.body.room;
   if (gameSessions[room].playerIn(user)) {
     makeGliders(gliders, user, room);
-    res.send(200);
+    res.sendStatus(200);
   }
   else {
-    res.send(404);
+    res.sendStatus(404);
   }
 });
 

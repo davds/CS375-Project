@@ -15,6 +15,7 @@ const options = {
 const io = require('socket.io').listen(server, options);
 let gameSessions = {"test": new GameSession("test")};
 gameSessions["test"].addPlayer(new Player("davd", "background-color: purple;"));
+gameSessions["test"].addPlayer(new Player("hoff", "background-color: red;"));
 
 
 app.use(express.json());
@@ -270,7 +271,7 @@ function countLiveNeighbors(pos, player, room) {
 function makeGliders(gliders, player, room) {
   for (let i = 0; i < gliders.length; i++) {
     pos = gliders[i].pos;
-    orientation = gliders[i].orientation;
+    orientation = gliders[i].orientation; 
     let newPositions = makeGliderPos(pos, orientation);
     for (let j = 0; j < newPositions.length; j++) {
       makeCell(newPositions[j], player, room);

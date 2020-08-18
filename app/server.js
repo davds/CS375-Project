@@ -271,7 +271,6 @@ function makeGliders(gliders, player, room) {
   for (let i = 0; i < gliders.length; i++) {
     pos = gliders[i].pos;
     orientation = gliders[i].orientation;
-    console.log(pos + " " + orientation + " " + room);
     let newPositions = makeGliderPos(pos, orientation);
     for (let j = 0; j < newPositions.length; j++) {
       makeCell(newPositions[j], player, room);
@@ -339,7 +338,6 @@ app.get("/cells", function(req, res) {
   let room = req.query.room;
   let activePieces = gameSessions[room].getActivePieces();
   let resActivePieces = [];
-  console.log(activePieces);
   for (i in activePieces) {
     resActivePieces.push({ "pos": activePieces[i].getPos(), "style": activePieces[i].getStyle() });
   }

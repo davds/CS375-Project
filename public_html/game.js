@@ -222,7 +222,10 @@ function sendGliders() {
             ],
             room: "test"
         })
-    });
+    });    
+    placedGliders = [];
+    $("td").removeClass("solid");
+    getBoard('test');
 }
 
 function rotateGlider() {
@@ -242,13 +245,11 @@ function showGliders() {
 }
 
 
-
-
 $(document).ready(() => {
     $("#game-of-life td").on("click", cell => {
         curGlider.setCenterPos(getCellCoords(cell.target));
         placeGlider(cell.target);
-        showGliders()
+        showGliders();
     });
 
     $("#game-of-life td").on("mouseover", cell => {

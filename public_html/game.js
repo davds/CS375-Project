@@ -85,6 +85,30 @@ class Glider {
     }
 }
 
+const quadrants = {
+    "1": {"xMin": 0,
+        "xMax": 15,
+        "yMin": 0,
+        "yMax": 15
+    },
+    "2": {"xMin": 84,
+        "xMax": 99,
+        "yMin": 0,
+        "yMax": 15
+    },
+    "3": {"xMin": 84,
+        "xMax": 99,
+        "yMin": 84,
+        "yMax": 99
+    },
+    "4": {"xMin": 0,
+        "xMax": 15,
+        "yMin": 84,
+        "yMax": 99
+    }
+};
+let startingCoords;
+
 //#endregion
 
 //#region Global Variables
@@ -109,13 +133,12 @@ for (let i = 0; i < baseTableDim[0]; i++) {
 
 function createBoard(r, c) {
     let board = document.getElementById("game-of-life");
-    //createQuadrantLines();
     for (let i = 0; i < r; i++) {
         let row = document.createElement("tr");
         board.append(row);
         for (let j = 0; j < c; j++) {
             let col = document.createElement("td");
-            col.id = `${i},${j}`;
+            col.id = `${j},${i}`;
             row.append(col);
         }
     }
@@ -135,12 +158,29 @@ function getBoard(room) {
     });
 }
 
-function drawBoard() {    
+function addQuadrant() {
+    for (let coords in boardCells) {
+        let pos = coords.split(":");
+        if (!validPos(pos)) {
+            boardCells[coords].inBounds = false;
+        }
+    }
+    drawBoard();
+}
+
+function drawBoard() {
+    $("td").removeClass("outta-bounds");
     let rows = gameBoard.querySelectorAll("tr");
     for (let i = 0; i < baseTableDim[0]; i++) {
         let cells = rows[i].querySelectorAll("td");
         for (let j = 0; j < baseTableDim[1]; j++) {
-            cells[j].style = boardCells[`${i}:${j}`].style;
+            if (boardCells[`${j}:${i}`].inBounds) {
+                cells[j].style = boardCells[`${j}:${i}`].style;
+            }
+            else {
+                cells[j].classList.add("outta-bounds");
+            }
+            
         }
     }
 }
@@ -165,13 +205,15 @@ function nextGen() {
 
 createBoard(baseTableDim[0], baseTableDim[1]);
 
+
+
 //#endregion
 
 
 //precondition: cell position array of two integers [x, y], boundary of the x quadrant, boundary of the y quadrant. 
 //postcondition: boolean that is true if the given coordinates are in bounds and false otherwise.
-function isCenterPosValid(pos, bX=baseTableDim[0] + 1, bY=baseTableDim[1] + 1) {
-    return pos[0] > 0 && pos[1] > 0 && pos[0] < (bX - 1) && pos[1] < (bY - 1);
+function validPos(pos) {
+    return pos[0] >= startingCoords["xMin"] && pos[0] <= startingCoords["xMax"] && pos[1] >= startingCoords["yMin"] && pos[1] <= startingCoords["yMax"];
 }
 
 //precondition: cell.id, which is a string with two coordinates separated by ","
@@ -242,6 +284,22 @@ function showGliders() {
             cell.classList.add("solid");              
         }
     }
+}
+
+//Add player to a game session object and get the quadrant player is in
+function addPlayer() {
+    fetch("/quadrant").then(response => {
+        if (response.status == 200) {
+            response.json().then(data => {
+                console.log("Quadrant:" + data.quadrant);
+                startingCoords = quadrants[data.quadrant];
+                addQuadrant();
+            });
+        }
+        else {
+            alert("Please log in.");
+        }
+    });
 }
 
 

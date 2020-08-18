@@ -13,9 +13,7 @@ const options = {
   perMessageDeflate: false,
 };
 const io = require('socket.io').listen(server, options);
-let gameSessions = {"test": new GameSession("test")};
-gameSessions["test"].addPlayer(new Player("davd", "background-color: purple;"));
-gameSessions["test"].addPlayer(new Player("hoff", "background-color: red;"));
+const gameSessions = {};
 
 
 app.use(express.json());
@@ -50,8 +48,8 @@ app.get('/home', (req, res) => {
 
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
-if (process.env._ && process.env._.indexOf("heroku"))
-  tempEnv = require("../heroku.json");
+//if (process.env._ && process.env._.indexOf("heroku"))
+//  tempEnv = require("../heroku.json");
 const env = tempEnv;
 
 const Pool = pg.Pool;
@@ -127,27 +125,30 @@ app.post("/auth", (req, res) => {
 });
 
 //Precondish: takes a username and the css styling of their cells
-//Postcondish: adds the player to an existing session object or creates a new one for them
-function addPlayer(username, style) {
+//Postcondish: adds the player to an existing session object or creates a new one for them, returns room name
+function addPlayer(username) {
   //Create player object
-  let player = new Player(username, style);
+  let player = new Player(username);
   //See if a game session exists
-  if (gameSessions.length == 0) {
+  if (Object.keys(gameSessions).length == 0) {
     let session = new GameSession('room1');
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
+    return session.getRoom();
   }
   //See if a new session needs to be made
   else if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4){
     let session = new GameSession(`room${gameSessions.length + 1}`);
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
+    return session.getRoom();
   }
   else {
     gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].addPlayer(player);
     if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4) {
       startGame(Object.keys(gameSessions)[Object.keys(gameSessions).length-1]);
     }
+    return gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getRoom();
   }
 }
 
@@ -378,6 +379,23 @@ app.post("/gliders", function(req, res) {
   }
   else {
     res.sendStatus(404);
+  }
+});
+
+//GET handler for giving the client the coordinates for the quadrant they are in, also adds that player to a game session
+app.get("/quadrant", function(req, res) {
+  if (!req.session.loggedin) {
+    res.sendStatus(404);
+  }
+  else {
+    let id = req.session.username;
+    let room = addPlayer(id);
+    console.log(gameSessions[room]);
+    let resBody = {
+      "quadrant": gameSessions[room].getNumPlayers()
+    };
+    res.status(200);
+    res.json(resBody);
   }
 });
 

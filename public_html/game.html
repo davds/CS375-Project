@@ -23,6 +23,11 @@
       background-color: black;
       opacity: 0.5;
     }
+    .outta-bounds {
+      border: 1px solid rgba(0, 0, 0, .6);
+      background-color: black;
+      opacity: 0.5;
+    }
     .vl {
       border-left: 5px solid purple;
       height: 500px;
@@ -101,7 +106,7 @@
     const socket = io();
 
     socket.on('connect', () => {
-      console.log("Connected");
+      addPlayer();
     });
 
     socket.on('phaseOne', (data) => {

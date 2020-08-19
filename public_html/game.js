@@ -245,7 +245,6 @@ function removeTransCells() {
     }
 }
 
-
 //checks to see if the coordinate is being used by another glider
 //inefficient.
 // function isCoordTaken(coords) {
@@ -259,7 +258,6 @@ function removeTransCells() {
 //     }
 //     return false;
 // }
-
 
 function getCenterDiff(coord1, coord2) {
     let xDiff = Math.abs(coord1[0] - coord2[0]);
@@ -280,6 +278,7 @@ function areCoordsTaken() {
 function previewGlider() {
     let cells = curGlider.getActiveCoords();
     let centerPos = curGlider.getCenterPos();
+    let isTaken = areCoordsTaken();
     if(curGlider.getCenterPos()[0] === centerPos[0] && curGlider.getCenterPos()[1] === centerPos[1]) {
         for (i = 0; i < cells.length; i++) {
             let cellId = cells[i];

@@ -68,7 +68,12 @@
           plaintextPassword: passwordInput.value,
         })
       }).then(function (response) {
+        console.log(response.status)
+        if (response.status === 200){
+          location.assign("/home.html")
+        } else {
           return response.text()
+        }
       }).then(function (data) {
           status.textContent = data
       })

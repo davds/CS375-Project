@@ -392,7 +392,8 @@ app.get("/quadrant", function(req, res) {
     let room = addPlayer(id);
     console.log(gameSessions[room]);
     let resBody = {
-      "quadrant": gameSessions[room].getNumPlayers()
+      "quadrant": gameSessions[room].getNumPlayers(),
+      "style": gameSessions[room].getPlayer(id).getStyle()
     };
     res.status(200);
     res.json(resBody);

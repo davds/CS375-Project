@@ -107,7 +107,7 @@ const quadrants = {
         "yMax": 99
     }
 };
-let startingCoords;
+let activeCoords;
 
 //#endregion
 
@@ -121,27 +121,35 @@ let baseTableDim = [99, 99];
 let gameBoard = document.getElementById("game-of-life");
 let boardCells = {};
 
-for (let i = 0; i < baseTableDim[0]; i++) {
-    for (let j = 0; j < baseTableDim[1]; j++) {
-        boardCells[`${i}:${j}`] = { "style": "", "inBounds": true };
-    }
-}
 
 //#endregion
 
 //#region Board Functions
 
-function createBoard(r, c) {
-    let board = document.getElementById("game-of-life");
-    for (let i = 0; i < r; i++) {
+function createBoard() {
+    //Create representation of board
+    for (let i = 0; i < baseTableDim[0]; i++) {
+        for (let j = 0; j < baseTableDim[1]; j++) {
+            boardCells[`${i}:${j}`] = { "style": "", "inBounds": true };
+        }
+    }
+    addQuadrant();
+    for (let i = 0; i < baseTableDim[1]; i++) {
         let row = document.createElement("tr");
-        board.append(row);
-        for (let j = 0; j < c; j++) {
+        gameBoard.append(row);
+        for (let j = 0; j < baseTableDim[0]; j++) {
             let col = document.createElement("td");
             col.id = `${j},${i}`;
+            if (!boardCells[`${j}:${i}`].inBounds) {
+                col.classList.add("outta-bounds");
+            }
+            else {
+                col.classList.add("in-bounds");
+            }
             row.append(col);
         }
     }
+    addListeners();
 }
 
 function getBoard(room) {
@@ -165,22 +173,16 @@ function addQuadrant() {
             boardCells[coords].inBounds = false;
         }
     }
-    drawBoard();
 }
 
 function drawBoard() {
-    $("td").removeClass("outta-bounds");
     let rows = gameBoard.querySelectorAll("tr");
-    for (let i = 0; i < baseTableDim[0]; i++) {
+    for (let i = activeCoords["yMin"]; i < activeCoords["yMax"]; i++) {
         let cells = rows[i].querySelectorAll("td");
-        for (let j = 0; j < baseTableDim[1]; j++) {
+        for (let j = activeCoords["xMin"]; j < activeCoords["xMax"]; j++) {
             if (boardCells[`${j}:${i}`].inBounds) {
                 cells[j].style = boardCells[`${j}:${i}`].style;
             }
-            else {
-                cells[j].classList.add("outta-bounds");
-            }
-            
         }
     }
 }
@@ -203,17 +205,13 @@ function nextGen() {
     });
 }
 
-createBoard(baseTableDim[0], baseTableDim[1]);
-
-
-
 //#endregion
 
 
 //precondition: cell position array of two integers [x, y], boundary of the x quadrant, boundary of the y quadrant. 
 //postcondition: boolean that is true if the given coordinates are in bounds and false otherwise.
 function validPos(pos) {
-    return pos[0] >= startingCoords["xMin"] && pos[0] <= startingCoords["xMax"] && pos[1] >= startingCoords["yMin"] && pos[1] <= startingCoords["yMax"];
+    return pos[0] >= activeCoords["xMin"] && pos[0] <= activeCoords["xMax"] && pos[1] >= activeCoords["yMin"] && pos[1] <= activeCoords["yMax"];
 }
 
 //precondition: cell.id, which is a string with two coordinates separated by ","
@@ -226,19 +224,24 @@ function getCellCoords(cell) {
     return clientCoordinates;
 }
 
-function previewGlider() {
+function clearPreviewGlider() {
     let cells = curGlider.getActiveCoordinates();
-    $("td").removeClass("transparent");
-
     for (i = 0; i < cells.length; i++) {
         let cellId = cells[i];
         let cell = document.getElementById(cellId[0] + "," + cellId[1]);
-        
-        if (cell == null) {
-            $("td").removeClass("transparent");
+        cell.classList.remove("transparent");
+    }
+}
+
+function previewGlider() {
+    let cells = curGlider.getActiveCoordinates();
+    for (i = 0; i < cells.length; i++) {
+        let cellId = cells[i];
+        let cell = document.getElementById(cellId[0] + "," + cellId[1]);
+        if (cell == null || !validPos(cellId)) {
+            clearPreviewGlider();
             break;
         }
-
         cell.classList.add("transparent");        
     }
 }
@@ -292,8 +295,8 @@ function addPlayer() {
         if (response.status == 200) {
             response.json().then(data => {
                 console.log("Quadrant:" + data.quadrant);
-                startingCoords = quadrants[data.quadrant];
-                addQuadrant();
+                activeCoords = quadrants[data.quadrant];
+                createBoard();
             });
         }
         else {
@@ -302,24 +305,27 @@ function addPlayer() {
     });
 }
 
-
-$(document).ready(() => {
-    $("#game-of-life td").on("click", cell => {
-        curGlider.setCenterPos(getCellCoords(cell.target));
-        placeGlider(cell.target);
-        showGliders();
+function addListeners() {
+    $(document).ready(() => {
+        $("#game-of-life td").on("click", cell => {
+            curGlider.setCenterPos(getCellCoords(cell.target));
+            placeGlider(cell.target);
+            showGliders();
+        });
+    
+        $("#game-of-life td").on("mouseover", cell => {
+            clearPreviewGlider();
+            curGlider.setCenterPos(getCellCoords(cell.target))
+            previewGlider();
+        });
+    
+        $("#game-of-life").on("contextmenu", cell => {
+            clearPreviewGlider();
+            curGlider.setCenterPos(getCellCoords(cell.target))
+            rotateGlider();
+            previewGlider();
+            cell.preventDefault();
+        });
     });
-
-    $("#game-of-life td").on("mouseover", cell => {
-        curGlider.setCenterPos(getCellCoords(cell.target))
-        previewGlider();
-    });
-
-    $("#game-of-life").on("contextmenu", cell => {
-        curGlider.setCenterPos(getCellCoords(cell.target))
-        rotateGlider();
-        previewGlider();
-        cell.preventDefault();
-    });
-})
+}
 

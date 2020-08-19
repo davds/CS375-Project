@@ -243,8 +243,41 @@ function removeTransCells() {
                 return;
             }
             $(cell).removeClass("transparent");
+            $(cell).removeClass("invalid");
         }
     }
+}
+
+
+//checks to see if the coordinate is being used by another glider
+//inefficient.
+// function isCoordTaken(coords) {
+//     for(i=0; i<placedGliders.length; i++) {
+//         let occupyingCoords = placedGliders[i].getOccupyingCoords();
+//         for(j=0; j<occupyingCoords.length; j++) {
+//             if(occupyingCoords[j][0] === coords[0] && occupyingCoords[j][1] === coords[1]) {
+//                 return true;
+//             }
+//         }
+//     }
+//     return false;
+// }
+
+
+function getCenterDiff(coord1, coord2) {
+    let xDiff = Math.abs(coord1[0] - coord2[0]);
+    let yDiff = Math.abs(coord1[1] - coord2[1]);
+    return [xDiff, yDiff];
+}
+
+function areCoordsTaken() {
+    for(i=0; i<placedGliders.length; i++) {
+        let diff = getCenterDiff(placedGliders[i].getCenterPos(), curGlider.getCenterPos());
+        if(diff[0]<=2 && diff[1]<=2) {
+            return true;
+        } 
+    }
+    return false;
 }
 
 function previewGlider() {
@@ -256,7 +289,8 @@ function previewGlider() {
     removeTransCells();
     let d2 = new Date();
     let t2 = d2.getTime(); 
-    console.log(t2-t1, t1, t2);
+    //console.log(t2-t1, t1, t2);
+    let isTaken = areCoordsTaken();
     if(curGlider.getCenterPos()[0] === centerPos[0] && curGlider.getCenterPos()[1] === centerPos[1]) {
         for (i = 0; i < cells.length; i++) {
             let cellId = cells[i];
@@ -266,7 +300,10 @@ function previewGlider() {
                 //$("td").removeClass("transparent");
                 break;
             }
-            cell.classList.add("transparent");        
+            cell.classList.add("transparent");
+            if(isTaken) {
+                $(cell).addClass("invalid");
+            }
         }
     }
 }

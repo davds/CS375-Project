@@ -116,6 +116,7 @@ const quadrants = {
     }
 };
 let activeCoords;
+let clientColor;
 
 //#endregion
 
@@ -260,11 +261,20 @@ function previewGlider() {
     }
 }
 
-//place glider at where the mouse is clicked on the board on the client side
+//place glider at where the mouse is clicked on the board on the client side, returns true if glider is placed
 function placeGlider(cell) {
-    placedGliders.push(new Glider(curGlider.getCenterPos(), curGlider.orientation));
-    if (placedGliders.length > gliderLimit)
-        placedGliders.shift();
+    if (validPos(curGlider.getCenterPos())) {
+        placedGliders.push(new Glider(curGlider.getCenterPos(), curGlider.orientation));
+        if (placedGliders.length > gliderLimit) {
+            placedGliders.shift();
+        }
+        return true;
+    }
+    else {
+        return false;
+    }
+
+        
 }
 
 function sendGliders() { 
@@ -291,14 +301,24 @@ function rotateGlider() {
     curGlider.changeOrientation();
 }
 
-function showGliders() {    
-    $("td").removeClass("solid");
+function clearGliders() {
     for (i in placedGliders) {        
         let cells = placedGliders[i].getActiveCoords();
-        for (i = 0; i < cells.length; i++) {
-            let cellId = cells[i];
+        for (j = 0; j < cells.length; j++) {
+            let cellId = cells[j];
             let cell = document.getElementById(cellId[0] + "," + cellId[1]);
-            cell.classList.add("solid");              
+            cell.style = "";        
+        }
+    }
+}
+
+function showGliders() {    
+    for (i in placedGliders) {        
+        let cells = placedGliders[i].getActiveCoords();
+        for (j = 0; j < cells.length; j++) {
+            let cellId = cells[j];
+            let cell = document.getElementById(cellId[0] + "," + cellId[1]);
+            cell.style = clientColor;
         }
     }
 }
@@ -309,7 +329,9 @@ function addPlayer() {
         if (response.status == 200) {
             response.json().then(data => {
                 console.log("Quadrant:" + data.quadrant);
+                console.log("style:" + data.style);
                 activeCoords = quadrants[data.quadrant];
+                clientColor = data.style;
                 createBoard();
             });
         }
@@ -323,9 +345,11 @@ function addListeners() {
     $(document).ready(() => {
         $("#game-of-life td").on("click", cell => {
             removeTransCells();
+            clearGliders();
             curGlider.setCenterPos(getCellCoords(cell.target));
-            placeGlider(cell.target);
-            showGliders();
+            if (placeGlider(cell.target)){
+                showGliders();
+            }    
         });
     
         $("#game-of-life td").on("mouseover", cell => {

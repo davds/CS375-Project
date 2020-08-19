@@ -53,8 +53,10 @@ class Glider {
     constructor(centerPos, orientation) {
         this.centerPos = centerPos; //currently centerPos must be a valid coordinate when created
         this.orientation = orientation;
+        this.lastCoords = null;
     }
     changeOrientation() {
+        this.lastCoords = this.getActiveCoords() 
         this.orientation = this.orientation.getNext();
     }
     getOrientation() {
@@ -63,25 +65,31 @@ class Glider {
     getCenterPos() {
         return this.centerPos;
     }
-    setCenterPos(pos) { //TODO: get boundaries of quadrant instead of entire board.
+    getLastCoords() {
+        return this.lastCoords;
+    }
+    setCenterPos(pos) { 
+        if(pos[0] != this.getCenterPos()[0] || pos[1] != this.getCenterPos()[1]) {
+            this.lastCoords = this.getActiveCoords() 
+        }
         this.centerPos = pos;
     }
-    getActiveCoordinates() {
+    getActiveCoords() {
         return shared.makeGliderPos(this.getCenterPos(), this.getOrientation());
     }
-    getOccupyingCoordinates() { //3x3 grid, 9 cells total that cannot have other cells on it.
-        let coordinates = [];
+    getOccupyingCoords() { //3x3 grid, 9 cells total that cannot have other cells on it.
+        let coords = [];
         let cp = this.getCenterPos();
-        coordinates.push([cp[0], cp[1]]);
-        coordinates.push([cp[0]+1, cp[1]]);
-        coordinates.push([cp[0]-1, cp[1]]);
-        coordinates.push([cp[0], cp[1]+1]);
-        coordinates.push([cp[0], cp[1]-1]);
-        coordinates.push([cp[0]+1, cp[1]+1]);
-        coordinates.push([cp[0]+1, cp[1]-1]);
-        coordinates.push([cp[0]-1, cp[1]+1]);
-        coordinates.push([cp[0]-1, cp[1]-1]);
-        return coordinates;
+        coords.push([cp[0], cp[1]]);
+        coords.push([cp[0]+1, cp[1]]);
+        coords.push([cp[0]-1, cp[1]]);
+        coords.push([cp[0], cp[1]+1]);
+        coords.push([cp[0], cp[1]-1]);
+        coords.push([cp[0]+1, cp[1]+1]);
+        coords.push([cp[0]+1, cp[1]-1]);
+        coords.push([cp[0]-1, cp[1]+1]);
+        coords.push([cp[0]-1, cp[1]-1]);
+        return coords;
     }
 }
 
@@ -123,7 +131,7 @@ let boardCells = {};
 
 for (let i = 0; i < baseTableDim[0]; i++) {
     for (let j = 0; j < baseTableDim[1]; j++) {
-        boardCells[`${i}:${j}`] = { "style": "", "inBounds": true };
+        boardCells[`${i}:${j}`] = { "style": "", "inBounds": true, "transparent": false };
     }
 }
 
@@ -180,7 +188,6 @@ function drawBoard() {
             else {
                 cells[j].classList.add("outta-bounds");
             }
-            
         }
     }
 }
@@ -222,24 +229,45 @@ function getCellCoords(cell) {
     let cellNumbers = cell.id.split(",");
     let cellX = parseInt(cellNumbers[0]);
     let cellY = parseInt(cellNumbers[1]);
-    let clientCoordinates = [cellX, cellY];
-    return clientCoordinates;
+    let clientCoords = [cellX, cellY];
+    return clientCoords;
+}
+
+function removeTransCells() {
+    let cells = curGlider.getLastCoords();
+    if(cells != null) {
+        for(i=0; i<cells.length; i++) {
+            let cellId = cells[i];
+            let cell = document.getElementById(cellId[0] + "," + cellId[1]);
+            if(cell === null) {
+                return;
+            }
+            $(cell).removeClass("transparent");
+        }
+    }
 }
 
 function previewGlider() {
-    let cells = curGlider.getActiveCoordinates();
-    $("td").removeClass("transparent");
-
-    for (i = 0; i < cells.length; i++) {
-        let cellId = cells[i];
-        let cell = document.getElementById(cellId[0] + "," + cellId[1]);
-        
-        if (cell == null) {
-            $("td").removeClass("transparent");
-            break;
+    let cells = curGlider.getActiveCoords();
+    let centerPos = curGlider.getCenterPos();
+    //$("td").removeClass("transparent");
+    let d = new Date();
+    let t1 = d.getTime();
+    removeTransCells();
+    let d2 = new Date();
+    let t2 = d2.getTime(); 
+    console.log(t2-t1, t1, t2);
+    if(curGlider.getCenterPos()[0] === centerPos[0] && curGlider.getCenterPos()[1] === centerPos[1]) {
+        for (i = 0; i < cells.length; i++) {
+            let cellId = cells[i];
+            let cell = document.getElementById(cellId[0] + "," + cellId[1]);
+            if (cell == null) {
+                removeTransCells();
+                //$("td").removeClass("transparent");
+                break;
+            }
+            cell.classList.add("transparent");        
         }
-
-        cell.classList.add("transparent");        
     }
 }
 
@@ -277,7 +305,7 @@ function rotateGlider() {
 function showGliders() {    
     $("td").removeClass("solid");
     for (i in placedGliders) {        
-        let cells = placedGliders[i].getActiveCoordinates();
+        let cells = placedGliders[i].getActiveCoords();
         for (i = 0; i < cells.length; i++) {
             let cellId = cells[i];
             let cell = document.getElementById(cellId[0] + "," + cellId[1]);

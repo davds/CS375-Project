@@ -69,7 +69,7 @@ class Glider {
         return this.lastCoords;
     }
     setCenterPos(pos) { 
-        if(pos[0] != this.getCenterPos()[0] || pos[1] != this.getCenterPos()[1]) {
+        if(!(pos[0] == this.getCenterPos()[0] && pos[1] == this.getCenterPos()[1])) {
             this.lastCoords = this.getActiveCoords() 
         }
         this.centerPos = pos;
@@ -95,23 +95,23 @@ class Glider {
 
 const quadrants = {
     "1": {"xMin": 0,
-        "xMax": 15,
+        "xMax": 19,
         "yMin": 0,
-        "yMax": 15
+        "yMax": 19
     },
-    "2": {"xMin": 84,
+    "2": {"xMin": 80,
         "xMax": 99,
         "yMin": 0,
-        "yMax": 15
+        "yMax": 19
     },
-    "3": {"xMin": 84,
+    "3": {"xMin": 80,
         "xMax": 99,
-        "yMin": 84,
+        "yMin": 80,
         "yMax": 99
     },
     "4": {"xMin": 0,
-        "xMax": 15,
-        "yMin": 84,
+        "xMax": 19,
+        "yMin": 80,
         "yMax": 99
     }
 };
@@ -150,9 +150,6 @@ function createBoard() {
             col.id = `${j},${i}`;
             if (!boardCells[`${j}:${i}`].inBounds) {
                 col.classList.add("outta-bounds");
-            }
-            else {
-                col.classList.add("in-bounds");
             }
             row.append(col);
         }
@@ -236,14 +233,11 @@ function getCellCoords(cell) {
 }
 
 function removeTransCells() {
-    let cells = curGlider.getLastCoords();
+    let cells = curGlider.getActiveCoords();
     if(cells != null) {
         for(i=0; i<cells.length; i++) {
             let cellId = cells[i];
             let cell = document.getElementById(cellId[0] + "," + cellId[1]);
-            if(cell === null) {
-                return;
-            }
             $(cell).removeClass("transparent");
         }
     }
@@ -252,18 +246,11 @@ function removeTransCells() {
 function previewGlider() {
     let cells = curGlider.getActiveCoords();
     let centerPos = curGlider.getCenterPos();
-    //$("td").removeClass("transparent");
-    let d = new Date();
-    let t1 = d.getTime();
-    removeTransCells();
-    let d2 = new Date();
-    let t2 = d2.getTime(); 
-    console.log(t2-t1, t1, t2);
     if(curGlider.getCenterPos()[0] === centerPos[0] && curGlider.getCenterPos()[1] === centerPos[1]) {
         for (i = 0; i < cells.length; i++) {
             let cellId = cells[i];
             let cell = document.getElementById(cellId[0] + "," + cellId[1]);
-            if (cell == null) {
+            if (cell == null  || !validPos(cellId)) {
                 removeTransCells();
                 //$("td").removeClass("transparent");
                 break;
@@ -335,19 +322,20 @@ function addPlayer() {
 function addListeners() {
     $(document).ready(() => {
         $("#game-of-life td").on("click", cell => {
+            removeTransCells();
             curGlider.setCenterPos(getCellCoords(cell.target));
             placeGlider(cell.target);
             showGliders();
         });
     
         $("#game-of-life td").on("mouseover", cell => {
-            clearPreviewGlider();
+            removeTransCells();
             curGlider.setCenterPos(getCellCoords(cell.target))
             previewGlider();
         });
     
         $("#game-of-life").on("contextmenu", cell => {
-            clearPreviewGlider();
+            removeTransCells();
             curGlider.setCenterPos(getCellCoords(cell.target))
             rotateGlider();
             previewGlider();

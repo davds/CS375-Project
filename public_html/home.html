@@ -2,8 +2,12 @@
 
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8">  
   <link rel="stylesheet" href="./source/bootstrap.min.css">
+  <script src="./source/jquery-3.5.1.min.js"></script>
+  <script src="./source/popper.min.js"></script>
+  <script src="./source/bootstrap.min.js"></script>
+  <script>$("#header").load("header.html");</script>
   <title>Home</title>
 </head>
 
@@ -25,12 +29,8 @@
       <p>Games Played: <strong id="gamesplayed"></strong></p>
     </div>
   </div>
-  <script src="./source/jquery-3.5.1.min.js"></script>
-  <script src="./source/popper.min.js"></script>
-  <script src="./source/bootstrap.min.js"></script>
   <script src="./client.js"></script>
   <script>  
-    $("#header").load("header.html");    
     let message = document.getElementById("message")
     let username = document.getElementById("username")
     let email = document.getElementById("email")

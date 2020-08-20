@@ -5,6 +5,11 @@
 <head>
   <meta charset="utf-8">
   <title>Game</title>
+  <link rel="stylesheet" href="./source/bootstrap.min.css">
+  <script src="./source/jquery-3.5.1.min.js"></script>
+  <script src="./source/popper.min.js"></script>
+  <script src="./source/bootstrap.min.js"></script>
+  <script>$("#header").load("header.html");</script>
   <style>
     table {
       border-collapse: collapse;
@@ -88,16 +93,12 @@
   <input type="button" value="Send Gliders" onclick="sendGliders()" />
   <input type="button" value="Show" onclick="getBoard('test')" />
   <input type="button" value="Next" onclick="nextGen()" />
-  <script src="./source/jquery-3.5.1.min.js"></script>
-  <script src="./source/popper.min.js"></script>
-  <script src="./source/bootstrap.min.js"></script>
   <script src="./shared.js"></script>
   <script src="./client.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="./shared.js"></script>
   <script src="game.js"></script>
   <script>
-    $("#header").load("header.html");
     const socket = io();
 
     socket.on('connect', () => {

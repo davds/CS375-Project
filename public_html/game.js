@@ -53,6 +53,7 @@ class Glider {
     constructor(centerPos, orientation) {
         this.centerPos = centerPos; //currently centerPos must be a valid coordinate when created
         this.orientation = orientation;
+        this.dimensions = [1, 1, 1, 1]; //how far the glider extends in each direction. order: +x -x +y -y. 
         this.lastCoords = null;
     }
     changeOrientation() {
@@ -219,8 +220,18 @@ function nextGen() {
 
 //precondition: cell position array of two integers [x, y], boundary of the x quadrant, boundary of the y quadrant. 
 //postcondition: boolean that is true if the given coordinates are in bounds and false otherwise.
+//used to show where quadrants should exist.
 function validPos(pos) {
     return pos[0] >= activeCoords["xMin"] && pos[0] <= activeCoords["xMax"] && pos[1] >= activeCoords["yMin"] && pos[1] <= activeCoords["yMax"];
+}
+
+//precondition: glider to be placed
+//postcondition: boolean that is true if the glider's dimensions fit within the bounds of the quadrant.
+//takes the glider's size into account to prevent gliders from being placed partially outside of the quadrant. validPos does not do this.
+function isGliderInBounds(glider) {
+    let pos = glider.getCenterPos();
+    let dimensions = glider.dimensions;
+    return (pos[0] - dimensions[1]) >= activeCoords["xMin"] && (pos[0] + dimensions[0]) <= activeCoords["xMax"] && (pos[1] -dimensions[3]) >= activeCoords["yMin"] && (pos[1] + dimensions[2]) <= activeCoords["yMax"];
 }
 
 //precondition: cell.id, which is a string with two coordinates separated by ","
@@ -265,10 +276,10 @@ function getCenterDiff(coord1, coord2) {
     return [xDiff, yDiff];
 }
 
-function areCoordsTaken() {
+function areCoordsTaken(coords) {
     for(i=0; i<placedGliders.length; i++) {
-        let diff = getCenterDiff(placedGliders[i].getCenterPos(), curGlider.getCenterPos());
-        if(diff[0]<=2 && diff[1]<=2) {
+        let diff = getCenterDiff(placedGliders[i].getCenterPos(), coords);
+        if(diff[0]<=3 && diff[1]<=3) {
             return true;
         } 
     }
@@ -278,7 +289,7 @@ function areCoordsTaken() {
 function previewGlider() {
     let cells = curGlider.getActiveCoords();
     let centerPos = curGlider.getCenterPos();
-    let isTaken = areCoordsTaken();
+    let isTaken = areCoordsTaken(curGlider.getCenterPos());
     if(curGlider.getCenterPos()[0] === centerPos[0] && curGlider.getCenterPos()[1] === centerPos[1]) {
         for (i = 0; i < cells.length; i++) {
             let cellId = cells[i];
@@ -298,7 +309,7 @@ function previewGlider() {
 
 //place glider at where the mouse is clicked on the board on the client side, returns true if glider is placed
 function placeGlider(cell) {
-    if (validPos(curGlider.getCenterPos())) {
+    if (!areCoordsTaken(curGlider.getCenterPos()) && isGliderInBounds(curGlider)) {
         placedGliders.push(new Glider(curGlider.getCenterPos(), curGlider.orientation));
         if (placedGliders.length > gliderLimit) {
             placedGliders.shift();
@@ -377,12 +388,12 @@ function addPlayer() {
 function addListeners() {
     $(document).ready(() => {
         $("#game-of-life td").on("click", cell => {
-            removeTransCells();
             clearGliders();
             curGlider.setCenterPos(getCellCoords(cell.target));
             if (placeGlider(cell.target)){
-                showGliders();
+                removeTransCells();
             }    
+            showGliders();
         });
     
         $("#game-of-life td").on("mouseover", cell => {

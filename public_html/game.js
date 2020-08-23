@@ -53,8 +53,11 @@ class Glider {
     constructor(centerPos, orientation) {
         this.centerPos = centerPos; //currently centerPos must be a valid coordinate when created
         this.orientation = orientation;
+        this.dimensions = [1, 1, 1, 1]; //how far the glider extends in each direction. order: +x -x +y -y. 
+        this.lastCoords = null;
     }
     changeOrientation() {
+        this.lastCoords = this.getActiveCoords() 
         this.orientation = this.orientation.getNext();
     }
     getOrientation() {
@@ -63,27 +66,58 @@ class Glider {
     getCenterPos() {
         return this.centerPos;
     }
-    setCenterPos(pos) { //TODO: get boundaries of quadrant instead of entire board.
+    getLastCoords() {
+        return this.lastCoords;
+    }
+    setCenterPos(pos) { 
+        if(!(pos[0] == this.getCenterPos()[0] && pos[1] == this.getCenterPos()[1])) {
+            this.lastCoords = this.getActiveCoords() 
+        }
         this.centerPos = pos;
     }
-    getActiveCoordinates() {
+    getActiveCoords() {
         return shared.makeGliderPos(this.getCenterPos(), this.getOrientation());
     }
-    getOccupyingCoordinates() { //3x3 grid, 9 cells total that cannot have other cells on it.
-        let coordinates = [];
+    getOccupyingCoords() { //3x3 grid, 9 cells total that cannot have other cells on it.
+        let coords = [];
         let cp = this.getCenterPos();
-        coordinates.push([cp[0], cp[1]]);
-        coordinates.push([cp[0]+1, cp[1]]);
-        coordinates.push([cp[0]-1, cp[1]]);
-        coordinates.push([cp[0], cp[1]+1]);
-        coordinates.push([cp[0], cp[1]-1]);
-        coordinates.push([cp[0]+1, cp[1]+1]);
-        coordinates.push([cp[0]+1, cp[1]-1]);
-        coordinates.push([cp[0]-1, cp[1]+1]);
-        coordinates.push([cp[0]-1, cp[1]-1]);
-        return coordinates;
+        coords.push([cp[0], cp[1]]);
+        coords.push([cp[0]+1, cp[1]]);
+        coords.push([cp[0]-1, cp[1]]);
+        coords.push([cp[0], cp[1]+1]);
+        coords.push([cp[0], cp[1]-1]);
+        coords.push([cp[0]+1, cp[1]+1]);
+        coords.push([cp[0]+1, cp[1]-1]);
+        coords.push([cp[0]-1, cp[1]+1]);
+        coords.push([cp[0]-1, cp[1]-1]);
+        return coords;
     }
 }
+
+const quadrants = {
+    "1": {"xMin": 0,
+        "xMax": 19,
+        "yMin": 0,
+        "yMax": 19
+    },
+    "2": {"xMin": 80,
+        "xMax": 99,
+        "yMin": 0,
+        "yMax": 19
+    },
+    "3": {"xMin": 80,
+        "xMax": 99,
+        "yMin": 80,
+        "yMax": 99
+    },
+    "4": {"xMin": 0,
+        "xMax": 19,
+        "yMin": 80,
+        "yMax": 99
+    }
+};
+let activeCoords;
+let clientColor;
 
 //#endregion
 
@@ -97,28 +131,32 @@ let baseTableDim = [99, 99];
 let gameBoard = document.getElementById("game-of-life");
 let boardCells = {};
 
-for (let i = 0; i < baseTableDim[0]; i++) {
-    for (let j = 0; j < baseTableDim[1]; j++) {
-        boardCells[`${i}:${j}`] = { "style": "", "inBounds": true };
-    }
-}
 
 //#endregion
 
 //#region Board Functions
 
-function createBoard(r, c) {
-    let board = document.getElementById("game-of-life");
-    //createQuadrantLines();
-    for (let i = 0; i < r; i++) {
+function createBoard() {
+    //Create representation of board
+    for (let i = 0; i < baseTableDim[0]; i++) {
+        for (let j = 0; j < baseTableDim[1]; j++) {
+            boardCells[`${i}:${j}`] = { "style": "", "inBounds": true };
+        }
+    }
+    addQuadrant();
+    for (let i = 0; i < baseTableDim[1]; i++) {
         let row = document.createElement("tr");
-        board.append(row);
-        for (let j = 0; j < c; j++) {
+        gameBoard.append(row);
+        for (let j = 0; j < baseTableDim[0]; j++) {
             let col = document.createElement("td");
-            col.id = `${i},${j}`;
+            col.id = `${j},${i}`;
+            if (!boardCells[`${j}:${i}`].inBounds) {
+                col.classList.add("outta-bounds");
+            }
             row.append(col);
         }
     }
+    addListeners();
 }
 
 function getBoard(room) {
@@ -135,12 +173,26 @@ function getBoard(room) {
     });
 }
 
-function drawBoard() {    
+function addQuadrant() {
+    for (let coords in boardCells) {
+        let pos = coords.split(":");
+        if (!validPos(pos)) {
+            boardCells[coords].inBounds = false;
+        }
+    }
+}
+
+function drawBoard() {
     let rows = gameBoard.querySelectorAll("tr");
-    for (let i = 0; i < baseTableDim[0]; i++) {
+    for (let i = activeCoords["yMin"]; i < activeCoords["yMax"]; i++) {
         let cells = rows[i].querySelectorAll("td");
-        for (let j = 0; j < baseTableDim[1]; j++) {
-            cells[j].style = boardCells[`${i}:${j}`].style;
+        for (let j = activeCoords["xMin"]; j < activeCoords["xMax"]; j++) {
+            if (boardCells[`${j}:${i}`].inBounds) {
+                cells[j].style = boardCells[`${j}:${i}`].style;
+            }
+            else {
+                cells[j].classList.add("outta-bounds");
+            }
         }
     }
 }
@@ -163,15 +215,23 @@ function nextGen() {
     });
 }
 
-createBoard(baseTableDim[0], baseTableDim[1]);
-
 //#endregion
 
 
 //precondition: cell position array of two integers [x, y], boundary of the x quadrant, boundary of the y quadrant. 
 //postcondition: boolean that is true if the given coordinates are in bounds and false otherwise.
-function isCenterPosValid(pos, bX=baseTableDim[0] + 1, bY=baseTableDim[1] + 1) {
-    return pos[0] > 0 && pos[1] > 0 && pos[0] < (bX - 1) && pos[1] < (bY - 1);
+//used to show where quadrants should exist.
+function validPos(pos) {
+    return pos[0] >= activeCoords["xMin"] && pos[0] <= activeCoords["xMax"] && pos[1] >= activeCoords["yMin"] && pos[1] <= activeCoords["yMax"];
+}
+
+//precondition: glider to be placed
+//postcondition: boolean that is true if the glider's dimensions fit within the bounds of the quadrant.
+//takes the glider's size into account to prevent gliders from being placed partially outside of the quadrant. validPos does not do this.
+function isGliderInBounds(glider) {
+    let pos = glider.getCenterPos();
+    let dimensions = glider.dimensions;
+    return (pos[0] - dimensions[1]) >= activeCoords["xMin"] && (pos[0] + dimensions[0]) <= activeCoords["xMax"] && (pos[1] -dimensions[3]) >= activeCoords["yMin"] && (pos[1] + dimensions[2]) <= activeCoords["yMax"];
 }
 
 //precondition: cell.id, which is a string with two coordinates separated by ","
@@ -180,32 +240,85 @@ function getCellCoords(cell) {
     let cellNumbers = cell.id.split(",");
     let cellX = parseInt(cellNumbers[0]);
     let cellY = parseInt(cellNumbers[1]);
-    let clientCoordinates = [cellX, cellY];
-    return clientCoordinates;
+    let clientCoords = [cellX, cellY];
+    return clientCoords;
 }
 
-function previewGlider() {
-    let cells = curGlider.getActiveCoordinates();
-    $("td").removeClass("transparent");
-
-    for (i = 0; i < cells.length; i++) {
-        let cellId = cells[i];
-        let cell = document.getElementById(cellId[0] + "," + cellId[1]);
-        
-        if (cell == null) {
-            $("td").removeClass("transparent");
-            break;
+function removeTransCells() {
+    let cells = curGlider.getActiveCoords();
+    if(cells != null) {
+        for(i=0; i<cells.length; i++) {
+            let cellId = cells[i];
+            let cell = document.getElementById(cellId[0] + "," + cellId[1]);
+            $(cell).removeClass("transparent");
+            $(cell).removeClass("invalid");
         }
-
-        cell.classList.add("transparent");        
     }
 }
 
-//place glider at where the mouse is clicked on the board on the client side
+//checks to see if the coordinate is being used by another glider
+//inefficient.
+// function isCoordTaken(coords) {
+//     for(i=0; i<placedGliders.length; i++) {
+//         let occupyingCoords = placedGliders[i].getOccupyingCoords();
+//         for(j=0; j<occupyingCoords.length; j++) {
+//             if(occupyingCoords[j][0] === coords[0] && occupyingCoords[j][1] === coords[1]) {
+//                 return true;
+//             }
+//         }
+//     }
+//     return false;
+// }
+
+function getCenterDiff(coord1, coord2) {
+    let xDiff = Math.abs(coord1[0] - coord2[0]);
+    let yDiff = Math.abs(coord1[1] - coord2[1]);
+    return [xDiff, yDiff];
+}
+
+function areCoordsTaken(coords) {
+    for(i=0; i<placedGliders.length; i++) {
+        let diff = getCenterDiff(placedGliders[i].getCenterPos(), coords);
+        if(diff[0]<=3 && diff[1]<=3) {
+            return true;
+        } 
+    }
+    return false;
+}
+
+function previewGlider() {
+    let cells = curGlider.getActiveCoords();
+    let centerPos = curGlider.getCenterPos();
+    let isTaken = areCoordsTaken(curGlider.getCenterPos());
+    if(curGlider.getCenterPos()[0] === centerPos[0] && curGlider.getCenterPos()[1] === centerPos[1]) {
+        for (i = 0; i < cells.length; i++) {
+            let cellId = cells[i];
+            let cell = document.getElementById(cellId[0] + "," + cellId[1]);
+            if (cell == null  || !validPos(cellId)) {
+                removeTransCells();
+                //$("td").removeClass("transparent");
+                break;
+            }
+            cell.classList.add("transparent");
+            if(isTaken) {
+                $(cell).addClass("invalid");
+            }
+        }
+    }
+}
+
+//place glider at where the mouse is clicked on the board on the client side, returns true if glider is placed
 function placeGlider(cell) {
-    placedGliders.push(new Glider(curGlider.getCenterPos(), curGlider.orientation));
-    if (placedGliders.length > gliderLimit)
-        placedGliders.shift();
+    if (!areCoordsTaken(curGlider.getCenterPos()) && isGliderInBounds(curGlider)) {
+        placedGliders.push(new Glider(curGlider.getCenterPos(), curGlider.orientation));
+        if (placedGliders.length > gliderLimit) {
+            placedGliders.shift();
+        }
+        return true;
+    }
+    else {
+        return false;
+    }   
 }
 
 function sendGliders() { 
@@ -232,36 +345,70 @@ function rotateGlider() {
     curGlider.changeOrientation();
 }
 
-function showGliders() {    
-    $("td").removeClass("solid");
+function clearGliders() {
     for (i in placedGliders) {        
-        let cells = placedGliders[i].getActiveCoordinates();
-        for (i = 0; i < cells.length; i++) {
-            let cellId = cells[i];
+        let cells = placedGliders[i].getActiveCoords();
+        for (j = 0; j < cells.length; j++) {
+            let cellId = cells[j];
             let cell = document.getElementById(cellId[0] + "," + cellId[1]);
-            cell.classList.add("solid");              
+            cell.style = "";        
         }
     }
 }
 
+function showGliders() {    
+    for (i in placedGliders) {        
+        let cells = placedGliders[i].getActiveCoords();
+        for (j = 0; j < cells.length; j++) {
+            let cellId = cells[j];
+            let cell = document.getElementById(cellId[0] + "," + cellId[1]);
+            cell.style = clientColor;
+        }
+    }
+}
 
-$(document).ready(() => {
-    $("#game-of-life td").on("click", cell => {
-        curGlider.setCenterPos(getCellCoords(cell.target));
-        placeGlider(cell.target);
-        showGliders();
+//Add player to a game session object and get the quadrant player is in
+function addPlayer() {
+    fetch("/quadrant").then(response => {
+        if (response.status == 200) {
+            response.json().then(data => {
+                console.log("Quadrant:" + data.quadrant);
+                console.log("style:" + data.style);
+                activeCoords = quadrants[data.quadrant];
+                clientColor = data.style;
+                createBoard();
+            });
+        }
+        else {
+            alert("Please log in.");
+        }
     });
+}
 
-    $("#game-of-life td").on("mouseover", cell => {
-        curGlider.setCenterPos(getCellCoords(cell.target))
-        previewGlider();
+function addListeners() {
+    $(document).ready(() => {
+        $("#game-of-life td").on("click", cell => {
+            clearGliders();
+            curGlider.setCenterPos(getCellCoords(cell.target));
+            if (placeGlider(cell.target)){
+                removeTransCells();
+            }    
+            showGliders();
+        });
+    
+        $("#game-of-life td").on("mouseover", cell => {
+            removeTransCells();
+            curGlider.setCenterPos(getCellCoords(cell.target))
+            previewGlider();
+        });
+    
+        $("#game-of-life").on("contextmenu", cell => {
+            removeTransCells();
+            curGlider.setCenterPos(getCellCoords(cell.target))
+            rotateGlider();
+            previewGlider();
+            cell.preventDefault();
+        });
     });
-
-    $("#game-of-life").on("contextmenu", cell => {
-        curGlider.setCenterPos(getCellCoords(cell.target))
-        rotateGlider();
-        previewGlider();
-        cell.preventDefault();
-    });
-})
+}
 

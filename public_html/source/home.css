@@ -1,0 +1,25 @@
+[type=radio] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+[type=radio] + i {
+    cursor: pointer;
+}
+[type=radio]:checked + i {
+    outline: 2px solid black;
+}
+
+.radio_item{
+    display: none !important;
+}
+.label_item{
+    opacity: 0.1;
+}
+.radio_item:checked + label {
+    opacity: 1;
+}
+label {
+    cursor: pointer;
+}

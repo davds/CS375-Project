@@ -11,6 +11,9 @@ class Player {
 	getStyle() {
 		return this.style;
 	}
+	setStyle(style) {
+		this.style = style;
+	}
 	setStrength(strength) {
 		this.strength = strength;
 	}
@@ -43,6 +46,7 @@ class ActivePiece {
 
 class GameSession {
 	constructor(roomName, coords=[[0,99],[0,99]]) {
+		this.colors = ["background-color: red;", "background-color: blue;", "background-color: green;", "background-color: yellow;"];
 		this.roomName = roomName;
 		this.players = {};
 		this.activePieces = [];
@@ -59,10 +63,11 @@ class GameSession {
 		return this.players[id];
 	}
 	addPlayer(player) {
+		player.setStyle(this.colors[this.getNumPlayers()]);
 		this.players[player.getId()] = player;
 	}
 	getNumPlayers() {
-		return this.players.length;
+		return Object.keys(this.players).length;
 	}
 	removePlayer(id) {
 		delete players[id];

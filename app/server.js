@@ -5,6 +5,7 @@ const express = require("express");
 const session = require("express-session");
 const app = express();
 const {Player, ActivePiece, GameSession} = require("./classes.js");
+const database = require("./database.js");
 const {makeGliderPos} = require("../public_html/shared.js");
 const hostname = "localhost";
 const port = process.env.PORT || 3000;
@@ -14,9 +15,8 @@ const options = {
 };
 const io = require('socket.io').listen(server, options);
 let gameSessions = {"test": new GameSession("test")};
-gameSessions["test"].addPlayer(new Player("davd", "background-color: purple;"));
+gameSessions["test"].addPlayer(new Player("davd"));
 gameSessions["test"].addPlayer(new Player("hoff", "background-color: red;"));
-
 
 app.use(express.json());
 app.use(express.static("../public_html"));
@@ -385,6 +385,7 @@ io.on("connect", socket => {
   console.log("Connected!");
   socket.emit('next', 'hello');
 });
+
 
 server.listen(port, function() {
   console.log(`Server listening on post: http://${hostname}:${port}`)

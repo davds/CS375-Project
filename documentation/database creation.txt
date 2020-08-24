@@ -14,10 +14,11 @@ CREATE TABLE users (
     UNIQUE (email)
 );
  
-CREATE TABLE stats (
-    id INT,
+CREATE TABLE userData (
+    username VARCHAR(20),
+    style VARCHAR(999),
     wins INT,
     gamesplayed INT,
-    PRIMARY KEY (id),
-    CONSTRAINT fk_id FOREIGN KEY (id) REFERENCES users (id)
+    PRIMARY KEY (username),
+    CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users (username)
 )

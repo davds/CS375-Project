@@ -1,7 +1,11 @@
+const database = require("./database.js");
 class Player {
-	constructor(id, style, strength=0) {
+	constructor(id, style="", strength=0) {
 		this.id = id;
-		this.style = style;
+		if (style === "")
+			this.style = database.getStyle(id)
+		else
+			this.style = style;
 		this.strength = strength;
 	}
 	getStyle() {

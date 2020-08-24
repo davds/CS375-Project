@@ -20,48 +20,7 @@
       <div class="jumbotron">
         <h1 class="display-2">Conway's Game of Death</h1>
         <hr class="my-4">
-        <div class="container p-3 my-3 border radio">
-          <h2>Select a color for your cells</h2>
-          <div class="row container-md">
-            <label class="col-sm" style="color: black; font-size: 36px;">
-              <input type="radio" name="colorradio" checked> <i class="fas fa-circle"></i>
-            </label>
-            <label class="col-sm" style="color: gray; font-size: 36px;">
-              <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
-            </label>
-            <label class="col-sm" style="color: blue; font-size: 36px;">
-              <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
-            </label>
-            <label class="col-sm" style="color: orange; font-size: 36px;">
-              <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
-            </label>
-            <label class="col-sm" style="color: green; font-size: 36px;">
-              <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
-            </label>
-            <label class="col-sm" style="color: tan; font-size: 36px;">
-              <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
-            </label>
-          </div>
-          <div class="row container-md">
-            <label class="col-sm" style="color: red; font-size: 36px;">
-              <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
-            </label>
-            <label class="col-sm" style="color: pink; font-size: 36px">
-              <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
-            </label>
-            <label class="col-sm" style="color: yellow; font-size: 36px">
-              <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
-            </label>
-            <label class="col-sm" style="color: purple; font-size: 36px">
-              <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
-            </label>
-            <label class="col-sm" style="color: cyan; font-size: 36px;">
-              <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
-            </label>
-            <label class="col-sm" style="color: brown; font-size: 36px;">
-              <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
-            </label>
-          </div>
+        <div class="container">
         </div>
         <button type="button" class="btn btn-success btn-lg btn-block" id="play">Play</button>
       </div>
@@ -72,6 +31,55 @@
       <p><i class="fas fa-envelope"></i> Email: <b id="email"></b></p> 
       <p><i class="fas fa-crown"></i> Wins: <strong id="wins"></strong></p>
       <p><i class="fas fa-gamepad"></i> Games Played: <strong id="gamesplayed"></strong></p>
+      <div class="container p-3 my-3 border radio" style="text-align: center;">
+        <h2 >Cell Color</h2>
+        <div class="row container-md">
+          <label class="col-sm" style="color: black; font-size: 42px;">
+            <input type="radio" name="colorradio" checked> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: blue; font-size: 42px;">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: orange; font-size: 42px;">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: lightgreen; font-size: 42px;">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: tan; font-size: 42px;">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: darkolivegreen; font-size: 42px;">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: darkslateblue; font-size: 42px;">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: red; font-size: 42px;">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: hotpink; font-size: 42px">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: yellow; font-size: 42px">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: purple; font-size: 42px">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: cyan; font-size: 42px;">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: brown; font-size: 42px;">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: deepskyblue; font-size: 42px;">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: tomato; font-size: 42px;">
+            <input type="radio" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+        </div>
     </div>
   </div>
   <script src="./client.js"></script>
@@ -88,8 +96,7 @@
                 message.textContent = data.message;
               } else {
                 username.textContent = data.username;
-                document.getElementById("logout").hidden = false;
-                //email.textContent = data.email
+                email.textContent = data.email
               }
             });
     play.addEventListener("click", function() {

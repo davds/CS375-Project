@@ -200,6 +200,6 @@
     }
     return newPositions;
   }
-  exports.makeGliderxPos = makeGliderxPos;
+  exports.makeGliderPos = makeGliderxPos;
 
 })(typeof exports === 'undefined'? this['shared']={}: exports);

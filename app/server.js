@@ -48,6 +48,14 @@ app.get('/home', (req, res) => {
   }
 })
 
+app.get('/cellcolor', (req, res) => {
+  let cellcolor = req.query.color;
+  let user = req.session.username;
+  console.log(cellcolor,user)
+  database.setStyle(user,`background-color: ${cellcolor}`);
+  res.status(200).send("Color updated");
+})
+
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
 if (process.env._ && process.env._.indexOf("heroku"))
@@ -80,7 +88,9 @@ app.post("/newUser", (req, res) => {
   //console.log(username + " " + plaintextPassword)
   bcrypt.hash(plaintextPassword, 10).then(password => {
     pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, email, password]).then(response => {
-      res.status(200).send("Account created");
+      pool.query("INSERT INTO userData (username, style, wins,gamesplayed) VALUES ($1,'',0,0)", [username]).then(response => {
+        res.status(200).send("Account created");
+      })
     }).catch(error => {
       console.log(`FAILED TO CREATE USER ${username}\n` + error);
       if (error.constraint === "users_email_key") {

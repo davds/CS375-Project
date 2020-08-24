@@ -85,10 +85,14 @@
   </div>
   <script src="./client.js"></script>
   <script>  
-    let message = document.getElementById("message")
-    let username = document.getElementById("username")
-    let email = document.getElementById("email")
-    let play = document.getElementById("play")
+    function getRadio() {
+      return $("input[name=colorradio]:checked").css("color")
+    }
+
+    let message = document.getElementById("message");
+    let username = document.getElementById("username");
+    let email = document.getElementById("email");
+    let play = document.getElementById("play");
     fetch("/home").then(function (response) {
                 return response.json()
             }).then(function (data) {
@@ -97,7 +101,7 @@
                 message.textContent = data.message;
               } else {
                 username.textContent = data.username;
-                email.textContent = data.email
+                email.textContent = data.email;
               }
             });
     play.addEventListener("click", function() {
@@ -105,14 +109,18 @@
         return res.json();
       }).then(data => {
       if (data.loggedIn) {
-        location.assign("/game.html")
-        //send selected color to db
+        let selectedcolor = getRadio()
+        fetch(`/cellcolor?color=${selectedcolor}`).then(function (response){
+          console.log("worked?");
+          location.assign("/game.html");
+        });
+        
       }else{
-        location.assign("/login.html")
+        location.assign("/login.html");
       }
       });
       
-    })
+    });
   </script>
 </body>
 </html>

@@ -8,18 +8,5 @@
     cursor: pointer;
 }
 [type=radio]:checked + i {
-    outline: 2px solid black;
-}
-
-.radio_item{
-    display: none !important;
-}
-.label_item{
-    opacity: 0.1;
-}
-.radio_item:checked + label {
-    opacity: 1;
-}
-label {
-    cursor: pointer;
+    outline: 1px dashed black;
 }

@@ -3,6 +3,7 @@ class Player {
 		this.id = id;
 		this.style = style;
 		this.strength = strength;
+		this.alive = true;
 	}
 	getStyle() {
 		return this.style;
@@ -18,6 +19,12 @@ class Player {
 	}
 	getId() {
 		return this.id;
+	}
+	getLiving() {
+		return this.alive;
+	}
+	dead() {
+		this.alive = false;
 	}
 }
 

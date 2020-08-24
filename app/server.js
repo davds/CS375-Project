@@ -48,8 +48,8 @@ app.get('/home', (req, res) => {
 
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
-if (process.env._ && process.env._.indexOf("heroku"))
-  tempEnv = require("../heroku.json");
+//if (process.env._ && process.env._.indexOf("heroku"))
+//  tempEnv = require("../heroku.json");
 const env = tempEnv;
 
 const Pool = pg.Pool;
@@ -328,6 +328,14 @@ function checkCollision(contestedPositions, cells) {
   return cells;
 }
 
+function checkWinner(room) {
+  return
+}
+
+function closeZone(room) {
+  return
+}
+
 //Precondish: duble with x, y coords of a cell, an owner
 //Postcondish: doesn't return anything, makes a new cell object and appends it to the activePieces array for the corresponding game session
 function makeCell(pos, id, room) {
@@ -365,6 +373,18 @@ function startGame(room) {
 
 function phaseOne(room) {
   io.to(room).emit('phaseOne', room);
+  let generations = 0;
+  let generationInterval = setInterval( function() {
+    io.to(room).emit('nextGeneration', room);
+    if (++generations % 10 == 0) {
+      closeZone(room);
+      io.to(room).emit('newZone', room);
+    }
+    if (checkWinner(room)) {
+      io.to(room).emit('gameOver', room);
+      clearInterval(generationInterval);
+    }
+  }, 500);
 }
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
@@ -388,9 +408,15 @@ app.get("/quadrant", function(req, res) {
     res.sendStatus(404);
   }
   else {
+    //Check if player connecting is already in a game
     let id = req.session.username;
-    let room = addPlayer(id);
-    console.log(gameSessions[room]);
+    if (!req.session.room) {
+      req.session.room = addPlayer(id);
+    }
+    let room = req.session.room;
+    if (!gameSessions[room].playerIn(id)) {
+      req.session.room = addPlayer(id);
+    }
     let resBody = {
       "quadrant": gameSessions[room].getNumPlayers(),
       "style": gameSessions[room].getPlayer(id).getStyle()

@@ -385,6 +385,11 @@ function addPlayer() {
     });
 }
 
+
+function phaseOne() {
+
+}
+
 function addListeners() {
     $(document).ready(() => {
         $("#game-of-life td").on("click", cell => {

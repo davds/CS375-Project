@@ -158,7 +158,7 @@
   }
   //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider
   //Postcondish: returns positions of cells needed to make glider
-  function makeGliderxPos(gliderPos, orientation) {
+  function makeGliderPos(gliderPos, orientation) {
     newPositions = []; 
     switch(orientation) {
       case "SE":

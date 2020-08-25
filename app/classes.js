@@ -48,19 +48,38 @@ class ActivePiece {
 }
 
 class GameSession {
-	constructor(roomName, coords=[[0,99],[0,99]]) {
+	constructor(roomName, closingCell, coords=[[0,99],[0,99]]) {
 		this.colors = ["background-color: red;", "background-color: blue;", "background-color: green;", "background-color: yellow;"];
 		this.roomName = roomName;
 		this.players = {};
 		this.activePieces = [];
 		this.dimensions = {};
 		this.setDimensions(coords);
+		this.livingPlayers = [];
+		this.aliveLastRound = [];
+		this.closingCell = closingCell;
+		this.winners = {};
 	}
 	getRoom() {
 		return this.roomName;
 	}
 	getPlayers() {
 		return this.players;
+	}
+	getLivingPlayers() {
+		return this.livingPlayers;
+	}
+	setLivingPlayers() {
+		this.aliveLastRound = this.livingPlayers;
+		this.livingPlayers = [];
+		for (let id in players) {
+			if (players[id].getLiving()) {
+				this.livingPlayers.push(id);
+			}
+		}
+	}
+	getAliveLastRound() {
+		return this.aliveLastRound;
 	}
 	getPlayer(id) {
 		return this.players[id];
@@ -96,6 +115,16 @@ class GameSession {
 	getDimensions() {
 		return this.dimensions;
 	}
+	getClosingCell() {
+		return this.closingCell;
+	}
+	setWinners(winners) {
+		this.winners = winners;
+	}
+	getWinners() {
+		return this.winners;
+	}
+
 }
 
 exports.Player = Player;

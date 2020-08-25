@@ -48,8 +48,8 @@ app.get('/home', (req, res) => {
 
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
-//if (process.env._ && process.env._.indexOf("heroku"))
-//  tempEnv = require("../heroku.json");
+if (process.env._ && process.env._.indexOf("heroku"))
+  tempEnv = require("../heroku.json");
 const env = tempEnv;
 
 const Pool = pg.Pool;
@@ -131,14 +131,14 @@ function addPlayer(username) {
   let player = new Player(username);
   //See if a game session exists
   if (Object.keys(gameSessions).length == 0) {
-    let session = new GameSession('room1');
+    let session = new GameSession('room1', [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
     return session.getRoom();
   }
   //See if a new session needs to be made
   else if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4){
-    let session = new GameSession(`room${gameSessions.length + 1}`);
+    let session = new GameSession(`room${gameSessions.length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
     return session.getRoom();
@@ -294,6 +294,10 @@ function setPlayerStats(room) {
       }
     }
     player.setStrength(strength);
+    if (player.getStrength() == 0) {
+      player.dead();
+      gameSessions[room].setLivingPlayers();
+    }
   }
 }
 
@@ -328,12 +332,65 @@ function checkCollision(contestedPositions, cells) {
   return cells;
 }
 
+//Precondish: takes a room to check if there are any winners
+//Postcondish: returns true if winner(s) are determined, false if no one has won yet. If there is a tie (no players have any cells), all players alive in the previous generation are the winners.
+//Updates the game session with the winners
 function checkWinner(room) {
-  return
+  let winningPlayers = {};
+  if (gameSessions[room].getLivingPlayers().length == 0) {
+    let winners = gameSessions[room].getAliveLastRound();
+    for (let i = 0; i < winners; i++) {
+      winningPlayers[winners[i]] = gameSessions[room].getPlayer(winners[i]);
+    }
+    gameSessions[room].setWinners(winningPlayers);
+    return true;
+  }
+  else if (gameSessions[room].getLivingPlayers().length == 1) {
+    winningPlayers[gameSessions[room].getLivingPlayers()[0]] = gameSessions[room].getPlayer(getLivingPlayers()[0]);
+    gameSessions[room].setWinners(winningPlayers);
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
+//Precondish: Takes a room to change the zone coordinates
+//Postcondish: Changes the active dimensions of the board (that living cell boundaries are calculated with). It randomly closes in by either 1 or 2 cells on all 4 sides.
+//If the zone reaches the cell that was chosen at the beginning to close in on, it does not change.
 function closeZone(room) {
-  return
+  let closingCell = gameSessions[room].getClosingCell();
+  let currentDimensions =  gameSessions[room].getDimensions();
+  let newDimensions = [[],[]];
+  if (closingCell[0] - currentDimensions["xMin"] <= 2) {
+    newDimensions[0].push(closingCell[0] - 1);
+  }
+  else {
+    newDimensions[0].push(currentDimensions["xMin"] + getRandomInt(1) + 1);
+  }
+
+  if (currentDimensions["xMax"] - closingCell[0] <= 2) {
+    newDimensions[0].push(closingCell[0] + 1);
+  }
+  else {
+    newDimensions[0].push(currentDimensions["xMax"] - getRandomInt(1) + 1);
+  }
+
+  if (closingCell[1] - currentDimensions["yMin"] <= 2) {
+    newDimensions[1].push(closingCell[0] - 1);
+  }
+  else {
+    newDimensions[1].push(currentDimensions["yMin"] + getRandomInt(1) + 1);
+  }
+
+  if (currentDimensions["yMax"] - closingCell[0] <= 2) {
+    newDimensions[0].push(closingCell[0] + 1);
+  }
+  else {
+    newDimensions[0].push(currentDimensions["yMax"] - getRandomInt(1) + 1);
+  }
+
+  gameSessions[room].setDimensions(newDimensions);
 }
 
 //Precondish: duble with x, y coords of a cell, an owner
@@ -345,7 +402,7 @@ function makeCell(pos, id, room) {
 
 //GET handler for sending client a JSON body of active cell objects
 app.get("/cells", function(req, res) {
-  let room = req.query.room;
+  let room = req.session.room;
   let activePieces = gameSessions[room].getActivePieces();
   let resActivePieces = [];
   for (i in activePieces) {
@@ -355,27 +412,35 @@ app.get("/cells", function(req, res) {
   res.json(resActivePieces);
 });
 
+//for testing
 app.get("/step", function(req, res) {
   let room = req.query.room;
   nextGeneration(room);
   res.sendStatus(200);
 });
 
+//for testing
 app.get("/reset", function(req, res) {
   initTestBoard()  
 });
 
 //Sequence of game events
 function startGame(room) {
+  gameSessions[room].setLivingPlayers();
   io.to(room).emit('countdown', room);
-  timer = setTimeout(phaseOne, 30000, room);
+  timer = setTimeout(getClientGliders, 30000, room);
+}
+
+function getClientGliders(room) {
+  io.to(room).emit('sendGliders', room);
 }
 
 function phaseOne(room) {
   io.to(room).emit('phaseOne', room);
   let generations = 0;
-  let generationInterval = setInterval( function() {
+  let generationInterval = setInterval(function() {
     io.to(room).emit('nextGeneration', room);
+    nextGeneration(room);
     if (++generations % 10 == 0) {
       closeZone(room);
       io.to(room).emit('newZone', room);
@@ -396,6 +461,7 @@ app.post("/gliders", function(req, res) {
   if (gameSessions[room].playerIn(user)) {
     makeGliders(gliders, user, room);
     res.sendStatus(200);
+    phaseOne();
   }
   else {
     res.sendStatus(404);
@@ -424,6 +490,20 @@ app.get("/quadrant", function(req, res) {
     res.status(200);
     res.json(resBody);
   }
+});
+
+//GET handler for getting the winner(s) of the game
+app.get("/winners", function(req, res) {
+  let room = req.session.room;
+  res.status(200);
+  res.json(gameSessions[room].getWinners());
+});
+
+//GET handler for updating the zone
+app.get("/zone", function(req, res) {
+  let room = req.session.room;
+  res.status(200);
+  res.json(gameSessions[room].getDimensions());
 });
 
 io.on("connect", socket => {

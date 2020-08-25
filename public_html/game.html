@@ -113,10 +113,32 @@
       addPlayer();
     });
 
+    socket.on('countdown', () => {
+      console.log("Game started, countdown starting.");
+      startCountdown();
+    })
+
     socket.on('phaseOne', (data) => {
       console.log("Phase One Starting.");
       phaseOne();
     });
+
+    socket.on('sendGliders', () => {
+      sendGliders();
+    });
+
+    socket.on('nextGeneration', () => {
+      getNextGeneration();
+    });
+
+    socket.on('newZone', () => {
+      getNewZone();
+    });
+
+    socket.on('newZone', () => {
+      gameOver();
+    });
+
   </script>
 </body>
 

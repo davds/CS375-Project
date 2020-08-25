@@ -385,10 +385,33 @@ function addPlayer() {
     });
 }
 
+//These are for Hoff
 
-function phaseOne() {
-
+//This signals the start of the game. A 30 second countdown timer should start (along with some basic instructions). This is the only time gliders should be allowed to be placed.
+function startCountdown() {
+    return
 }
+
+//The board should be redrawn here so the out of bounds cells are removed from the board, and all players gliders should be recieved from the server, then drawn on the board
+function phaseOne() {
+    return
+}
+
+//Every time this is called, the cells should be recieved from the server and drawn on the board
+function getNextGeneration() {
+    return
+}
+
+//When this is called get the new board dimensions from the server. Add the out of bounds class to any cells not within the dimensions
+function getNewZone() {
+    return
+}
+
+//Get the winner(s) from the server. Display a message about who won, clear the board. Special message if this client is one of the winners
+function gameOver() {
+    return
+}
+
 
 function addListeners() {
     $(document).ready(() => {

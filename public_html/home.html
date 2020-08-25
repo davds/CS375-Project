@@ -92,6 +92,8 @@
     let message = document.getElementById("message");
     let username = document.getElementById("username");
     let email = document.getElementById("email");
+    let wins = document.getElementById("wins");
+    let gamesplayed = document.getElementById("gamesplayed");
     let play = document.getElementById("play");
     fetch("/home").then(function (response) {
                 return response.json()
@@ -100,8 +102,11 @@
               if (data.hasOwnProperty("message")){
                 message.textContent = data.message;
               } else {
+                console.log(data)
                 username.textContent = data.username;
                 email.textContent = data.email;
+                wins.textContent = data.wins;
+                gamesplayed.textContent = data.gamesplayed;
               }
             });
     play.addEventListener("click", function() {

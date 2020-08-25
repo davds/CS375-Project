@@ -42,7 +42,9 @@ app.get('/', function (req, res) {
 
 app.get('/home', (req, res) => {
   if (req.session.loggedin) {
-    res.json({username: req.session.username})
+    database.getGamesPlayed()
+    let u = req.session.username;
+    res.json({username: u,wins: database.getWins(u), gamesplayed: database.getGamesPlayed(u)})
   } else {
     res.json({message: "No user logged in"})
   }

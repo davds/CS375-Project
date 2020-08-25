@@ -485,7 +485,8 @@ app.get("/quadrant", function(req, res) {
     }
     let resBody = {
       "quadrant": gameSessions[room].getNumPlayers(),
-      "style": gameSessions[room].getPlayer(id).getStyle()
+      "style": gameSessions[room].getPlayer(id).getStyle(),
+      "room" : room
     };
     res.status(200);
     res.json(resBody);
@@ -508,7 +509,9 @@ app.get("/zone", function(req, res) {
 
 io.on("connect", socket => {
   console.log("Connected!");
-  socket.emit('next', 'hello');
+  socket.on('joinRoom', room => {
+    socket.join(room);
+  });
 });
 
 server.listen(port, function() {

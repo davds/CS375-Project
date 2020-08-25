@@ -110,7 +110,10 @@
     const socket = io();
 
     socket.on('connect', () => {
-      addPlayer();
+      let room = addPlayer();
+      if (room != null) {
+        socket.emit('joinRoom', room);
+      }
     });
 
     socket.on('countdown', () => {

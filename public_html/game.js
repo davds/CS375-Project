@@ -377,10 +377,12 @@ function addPlayer() {
                 activeCoords = quadrants[data.quadrant];
                 clientColor = data.style;
                 createBoard();
+                return data.room;
             });
         }
         else {
             alert("Please log in.");
+            return null;
         }
     });
 }

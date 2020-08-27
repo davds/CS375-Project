@@ -439,8 +439,8 @@ function phaseOne(room) {
   io.to(room).emit('phaseOne', room);
   let generations = 0;
   let generationInterval = setInterval(function() {
-    io.to(room).emit('nextGeneration', room);
     nextGeneration(room);
+    io.to(room).emit('nextGeneration', room);
     if (++generations % 10 == 0) {
       closeZone(room);
       io.to(room).emit('newZone', room);
@@ -460,8 +460,11 @@ app.post("/gliders", function(req, res) {
   let room = req.body.room;
   if (gameSessions[room].playerIn(user)) {
     makeGliders(gliders, user, room);
+    gameSessions[room].addGlider();
     res.sendStatus(200);
-    phaseOne();
+    if (gameSessions[room].getGlidersReceived() == 4) {
+      phaseOne();
+    }
   }
   else {
     res.sendStatus(404);
@@ -510,6 +513,7 @@ app.get("/zone", function(req, res) {
 io.on("connect", socket => {
   console.log("Connected!");
   socket.on('joinRoom', room => {
+    console.log('player joined room');
     socket.join(room);
   });
 });

@@ -168,7 +168,7 @@ function createBoard() {
 
 function getBoard(room) {
     clearBoard();
-    fetch(`/cells?room=${room}`).then(response => {
+    fetch(`/cells`).then(response => {
         return response.json();
     }).then(data => {
         for (let i = 0; i < data.length; i++) {
@@ -220,7 +220,7 @@ function resetBoard() {
 }
 //testing (for now)
 function nextGen() {
-    fetch("/step?room=test").then(response => {
+    fetch("/step").then(response => {
         getBoard("test");
     });
 }
@@ -460,7 +460,7 @@ function getNextGeneration() {
 
 //When this is called get the new board dimensions from the server. Add the out of bounds class to any cells not within the dimensions
 function getNewZone() {
-    fetch(`/zone?room=${room}`).then(response => {
+    fetch(`/zone`).then(response => {
         return response.json();
     }).then(data => {
         activeCoords["xMax"] = data["xMax"]
@@ -469,12 +469,11 @@ function getNewZone() {
         activeCoords["yMin"] = data["yMin"]
         addQuadrant();
     });
-    
 }
 
 //Get the winner(s) from the server. Display a message about who won, clear the board. Special message if this client is one of the winners
 function gameOver() {
-    fetch(`/winners?room=${room}`).then(response => {
+    fetch(`/winners`).then(response => {
         
     });
 }

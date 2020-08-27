@@ -343,8 +343,7 @@ function sendGliders() {
                 { pos: placedGliders[0].getCenterPos(), orientation: placedGliders[0].getOrientation() },
                 { pos: placedGliders[1].getCenterPos(), orientation: placedGliders[1].getOrientation() },
                 { pos: placedGliders[2].getCenterPos(), orientation: placedGliders[2].getOrientation() },
-            ],
-            room: "test"
+            ]
         })
     });    
     placedGliders = [];

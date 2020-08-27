@@ -457,7 +457,7 @@ app.post("/gliders", function(req, res) {
   console.log("/gliders received post");
   let user = req.session.username;
   let gliders = req.body.gliders;
-  let room = req.body.room;
+  let room = req.session.room;
   if (gameSessions[room].playerIn(user)) {
     makeGliders(gliders, user, room);
     gameSessions[room].addGlider();

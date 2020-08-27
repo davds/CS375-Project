@@ -116,6 +116,7 @@ const quadrants = {
         "yMax": 99
     }
 };
+
 let activeCoords;
 let clientColor;
 
@@ -124,13 +125,19 @@ let clientColor;
 //#region Global Variables
 
 const gliderLimit = 3;
+let canPlaceGliders = true;
 let placedGliders = []; //a table of placed Glider class objects.
 let curGlider = new Glider([0,0], NW);
 let allowBoardInput = false;
 let baseTableDim = [99, 99];
 let gameBoard = document.getElementById("game-of-life");
 let boardCells = {};
-
+const startCoords = {
+    "xMin": 0,
+    "xMax": baseTableDim[0],
+    "yMin": 0,
+    "yMax": baseTableDim[1]
+}
 
 //#endregion
 
@@ -178,6 +185,9 @@ function addQuadrant() {
         let pos = coords.split(":");
         if (!validPos(pos)) {
             boardCells[coords].inBounds = false;
+        }
+        else {
+            boardCells[coords].inBounds = true;
         }
     }
 }
@@ -309,8 +319,9 @@ function previewGlider() {
 
 //place glider at where the mouse is clicked on the board on the client side, returns true if glider is placed
 function placeGlider(cell) {
-    if (!areCoordsTaken(curGlider.getCenterPos()) && isGliderInBounds(curGlider)) {
+    if (!areCoordsTaken(curGlider.getCenterPos()) && isGliderInBounds(curGlider) && canPlaceGliders) {
         placedGliders.push(new Glider(curGlider.getCenterPos(), curGlider.orientation));
+        updateGliderText();
         if (placedGliders.length > gliderLimit) {
             placedGliders.shift();
         }
@@ -327,7 +338,7 @@ function sendGliders() {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({  //TODO: if theres fewer than 3 placed gliders, this errors.
             gliders: [ 
                 { pos: placedGliders[0].getCenterPos(), orientation: placedGliders[0].getOrientation() },
                 { pos: placedGliders[1].getCenterPos(), orientation: placedGliders[1].getOrientation() },
@@ -377,6 +388,7 @@ function addPlayer() {
                 activeCoords = quadrants[data.quadrant];
                 clientColor = data.style;
                 createBoard();
+
                 return data.room;
             });
         }
@@ -387,31 +399,84 @@ function addPlayer() {
     });
 }
 
-//These are for Hoff
+function updateGliderText() {
+    let numRemaining = gliderLimit - placedGliders.length;
+    if (numRemaining<0) {
+        numRemaining = 0;
+    } 
+    if(canPlaceGliders) {
+        let phaseElement = document.getElementById("phase");
+        phaseElement.textContent = "Phase: Placing Gliders. Left click: place, Right click: rotate. " +numRemaining+ " glider(s) remaining.";
+    }
+}
 
+//These are for Hoff
 //This signals the start of the game. A 30 second countdown timer should start (along with some basic instructions). This is the only time gliders should be allowed to be placed.
 function startCountdown() {
-    return
+    console.log("countdown begun!");
+    let secondsLeft = 2;
+    let timerElement = document.getElementById("generations");
+    let oldSt = timerElement.textContent;
+    updateGliderText();
+    canPlaceGliders = true;
+    let interval = setInterval(() => {
+        if(secondsLeft>0) {
+            timerElement.textContent = "" + secondsLeft + " seconds remain";
+            secondsLeft -= 1;
+        }
+        else {
+            canPlaceGliders = false;
+            timerElement.textContent = oldSt
+            clearInterval(interval);
+            sendGliders(); //SEND GLIDERS FAILS!
+            phaseOne(); 
+            //phaseOne();
+        }
+    }, 1000);
+    
 }
+
+
 
 //The board should be redrawn here so the out of bounds cells are removed from the board, and all players gliders should be recieved from the server, then drawn on the board
 function phaseOne() {
-    return
+    //3 2 1 timer?
+     $("td").removeClass("outta-bounds");
+    activeCoords = startCoords;
+    console.log("phase one...");
+    addQuadrant();
+    removeTransCells();
+    drawBoard();
+    //getNextGeneration();
 }
+
+
 
 //Every time this is called, the cells should be recieved from the server and drawn on the board
 function getNextGeneration() {
-    return
+    getBoard("test");
+    getNewZone();
 }
 
 //When this is called get the new board dimensions from the server. Add the out of bounds class to any cells not within the dimensions
 function getNewZone() {
-    return
+    fetch(`/zone?room=${room}`).then(response => {
+        return response.json();
+    }).then(data => {
+        activeCoords["xMax"] = data["xMax"]
+        activeCoords["yMax"] = data["yMax"]
+        activeCoords["xMin"] = data["xMin"]
+        activeCoords["yMin"] = data["yMin"]
+        addQuadrant();
+    });
+    
 }
 
 //Get the winner(s) from the server. Display a message about who won, clear the board. Special message if this client is one of the winners
 function gameOver() {
-    return
+    fetch(`/winners?room=${room}`).then(response => {
+        
+    });
 }
 
 
@@ -425,11 +490,12 @@ function addListeners() {
             }    
             showGliders();
         });
-    
         $("#game-of-life td").on("mouseover", cell => {
             removeTransCells();
             curGlider.setCenterPos(getCellCoords(cell.target))
-            previewGlider();
+            if(canPlaceGliders) {
+                previewGlider();
+            }
         });
     
         $("#game-of-life").on("contextmenu", cell => {
@@ -439,6 +505,7 @@ function addListeners() {
             previewGlider();
             cell.preventDefault();
         });
+        startCountdown();
     });
 }
 

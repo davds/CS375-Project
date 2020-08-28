@@ -76,7 +76,7 @@ class Glider {
         this.centerPos = pos;
     }
     getActiveCoords() {
-        return shared.makeGliderPos(this.getCenterPos(), this.getOrientation());
+        return makeGliderPos(this.getCenterPos(), this.getOrientation());
     }
     getOccupyingCoords() { //3x3 grid, 9 cells total that cannot have other cells on it.
         let coords = [];
@@ -285,6 +285,51 @@ function areCoordsTaken(coords) {
     }
     return false;
 }
+
+//Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider
+//Postcondish: returns positions of cells needed to make glider
+function makeGliderPos(gliderPos, orientation) {
+    newPositions = []; 
+    switch(orientation) {
+      case "SE":
+        newPositions = [
+          [gliderPos[0], gliderPos[1] -1],
+          [gliderPos[0] + 1, gliderPos[1]],
+          [gliderPos[0] - 1, gliderPos[1] + 1],
+          [gliderPos[0], gliderPos[1] + 1],
+          [gliderPos[0] + 1, gliderPos[1] + 1]
+        ];
+        break;
+      case "NE":
+        newPositions = [
+          [gliderPos[0], gliderPos[1] - 1],
+          [gliderPos[0] + 1, gliderPos[1] - 1],
+          [gliderPos[0] - 1, gliderPos[1]],
+          [gliderPos[0] + 1, gliderPos[1]],
+          [gliderPos[0] + 1, gliderPos[1] + 1]
+        ];
+        break;
+      case "NW":
+        newPositions = [
+          [gliderPos[0], gliderPos[1] - 1],
+          [gliderPos[0] + 1, gliderPos[1] - 1],
+          [gliderPos[0] - 1, gliderPos[1] - 1],
+          [gliderPos[0] - 1, gliderPos[1]],
+          [gliderPos[0], gliderPos[1] + 1]
+        ];
+        break;
+      case "SW":
+        newPositions = [
+          [gliderPos[0] - 1, gliderPos[1] - 1],
+          [gliderPos[0] - 1, gliderPos[1]],
+          [gliderPos[0] + 1, gliderPos[1]],
+          [gliderPos[0] - 1, gliderPos[1] + 1],
+          [gliderPos[0], gliderPos[1] + 1]
+        ];
+        break;
+    }
+    return newPositions;
+  }
 
 function previewGlider() {
     let cells = curGlider.getActiveCoords();

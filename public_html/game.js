@@ -94,6 +94,51 @@ class Glider {
     }
 }
 
+//Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider
+//Postcondish: returns positions of cells needed to make glider
+function makeGliderPos(gliderPos, orientation) {
+    newPositions = []; 
+    switch(orientation) {
+      case "SE":
+        newPositions = [
+          [gliderPos[0], gliderPos[1] -1],
+          [gliderPos[0] + 1, gliderPos[1]],
+          [gliderPos[0] - 1, gliderPos[1] + 1],
+          [gliderPos[0], gliderPos[1] + 1],
+          [gliderPos[0] + 1, gliderPos[1] + 1]
+        ];
+        break;
+      case "NE":
+        newPositions = [
+          [gliderPos[0], gliderPos[1] - 1],
+          [gliderPos[0] + 1, gliderPos[1] - 1],
+          [gliderPos[0] - 1, gliderPos[1]],
+          [gliderPos[0] + 1, gliderPos[1]],
+          [gliderPos[0] + 1, gliderPos[1] + 1]
+        ];
+        break;
+      case "NW":
+        newPositions = [
+          [gliderPos[0], gliderPos[1] - 1],
+          [gliderPos[0] + 1, gliderPos[1] - 1],
+          [gliderPos[0] - 1, gliderPos[1] - 1],
+          [gliderPos[0] - 1, gliderPos[1]],
+          [gliderPos[0], gliderPos[1] + 1]
+        ];
+        break;
+      case "SW":
+        newPositions = [
+          [gliderPos[0] - 1, gliderPos[1] - 1],
+          [gliderPos[0] - 1, gliderPos[1]],
+          [gliderPos[0] + 1, gliderPos[1]],
+          [gliderPos[0] - 1, gliderPos[1] + 1],
+          [gliderPos[0], gliderPos[1] + 1]
+        ];
+        break;
+    }
+    return newPositions;
+  }
+
 const quadrants = {
     "1": {"xMin": 0,
         "xMax": 19,
@@ -157,9 +202,6 @@ function createBoard() {
         for (let j = 0; j < baseTableDim[0]; j++) {
             let col = document.createElement("td");
             col.id = `${j},${i}`;
-            if (!boardCells[`${j}:${i}`].inBounds) {
-                col.classList.add("outta-bounds");
-            }
             row.append(col);
         }
     }
@@ -191,6 +233,7 @@ function getBoard() {
             let y = data[i].pos[1];
             boardCells[`${x}:${y}`].style = data[i].style;
         }
+        console.log(boardCells);
         drawBoard();
     });
 }
@@ -209,13 +252,11 @@ function addQuadrant() {
 
 function drawBoard() {
     let rows = gameBoard.querySelectorAll("tr");
-    for (let i = activeCoords["yMin"]; i < activeCoords["yMax"]; i++) {
+    for (let i = 0; i < baseTableDim[1]; i++) {
         let cells = rows[i].querySelectorAll("td");
-        for (let j = activeCoords["xMin"]; j < activeCoords["xMax"]; j++) {
-            if (boardCells[`${j}:${i}`].inBounds) {
-                cells[j].style = boardCells[`${j}:${i}`].style;
-            }
-            else {
+        for (let j = 0; j < baseTableDim[0]; j++) {
+            cells[j].style = boardCells[`${j}:${i}`].style;
+            if (!boardCells[`${j}:${i}`].inBounds && boardCells[`${j}:${i}`].style == "") {
                 cells[j].classList.add("outta-bounds");
             }
         }
@@ -310,51 +351,6 @@ function areCoordsTaken(coords) {
     }
     return false;
 }
-
-//Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider
-//Postcondish: returns positions of cells needed to make glider
-function makeGliderPos(gliderPos, orientation) {
-    newPositions = []; 
-    switch(orientation) {
-      case "SE":
-        newPositions = [
-          [gliderPos[0], gliderPos[1] -1],
-          [gliderPos[0] + 1, gliderPos[1]],
-          [gliderPos[0] - 1, gliderPos[1] + 1],
-          [gliderPos[0], gliderPos[1] + 1],
-          [gliderPos[0] + 1, gliderPos[1] + 1]
-        ];
-        break;
-      case "NE":
-        newPositions = [
-          [gliderPos[0], gliderPos[1] - 1],
-          [gliderPos[0] + 1, gliderPos[1] - 1],
-          [gliderPos[0] - 1, gliderPos[1]],
-          [gliderPos[0] + 1, gliderPos[1]],
-          [gliderPos[0] + 1, gliderPos[1] + 1]
-        ];
-        break;
-      case "NW":
-        newPositions = [
-          [gliderPos[0], gliderPos[1] - 1],
-          [gliderPos[0] + 1, gliderPos[1] - 1],
-          [gliderPos[0] - 1, gliderPos[1] - 1],
-          [gliderPos[0] - 1, gliderPos[1]],
-          [gliderPos[0], gliderPos[1] + 1]
-        ];
-        break;
-      case "SW":
-        newPositions = [
-          [gliderPos[0] - 1, gliderPos[1] - 1],
-          [gliderPos[0] - 1, gliderPos[1]],
-          [gliderPos[0] + 1, gliderPos[1]],
-          [gliderPos[0] - 1, gliderPos[1] + 1],
-          [gliderPos[0], gliderPos[1] + 1]
-        ];
-        break;
-    }
-    return newPositions;
-  }
 
 function previewGlider() {
     let cells = curGlider.getActiveCoords();
@@ -455,6 +451,7 @@ function addPlayer() {
             return null;
         }
     });
+    getBoard();
 }
 
 function updateGliderText() {

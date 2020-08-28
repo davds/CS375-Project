@@ -175,8 +175,8 @@ app.get('/home', (req, res) => {
 
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
-if (process.env._ && process.env._.indexOf("heroku"))
-  tempEnv = require("../heroku.json");
+//if (process.env._ && process.env._.indexOf("heroku"))
+//  tempEnv = require("../heroku.json");
 const env = tempEnv;
 
 const Pool = pg.Pool;
@@ -360,11 +360,12 @@ function populateBoard(room) {
       }
     }
     let pickedObstacle = possibleObstacles[getRandomInt(possibleObstacles.length)];
-    let cornerPos = [obstacleDims[i]["cornerCoord"[0]] + getRandomInt(obstacleDims[i]["dims"][0] - obstacles[pickedObstacle][0]), obstacleDims[i]["cornerCoord"[1]] + getRandomInt(obstacleDims[i]["dims"][1] - obstacles[pickedObstacle][1])];
-    let functionString =  `${pickedObstacle}(${cornerPos})`;
-    let cellsToAdd = eval(functionString);
-    for (cell in cellsToAdd) {
-      let newPiece = new ActivePiece(cell, gameBoard);
+    let xPos = obstacleDims[i]["cornerCoord"][0] + getRandomInt(obstacleDims[i]["dims"][0] - obstacles[pickedObstacle][0]);
+    let yPos = obstacleDims[i]["cornerCoord"][1] + getRandomInt(obstacleDims[i]["dims"][1] - obstacles[pickedObstacle][1]);
+    let cornerPos = [xPos, yPos];
+    let cellsToAdd = obstacle[pickedObstacle](cornerPos);
+    for (let j = 0; j < cellsToAdd.length; j++) {
+      let newPiece = new ActivePiece(cellsToAdd[j], gameBoard);
       gameSessions[room].addActivePiece(newPiece);
     }
   }
@@ -597,8 +598,10 @@ function makeCell(pos, id, room) {
 
 //GET handler for sending client a JSON body of active cell objects
 app.get("/cells", function(req, res) {
+  console.log("GET request received.");
   let room = req.session.room;
   let activePieces = gameSessions[room].getActivePieces();
+  //console.log(activePieces);
   let resActivePieces = [];
   for (i in activePieces) {
     resActivePieces.push({ "pos": activePieces[i].getPos(), "style": activePieces[i].getStyle() });

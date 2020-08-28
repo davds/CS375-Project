@@ -102,7 +102,7 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="./client.js"></script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="game.js"></script>
+  <script src="game.js" type="text/javascript"></script>
   <script>
     $("#header").load("header.html");
     const socket = io();
@@ -111,7 +111,6 @@
       let room = addPlayer();
       if (room != null) {
         socket.emit('joinRoom', room);
-        getBoard();
       }
     });
 

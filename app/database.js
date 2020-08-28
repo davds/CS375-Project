@@ -19,18 +19,28 @@ class Database {
     });
     return style;
   }
-}
 
+  addWin(name) {
+    this.pool.query("UPDATE userData SET wins = wins + 1 WHERE username = $1", [name]);
+  }
 
-var methods = {    
-    addWin: name => pool.query("UPDATE userData SET wins = wins + 1 WHERE username = $1", [name]),
-
-    getWins: name => pool.query("SELECT wins FROM userData WHERE username = $1", [name]),
+  async getWins(name) {
+    let wins = await this.pool.query("SELECT wins FROM userData WHERE username = $1", [name]).then(response => {
+      return response.rows[0].wins;
+    });
+    return wins;
+  }  
     
-    addGamePlayed: name => pool.query("UPDATE userData SET gamesplayed = gamesplayed + 1 WHERE username = $1", [name]),
+  addGamePlayed(name) {
+    this.pool.query("UPDATE userData SET gamesplayed = gamesplayed + 1 WHERE username = $1", [name])
+  }
 
-    getGamesPlayed: name => pool.query("SELECT gamesplayed FROM userData WHERE username = $1", [name]),
+  async getGamesPlayed(name) { 
+    let games = await this.pool.query("SELECT gamesplayed FROM userData WHERE username = $1", [name]).then(response => {
+      return response.rows[0].gamesplayed;
+    });
+    return games;
+  }
 }
-
 
 module.exports = new Database();

@@ -38,11 +38,13 @@ app.get('/', function (req, res) {
   res.redirect('/home.html');
 });
 
-app.get('/home', (req, res) => {
+app.get('/home', async (req, res) => {
   if (req.session.loggedin) {
     database.getGamesPlayed()
     let u = req.session.username;
-    res.json({username: u,wins: database.getWins(u), gamesplayed: database.getGamesPlayed(u)})
+    let w = await database.getWins(u);
+    let gp = await database.getGamesPlayed(u);
+    res.json({username: u,wins: w, gamesplayed: gp})
   } else {
     res.json({message: "No user logged in"})
   }

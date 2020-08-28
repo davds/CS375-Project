@@ -110,27 +110,27 @@
       fetch("/user").then(res => {
         return res.json();
       }).then(data => {
-        if (data.loggedIn) {
-          location.assign("/game.html")
-          //send selected color to db
-          let style = ""
-          $("input[type='radio']").each(i => {
-            if ($("input[type='radio']")[i].checked) {
-              style = $("input[type='radio']")[i].style.cssText;
-            }
-          });
+      if (data.loggedIn) {
+        location.assign("/game.html")
+        //send selected color to db
+        let style = ""
+        $("input[type='radio']").each(i => {
+          if ($("input[type='radio']")[i].checked) {
+            style = $("input[type='radio']")[i].style.cssText;
+          }
+        });
 
-          if (style !== "") 
-            fetch("/updateUserStyle", {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ style: style })
-            });
-        } else {
-          location.assign("/login.html")
-        }
+        if (style !== "") 
+          fetch("/updateUserStyle", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ style: style })
+          });
+      } else {
+        location.assign("/login.html")
+      }
       });
       
     });

@@ -166,6 +166,21 @@ function createBoard() {
     addListeners();
 }
 
+function drawBounds() {
+    for (let i = 0; i < baseTableDim[0]; i++) {
+        for (let j = 0; j < baseTableDim[1]; j++) {
+            let cellId = [i, j]
+            let cell = document.getElementById(cellId[0] + "," + cellId[1]);
+            if (!boardCells[`${i}:${j}`].inBounds) {
+                cell.classList.add("outta-bounds");
+            }
+            else {
+                $(cell).removeClass("outta-bounds");
+            }
+        }
+    }
+}
+
 function getBoard(room) {
     clearBoard();
     fetch(`/cells`).then(response => {
@@ -387,7 +402,6 @@ function addPlayer() {
                 activeCoords = quadrants[data.quadrant];
                 clientColor = data.style;
                 createBoard();
-
                 return data.room;
             });
         }
@@ -429,6 +443,7 @@ function startCountdown() {
             clearInterval(interval);
             sendGliders(); //SEND GLIDERS FAILS!
             phaseOne(); 
+            //getNewZone();
             //phaseOne();
         }
     }, 1000);
@@ -444,6 +459,7 @@ function phaseOne() {
     activeCoords = startCoords;
     console.log("phase one...");
     addQuadrant();
+    drawBounds();
     removeTransCells();
     drawBoard();
     //getNextGeneration();
@@ -453,8 +469,7 @@ function phaseOne() {
 
 //Every time this is called, the cells should be recieved from the server and drawn on the board
 function getNextGeneration() {
-    getBoard("test");
-    getNewZone();
+    getBoard();
 }
 
 //When this is called get the new board dimensions from the server. Add the out of bounds class to any cells not within the dimensions
@@ -462,21 +477,26 @@ function getNewZone() {
     fetch(`/zone`).then(response => {
         return response.json();
     }).then(data => {
+        console.log(data)
         activeCoords["xMax"] = data["xMax"]
         activeCoords["yMax"] = data["yMax"]
         activeCoords["xMin"] = data["xMin"]
         activeCoords["yMin"] = data["yMin"]
         addQuadrant();
+        drawBounds();
     });
 }
 
 //Get the winner(s) from the server. Display a message about who won, clear the board. Special message if this client is one of the winners
 function gameOver() {
+    let winnerElement = document.getElementById("generations");
     fetch(`/winners`).then(response => {
-        
+        return response.json();
+    }).then(data => {
+        winnerElement.textContent = "Winners: ";
+        console.log(data);
     });
 }
-
 
 function addListeners() {
     $(document).ready(() => {
@@ -503,7 +523,7 @@ function addListeners() {
             previewGlider();
             cell.preventDefault();
         });
-        startCountdown();
+        //startCountdown();
     });
 }
 

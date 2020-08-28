@@ -181,7 +181,7 @@ function drawBounds() {
     }
 }
 
-function getBoard(room) {
+function getBoard() {
     clearBoard();
     fetch(`/cells`).then(response => {
         return response.json();

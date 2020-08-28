@@ -67,7 +67,7 @@
   //Precondish: [pos[0], pos[1]] is the top left of the hat
   //Postcondish: returns a hat pattern
   //type: still life, size: 5x4
-  function makeHivePos(pos) {
+  function makeHatPos(pos) {
     positions = [
       [pos[0] + 2, pos[1]],
       [pos[0] + 1, pos[1] + 1],
@@ -690,6 +690,27 @@
     }
     return newPositions;
   }
+
   exports.makeGliderPos = makeGliderPos;
+  exports.make31Dot4Pos = make31Dot4Pos;
+  exports.makeBargePos = makeBargePos;
+  exports.makeBeaconPos = makeBeaconPos;
+  exports.makeBipolePos = makeBipolePos;
+  exports.makeBlinkerPos = makeBlinkerPos;
+  exports.makeBoatPos = makeBoatPos;
+  exports.makeCenturyEaterPos = makeCenturyEaterPos;
+  exports.makeCirclePos = makeCirclePos;
+  exports.makeClipPos = makeClipPos;
+  exports.makeCthulhuPos = makeCthulhuPos;
+  exports.makeCyclicPos = makeCyclicPos;
+  exports.makeEurekaPos = makeEurekaPos;
+  exports.makeToadPos = makeToadPos;
+  exports.makeHatPos = makeHatPos;
+  exports.makeHivePos = makeHivePos;
+  exports.makeLongBoatPos = makeLongBoatPos;
+  exports.makeLongShipPos = makeLongShipPos;
+  exports.makeP11Pos = makeP11Pos;
+  exports.makeP16Pos = makeP16Pos;
+  exports.makeSquarePos = makeSquarePos;
 
 })(typeof exports === 'undefined'? this['shared']={}: exports);

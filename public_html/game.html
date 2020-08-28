@@ -113,6 +113,7 @@
       let room = addPlayer();
       if (room != null) {
         socket.emit('joinRoom', room);
+        getBoard();
       }
     });
 

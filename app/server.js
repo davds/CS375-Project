@@ -14,107 +14,130 @@ const options = {
 };
 const io = require('socket.io').listen(server, options);
 const gameSessions = {};
-const obstacleDims = {
-  "1" : {
+const obstacleDims = [
+  {
     "cornerCoord": [21,0],
     "dims": [16, 19]
   },
-  "2" : {
+  {
     "cornerCoord": [38,0],
     "dims": [22, 19]
   },
-  "3" : {
+  {
     "cornerCoord": [61,0],
     "dims": [16, 19]
   },
-  "4" : {
+  {
     "cornerCoord": [0,21],
     "dims": [19, 16]
   },
-  "5" : {
+  {
     "cornerCoord": [20,20],
     "dims": [17, 17]
   },
-  "6" : {
+  {
     "cornerCoord": [38,21],
     "dims": [22, 8]
   },
-  "7" : {
+  {
     "cornerCoord": [38,30],
     "dims": [22, 8]
   },
-  "8" : {
+  {
     "cornerCoord": [61,20],
     "dims": [17, 17]
   },
-  "9" : {
+  {
     "cornerCoord": [79,21],
     "dims": [19, 16]
   },
-  "10" : {
+  {
     "cornerCoord": [0,38],
     "dims": [19, 22]
   },
-  "11" : {
+  {
     "cornerCoord": [20,38],
     "dims": [8, 22]
   },
-  "12" : {
+  {
     "cornerCoord": [29,38],
     "dims": [8, 22]
   },
-  "13" : {
+  {
     "cornerCoord": [38,38],
     "dims": [22, 22]
   },
-  "14" : {
+  {
     "cornerCoord": [61,38],
     "dims": [8, 22]
   },
-  "15" : {
+  {
     "cornerCoord": [70,38],
     "dims": [8, 22]
   },
-  "16" : {
+  {
     "cornerCoord": [79,38],
     "dims": [19, 22]
   },
-  "17" : {
+  {
     "cornerCoord": [0,61],
     "dims": [19, 16]
   },
-  "18" : {
+  {
     "cornerCoord": [20,61],
     "dims": [17, 17]
   },
-  "19" : {
+  {
     "cornerCoord": [38,61],
     "dims": [22, 8]
   },
-  "20" : {
+  {
     "cornerCoord": [38,70],
     "dims": [22, 8]
   },
-  "21" : {
+  {
     "cornerCoord": [61,61],
     "dims": [17, 17]
   },
-  "22" : {
+  {
     "cornerCoord": [79,61],
     "dims": [19, 16]
   },
-  "23" : {
+  {
     "cornerCoord": [21,79],
     "dims": [16, 19]
   },
-  "24" : {
+  {
     "cornerCoord": [38,79],
     "dims": [22, 19]
   },
-  "25" : {
+  {
     "cornerCoord": [61,79],
     "dims": [16, 19]
   }
+];
+
+const obstacles = {
+  "makeBlinkerPos" : [3, 3],
+  "makeSquarePos" : [2, 2],
+  "makeBargePos" : [4, 4],
+  "makeHivePos" : [4, 3],
+  "makeHatPos" : [5, 4],
+  "makeBoatPos" : [3, 3],
+  "makeLongBoatPos" : [5, 5],
+  "makeBeaconPos" : [4, 4],
+  "makeToadPos" : [4, 4],
+  "makeBipolePos" : [5, 5],
+  "makeP11Pos" : [22, 22],
+  "makeP16Pos" : [15, 15],
+  "makeCirclePos" : [11, 11],
+  "makeEurekaPos" : [18, 15],
+  "makeClipPos" : [9, 8],
+  "make31Dot4Pos" : [13, 8],
+  "makeCenturyEaterPos" : [8, 7],
+  "makeLongShipPos" : [13, 13],
+  "makeCyclicPos" : [10, 10],
+  "makeCthulhuPos" : [11, 13],
 };
 
 
@@ -236,6 +259,7 @@ function addPlayer(username) {
     let session = new GameSession('room1', [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
+    populateBoard(session.getRoom());
     return session.getRoom();
   }
   //See if a new session needs to be made
@@ -243,6 +267,7 @@ function addPlayer(username) {
     let session = new GameSession(`room${gameSessions.length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
+    populateBoard(session.getRoom());
     return session.getRoom();
   }
   else {
@@ -276,6 +301,27 @@ function inBounds(xPos, yPos, room) {
     }
   }
   return false;
+}
+
+function populateBoard(room) {
+  let gameBoard = gameSessions[room].getObstacles();
+  for (let i = 0; i < obstacleDims.length; i++) {
+    let possibleObstacles = [];
+    for (let functionName in obstacles) {
+      if (obstacles[functionName][0] <= obstacleDims[i]["dims"][0] && obstacles[functionName][1] <= obstacleDims[i]["dims"][1]) {
+        possibleObstacles.push(functionName);
+      }
+    }
+    let pickedObstacle = possibleObstacles[getRandomInt(possibleObstacles.length)];
+    let cornerPos = [obstacleDims[i]["cornerCoord"[0]] + getRandomInt(obstacleDims[i]["dims"][0] - obstacles[pickedObstacle][0]), obstacleDims[i]["cornerCoord"[1]] + getRandomInt(obstacleDims[i]["dims"][1] - obstacles[pickedObstacle][1])];
+    let functionString =  `${pickedObstacle}(${cornerPos})`;
+    let cellsToAdd = eval(functionString);
+    for (cell in cellsToAdd) {
+      let newPiece = new ActivePiece(cell, gameBoard);
+      gameSessions[room].addActivePiece(newPiece);
+    }
+  }
+
 }
 
 //Precondish: array of current active cell objects must be initialized

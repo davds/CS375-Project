@@ -64,6 +64,7 @@ class GameSession {
 		this.closingCell = closingCell;
 		this.winners = {};
 		this.glidersReceived = 0;
+		this.obstacles = new Player("board", "background-color: black;");
 	}
 	getRoom() {
 		return this.roomName;
@@ -134,6 +135,9 @@ class GameSession {
 	}
 	getGlidersReceived() {
 		return this.glidersReceived;
+	}
+	getObstacles() {
+		return this.obstacles;
 	}
 
 }

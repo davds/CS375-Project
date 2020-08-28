@@ -40,7 +40,6 @@ app.get('/', function (req, res) {
 
 app.get('/home', async (req, res) => {
   if (req.session.loggedin) {
-    database.getGamesPlayed()
     let u = req.session.username;
     let w = await database.getWins(u);
     let gp = await database.getGamesPlayed(u);

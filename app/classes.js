@@ -31,8 +31,17 @@ class Player {
 	getStrength() {
 		return this.strength;
 	}
+	setCellsConquered(cell_num) {
+		this.cellsConquered = cell_num;
+	}
 	getId() {
 		return this.id;
+	}
+	getLiving() {
+		return this.alive;
+	}
+	dead() {
+		this.alive = false;
 	}
 }
 
@@ -62,12 +71,33 @@ class GameSession {
 		this.activePieces = [];
 		this.dimensions = {};
 		this.setDimensions(coords);
+		this.livingPlayers = [];
+		this.aliveLastRound = [];
+		this.closingCell = closingCell;
+		this.winners = {};
+		this.glidersReceived = 0;
+		this.obstacles = new Player("board", "background-color: black;");
 	}
 	getRoom() {
 		return this.roomName;
 	}
 	getPlayers() {
 		return this.players;
+	}
+	getLivingPlayers() {
+		return this.livingPlayers;
+	}
+	setLivingPlayers() {
+		this.aliveLastRound = this.livingPlayers;
+		this.livingPlayers = [];
+		for (let id in players) {
+			if (players[id].getLiving()) {
+				this.livingPlayers.push(id);
+			}
+		}
+	}
+	getAliveLastRound() {
+		return this.aliveLastRound;
 	}
 	getPlayer(id) {
 		return this.players[id];
@@ -102,6 +132,25 @@ class GameSession {
 	getDimensions() {
 		return this.dimensions;
 	}
+	getClosingCell() {
+		return this.closingCell;
+	}
+	setWinners(winners) {
+		this.winners = winners;
+	}
+	getWinners() {
+		return this.winners;
+	}
+	addGlider() {
+		this.glidersReceived += 1;
+	}
+	getGlidersReceived() {
+		return this.glidersReceived;
+	}
+	getObstacles() {
+		return this.obstacles;
+	}
+
 }
 
 exports.Player = Player;

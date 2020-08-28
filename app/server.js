@@ -6,7 +6,7 @@ const session = require("express-session");
 const app = express();
 const {Player, ActivePiece, GameSession} = require("./classes.js");
 const database = require("./database.js");
-const {makeGliderPos} = require("../public_html/shared.js");
+const obstacle = require("./obstacles.js");
 const hostname = "localhost";
 const port = process.env.PORT || 3000;
 const server = require('http').createServer(app);
@@ -14,7 +14,135 @@ const options = {
   perMessageDeflate: false,
 };
 const io = require('socket.io').listen(server, options);
-let gameSessions = {"test": new GameSession("test")};
+const gameSessions = {};
+const obstacleDims = [
+  {
+    "cornerCoord": [21,0],
+    "dims": [16, 19]
+  },
+  {
+    "cornerCoord": [38,0],
+    "dims": [22, 19]
+  },
+  {
+    "cornerCoord": [61,0],
+    "dims": [16, 19]
+  },
+  {
+    "cornerCoord": [0,21],
+    "dims": [19, 16]
+  },
+  {
+    "cornerCoord": [20,20],
+    "dims": [17, 17]
+  },
+  {
+    "cornerCoord": [38,21],
+    "dims": [22, 8]
+  },
+  {
+    "cornerCoord": [38,30],
+    "dims": [22, 8]
+  },
+  {
+    "cornerCoord": [61,20],
+    "dims": [17, 17]
+  },
+  {
+    "cornerCoord": [79,21],
+    "dims": [19, 16]
+  },
+  {
+    "cornerCoord": [0,38],
+    "dims": [19, 22]
+  },
+  {
+    "cornerCoord": [20,38],
+    "dims": [8, 22]
+  },
+  {
+    "cornerCoord": [29,38],
+    "dims": [8, 22]
+  },
+  {
+    "cornerCoord": [38,38],
+    "dims": [22, 22]
+  },
+  {
+    "cornerCoord": [61,38],
+    "dims": [8, 22]
+  },
+  {
+    "cornerCoord": [70,38],
+    "dims": [8, 22]
+  },
+  {
+    "cornerCoord": [79,38],
+    "dims": [19, 22]
+  },
+  {
+    "cornerCoord": [0,61],
+    "dims": [19, 16]
+  },
+  {
+    "cornerCoord": [20,61],
+    "dims": [17, 17]
+  },
+  {
+    "cornerCoord": [38,61],
+    "dims": [22, 8]
+  },
+  {
+    "cornerCoord": [38,70],
+    "dims": [22, 8]
+  },
+  {
+    "cornerCoord": [61,61],
+    "dims": [17, 17]
+  },
+  {
+    "cornerCoord": [79,61],
+    "dims": [19, 16]
+  },
+  {
+    "cornerCoord": [21,79],
+    "dims": [16, 19]
+  },
+  {
+    "cornerCoord": [38,79],
+    "dims": [22, 19]
+  },
+  {
+    "cornerCoord": [61,79],
+    "dims": [16, 19]
+  }
+];
+
+const obstacles = {
+  "makeBlinkerPos" : [3, 3],
+  "makeSquarePos" : [2, 2],
+  "makeBargePos" : [4, 4],
+  "makeHivePos" : [4, 3],
+  "makeHatPos" : [5, 4],
+  "makeBoatPos" : [3, 3],
+  "makeLongBoatPos" : [5, 5],
+  "makeBeaconPos" : [4, 4],
+  "makeToadPos" : [4, 4],
+  "makeBipolePos" : [5, 5],
+  "makeP11Pos" : [22, 22],
+  "makeP16Pos" : [15, 15],
+  "makeCirclePos" : [11, 11],
+  "makeEurekaPos" : [18, 15],
+  "makeClipPos" : [9, 8],
+  "make31Dot4Pos" : [13, 8],
+  "makeCenturyEaterPos" : [8, 7],
+  "makeLongShipPos" : [13, 13],
+  "makeCyclicPos" : [10, 10],
+  "makeCthulhuPos" : [11, 13],
+};
+
+// syntax for hussn
+//console.log(obstacle.makeBargePos([5,5]));
 
 app.use(express.json());
 app.use(express.static("../public_html"));
@@ -142,16 +270,18 @@ app.post("/auth", (req, res) => {
 async function addPlayer(player) {
   //See if a game session exists
   if (Object.keys(gameSessions).length == 0) {
-    let session = new GameSession('room1');
+    let session = new GameSession('room1', [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
+    populateBoard(session.getRoom());
     return session.getRoom();
   }
   //See if a new session needs to be made
   else if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4){
-    let session = new GameSession(`room${gameSessions.length + 1}`);
+    let session = new GameSession(`room${gameSessions.length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
+    populateBoard(session.getRoom());
     return session.getRoom();
   }
   else {
@@ -163,6 +293,51 @@ async function addPlayer(player) {
   }
 }
 setDimensions([[0,24],[0,24]]);
+
+//Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider
+//Postcondish: returns positions of cells needed to make glider
+function makeGliderPos(gliderPos, orientation) {
+  newPositions = [];
+  switch(orientation) {
+    case "SE":
+      newPositions = [
+        [gliderPos[0], gliderPos[1] -1],
+        [gliderPos[0] + 1, gliderPos[1]],
+        [gliderPos[0] - 1, gliderPos[1] + 1],
+        [gliderPos[0], gliderPos[1] + 1],
+        [gliderPos[0] + 1, gliderPos[1] + 1]
+      ];
+      break;
+    case "NE":
+      newPositions = [
+        [gliderPos[0], gliderPos[1] - 1],
+        [gliderPos[0] + 1, gliderPos[1] - 1],
+        [gliderPos[0] - 1, gliderPos[1]],
+        [gliderPos[0] + 1, gliderPos[1]],
+        [gliderPos[0] + 1, gliderPos[1] + 1]
+      ];
+      break;
+    case "NW":
+      newPositions = [
+        [gliderPos[0], gliderPos[1] - 1],
+        [gliderPos[0] + 1, gliderPos[1] - 1],
+        [gliderPos[0] - 1, gliderPos[1] - 1],
+        [gliderPos[0] - 1, gliderPos[1]],
+        [gliderPos[0], gliderPos[1] + 1]
+      ];
+      break;
+    case "SW":
+      newPositions = [
+        [gliderPos[0] - 1, gliderPos[1] - 1],
+        [gliderPos[0] - 1, gliderPos[1]],
+        [gliderPos[0] + 1, gliderPos[1]],
+        [gliderPos[0] - 1, gliderPos[1] + 1],
+        [gliderPos[0], gliderPos[1] + 1]
+      ];
+      break;
+  }
+  return newPositions;
+}
 
 //Precondish: duble with x, y coords of a cell
 //Postcondish: if cell is alive, return owner, otherwise returns Null
@@ -184,6 +359,28 @@ function inBounds(xPos, yPos) {
     }
   }
   return false;
+}
+
+function populateBoard(room) {
+  let gameBoard = gameSessions[room].getObstacles();
+  for (let i = 0; i < obstacleDims.length; i++) {
+    let possibleObstacles = [];
+    for (let functionName in obstacles) {
+      if (obstacles[functionName][0] <= obstacleDims[i]["dims"][0] && obstacles[functionName][1] <= obstacleDims[i]["dims"][1]) {
+        possibleObstacles.push(functionName);
+      }
+    }
+    let pickedObstacle = possibleObstacles[getRandomInt(possibleObstacles.length)];
+    let xPos = obstacleDims[i]["cornerCoord"][0] + getRandomInt(obstacleDims[i]["dims"][0] - obstacles[pickedObstacle][0]);
+    let yPos = obstacleDims[i]["cornerCoord"][1] + getRandomInt(obstacleDims[i]["dims"][1] - obstacles[pickedObstacle][1]);
+    let cornerPos = [xPos, yPos];
+    let cellsToAdd = obstacle[pickedObstacle](cornerPos);
+    for (let j = 0; j < cellsToAdd.length; j++) {
+      let newPiece = new ActivePiece(cellsToAdd[j], gameBoard);
+      gameSessions[room].addActivePiece(newPiece);
+    }
+  }
+
 }
 
 //Precondish: array of current active cell objects must be initialized
@@ -300,7 +497,11 @@ function setPlayerStats() {
         strength ++;
       }
     }
-    players[i].setStrength(strength);
+    player.setStrength(strength);
+    if (player.getStrength() == 0) {
+      player.dead();
+      gameSessions[room].setLivingPlayers();
+    }
   }
 }
 
@@ -335,6 +536,67 @@ function checkCollision(contestedPositions, cells) {
   return cells;
 }
 
+//Precondish: takes a room to check if there are any winners
+//Postcondish: returns true if winner(s) are determined, false if no one has won yet. If there is a tie (no players have any cells), all players alive in the previous generation are the winners.
+//Updates the game session with the winners
+function checkWinner(room) {
+  let winningPlayers = {};
+  if (gameSessions[room].getLivingPlayers().length == 0) {
+    let winners = gameSessions[room].getAliveLastRound();
+    for (let i = 0; i < winners; i++) {
+      winningPlayers[winners[i]] = gameSessions[room].getPlayer(winners[i]);
+    }
+    gameSessions[room].setWinners(winningPlayers);
+    return true;
+  }
+  else if (gameSessions[room].getLivingPlayers().length == 1) {
+    winningPlayers[gameSessions[room].getLivingPlayers()[0]] = gameSessions[room].getPlayer(getLivingPlayers()[0]);
+    gameSessions[room].setWinners(winningPlayers);
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+//Precondish: Takes a room to change the zone coordinates
+//Postcondish: Changes the active dimensions of the board (that living cell boundaries are calculated with). It randomly closes in by either 1 or 2 cells on all 4 sides.
+//If the zone reaches the cell that was chosen at the beginning to close in on, it does not change.
+function closeZone(room) {
+  let closingCell = gameSessions[room].getClosingCell();
+  let currentDimensions =  gameSessions[room].getDimensions();
+  let newDimensions = [[],[]];
+  if (closingCell[0] - currentDimensions["xMin"] <= 2) {
+    newDimensions[0].push(closingCell[0] - 1);
+  }
+  else {
+    newDimensions[0].push(currentDimensions["xMin"] + getRandomInt(1) + 1);
+  }
+
+  if (currentDimensions["xMax"] - closingCell[0] <= 2) {
+    newDimensions[0].push(closingCell[0] + 1);
+  }
+  else {
+    newDimensions[0].push(currentDimensions["xMax"] - getRandomInt(1) + 1);
+  }
+
+  if (closingCell[1] - currentDimensions["yMin"] <= 2) {
+    newDimensions[1].push(closingCell[0] - 1);
+  }
+  else {
+    newDimensions[1].push(currentDimensions["yMin"] + getRandomInt(1) + 1);
+  }
+
+  if (currentDimensions["yMax"] - closingCell[0] <= 2) {
+    newDimensions[0].push(closingCell[0] + 1);
+  }
+  else {
+    newDimensions[0].push(currentDimensions["yMax"] - getRandomInt(1) + 1);
+  }
+
+  gameSessions[room].setDimensions(newDimensions);
+}
+
 //Precondish: duble with x, y coords of a cell, an owner
 //Postcondish: doesn't return anything, makes a new cell object and appends it to the activePieces array for the corresponding game session
 function makeCell(pos, id, room) {
@@ -344,6 +606,10 @@ function makeCell(pos, id, room) {
 
 //GET handler for sending client a JSON body of active cell objects
 app.get("/cells", function(req, res) {
+  console.log("GET request received.");
+  let room = req.session.room;
+  let activePieces = gameSessions[room].getActivePieces();
+  //console.log(activePieces);
   let resActivePieces = [];
   for (i in activePieces) {
     resActivePieces.push({ "pos": activePieces[i].getPos(), "style": activePieces[i].getStyle() });
@@ -352,25 +618,59 @@ app.get("/cells", function(req, res) {
   res.json(resActivePieces);
 });
 
+//for testing
 app.get("/step", function(req, res) {
   let room = req.query.room;
   nextGeneration(room);
   res.sendStatus(200);
 });
 
+//for testing
 app.get("/reset", function(req, res) {
   initTestBoard()
 });
+
+//Sequence of game events
+function startGame(room) {
+  gameSessions[room].setLivingPlayers();
+  io.to(room).emit('countdown', room);
+  timer = setTimeout(getClientGliders, 30000, room);
+}
+
+function getClientGliders(room) {
+  io.to(room).emit('sendGliders', room);
+}
+
+function phaseOne(room) {
+  io.to(room).emit('phaseOne', room);
+  let generations = 0;
+  let generationInterval = setInterval(function() {
+    nextGeneration(room);
+    io.to(room).emit('nextGeneration', room);
+    if (++generations % 10 == 0) {
+      closeZone(room);
+      io.to(room).emit('newZone', room);
+    }
+    if (checkWinner(room)) {
+      io.to(room).emit('gameOver', room);
+      clearInterval(generationInterval);
+    }
+  }, 500);
+}
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
 app.post("/gliders", function(req, res) {
   console.log("/gliders received post");
   let user = req.session.username;
   let gliders = req.body.gliders;
-  let room = req.body.room;
+  let room = req.session.room;
   if (gameSessions[room].playerIn(user)) {
     makeGliders(gliders, user, room);
+    gameSessions[room].addGlider();
     res.sendStatus(200);
+    if (gameSessions[room].getGlidersReceived() == 4) {
+      phaseOne();
+    }
   }
   else {
     res.sendStatus(404);
@@ -383,27 +683,52 @@ app.get("/quadrant", async function(req, res) {
     res.sendStatus(404);
   }
   else {
+    //Check if player connecting is already in a game
     let id = req.session.username;
     let player = await new Player(id);
-    let room = await addPlayer(player);
-    console.log(gameSessions[room]);
+    if (!req.session.room) {
+      req.session.room = await addPlayer(player);
+    }
+    let room = req.session.room;
+    if (!gameSessions[room].playerIn(id)) {
+      req.session.room = await addPlayer(player);
+    }
     let resBody = {
       "quadrant": gameSessions[room].getNumPlayers(),
-      "style": gameSessions[room].getPlayer(id).getStyle()
+      "style": gameSessions[room].getPlayer(id).getStyle(),
+      "room" : room
     };
     res.status(200);
     res.json(resBody);
   }
 });
 
+
 app.post("/updateUserStyle", (req, res) => {
   let username = req.session.username;
   database.setStyle(username, req.body.style);
+
+//GET handler for getting the winner(s) of the game
+app.get("/winners", function(req, res) {
+  let room = req.session.room;
+  res.status(200);
+  res.json(gameSessions[room].getWinners());
+});
+
+//GET handler for updating the zone
+app.get("/zone", function(req, res) {
+  let room = req.session.room;
+  res.status(200);
+  res.json(gameSessions[room].getDimensions());
+
 });
 
 io.on("connect", socket => {
   console.log("Connected!");
-  socket.emit('next', 'hello');
+  socket.on('joinRoom', room => {
+    console.log('player joined room');
+    socket.join(room);
+  });
 });
 
 

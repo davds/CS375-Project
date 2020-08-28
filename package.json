@@ -9,17 +9,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/david-stone16/CS375-Project.git"
+    "url": "git+https://github.com/davds/CS375-Project.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/david-stone16/CS375-Project/issues"
+    "url": "https://github.com/davds/CS375-Project/issues"
   },
-  "homepage": "https://github.com/david-stone16/CS375-Project#readme",
+  "homepage": "https://github.com/davds/CS375-Project#readme",
   "dependencies": {
     "bcrypt": "^5.0.0",
     "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "socket.io": "^2.3.0",
     "pg": "^8.3.0"
   }
 }

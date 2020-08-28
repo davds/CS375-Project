@@ -2,20 +2,63 @@
 const pg = require("pg");
 const bcrypt = require("bcrypt");
 const express = require("express");
+const session = require("express-session");
 const app = express();
-const {Player, ActivePiece} = require("./classes.js");
+const {Player, ActivePiece, GameSession} = require("./classes.js");
+const database = require("./database.js");
 const {makeGliderPos} = require("../public_html/shared.js");
 const hostname = "localhost";
 const port = process.env.PORT || 3000;
+const server = require('http').createServer(app);
+const options = {
+  perMessageDeflate: false,
+};
+const io = require('socket.io').listen(server, options);
+let gameSessions = {"test": new GameSession("test")};
 
 app.use(express.json());
 app.use(express.static("../public_html"));
+app.use(session({ //https://codeshack.io/basic-login-system-nodejs-express-mysql/
+  secret: 'secret',
+  resave: true,
+  saveUninitialized: true
+}));
+
+app.get("/user", (req, res) => {
+  res.json({ loggedIn: req.session.loggedin, username: req.session.username });
+});
+
+app.get("/logout", (req, res) => {
+  req.session.loggedin = false;
+  req.session.username = null;
+  res.redirect('/home.html');
+});
 
 app.get('/', function (req, res) {
   res.redirect('/home.html');
 })
 
+app.get('/home', async (req, res) => {
+  if (req.session.loggedin) {
+    let u = req.session.username;
+    let w = await database.getWins(u);
+    let gp = await database.getGamesPlayed(u);
+    res.json({username: u,wins: w, gamesplayed: gp})
+  } else {
+    res.json({message: "No user logged in"})
+  }
+})
+
+app.get('/cellcolor', (req, res) => {
+  let cellcolor = req.query.color;
+  let user = req.session.username;
+  console.log(cellcolor,user)
+  database.setStyle(user,`background-color: ${cellcolor}`);
+  res.status(200).send("Color updated");
+})
+
 let tempEnv = require("../env.json");
+const { request, response } = require("express");
 if (process.env._ && process.env._.indexOf("heroku"))
   tempEnv = require("../heroku.json");
 const env = tempEnv
@@ -27,7 +70,7 @@ pool.connect().then(() => {
 });
 
 //POST handler for User Account creation
-app.post("/newUser", (req, res) => {  
+app.post("/newUser", (req, res) => {
   if (!("username" in req.body) || !("plaintextPassword" in req.body))
     return res.status(401).send("Invalid user creation request.");
 
@@ -35,9 +78,9 @@ app.post("/newUser", (req, res) => {
   const plaintextPassword = req.body.plaintextPassword;
   const email = req.body.email;
 
-  if (plaintextPassword.length >= 60) 
+  if (plaintextPassword.length >= 60)
     return res.status(401).send("Password exceeded maximum length (60).");
-  else if (plaintextPassword.length < 6) 
+  else if (plaintextPassword.length < 6)
     return res.status(401).send("Password did not meet minimum length (6).");
   else if (username.length > 20)
     return res.status(401).send("Password exceeded maximum length (20).");
@@ -46,7 +89,9 @@ app.post("/newUser", (req, res) => {
   //console.log(username + " " + plaintextPassword)
   bcrypt.hash(plaintextPassword, 10).then(password => {
     pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, email, password]).then(response => {
-      res.status(200).send("Account created");
+      pool.query("INSERT INTO userData (username, style, wins,gamesplayed) VALUES ($1,'',0,0)", [username]).then(response => {
+        res.status(200).send("Account created");
+      })
     }).catch(error => {
       console.log(`FAILED TO CREATE USER ${username}\n` + error);
       if (error.constraint === "users_email_key") {
@@ -54,19 +99,19 @@ app.post("/newUser", (req, res) => {
       } else {
         res.status(500).send("Username taken");
       }
-      
+
     });
   }).catch(error => {
     console.log(`BCRYPT HASHING FAILED FOR ${username}\n` + error);
     res.status(500).send(error);
-  });  
+  });
 });
 
 //POST handler for User Account login
 app.post("/auth", (req, res) => {
   const username = req.body.username;
   const plaintextPassword = req.body.plaintextPassword;
-  
+
   pool.query("SELECT password FROM users WHERE username = $1", [username]).then(response => {
     if (response.rows.length === 0) {
       return res.status(401).send("Invalid username/password");
@@ -75,6 +120,8 @@ app.post("/auth", (req, res) => {
     bcrypt.compare(plaintextPassword, password).then(match => {
       if (match) {
         console.log(`AUTHENTICATING USER '${username}'`);
+        req.session.loggedin = true;
+        req.session.username = username;
         res.status(200).send("Logged in");
       } else {
         console.log(`INCORRECT PASSWORD PROVIDED FOR '${username}'`);
@@ -90,28 +137,30 @@ app.post("/auth", (req, res) => {
   });
 });
 
-
-let activePieces = [];
-let players = [];
-function initTestBoard() {
-  //Representation of game board
-  let testPlayer = new Player("test", "background-color: black");
-  let testPiece = new ActivePiece([0,0], testPlayer);
-  let testPlayer2 = new Player("test2", "background-color: red");
-  let testPiece2 = new ActivePiece([0,1], testPlayer2);
-  activePieces = [testPiece, testPiece2];
-  players = [testPlayer, testPlayer2];
-  makeGlider([4,10], "SE", testPlayer);
-  makeGlider([9,10], "SW", testPlayer2);
-}
-initTestBoard()
-
-let dimensions = {};
-function setDimensions(coords) {
-  dimensions["xMin"] = coords[0][0];
-  dimensions["xMax"] = coords[0][1];
-  dimensions["yMin"] = coords[1][0];
-  dimensions["yMax"] = coords[1][1];
+//Precondish: takes a username and the css styling of their cells
+//Postcondish: adds the player to an existing session object or creates a new one for them, returns room name
+async function addPlayer(player) {
+  //See if a game session exists
+  if (Object.keys(gameSessions).length == 0) {
+    let session = new GameSession('room1');
+    session.addPlayer(player);
+    gameSessions[session.getRoom()] = session;
+    return session.getRoom();
+  }
+  //See if a new session needs to be made
+  else if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4){
+    let session = new GameSession(`room${gameSessions.length + 1}`);
+    session.addPlayer(player);
+    gameSessions[session.getRoom()] = session;
+    return session.getRoom();
+  }
+  else {
+    gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].addPlayer(player);
+    if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4) {
+      startGame(Object.keys(gameSessions)[Object.keys(gameSessions).length-1]);
+    }
+    return gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getRoom();
+  }
 }
 setDimensions([[0,24],[0,24]]);
 
@@ -121,7 +170,7 @@ function isAlive(pos) {
   for (let i = 0; i < activePieces.length; i++) {
     if (activePieces[i].getPos()[0] == pos[0] && activePieces[i].getPos()[1] == pos[1]) {
       return activePieces[i].getOwner();
-    }   
+    }
   }
   return null;
 }
@@ -149,8 +198,8 @@ function nextGeneration() {
     //Check the 3x3 box around each living cell if any dead cells will be alive in the next generation
     for (let i = xPos - 1; i <= xPos + 1; i++) {
       for (let j = yPos - 1; j <= yPos + 1; j++) {
-        if (isAlive([i,j]) != owner && inBounds(i, j)) {
-          neighbors = countLiveNeighbors([i,j], owner);
+        if (isAlive([i,j], room) != owner && inBounds(i, j, room)) {
+          neighbors = countLiveNeighbors([i,j], owner, room);
           if (neighbors == 3) {
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
             if (!(`${i}:${j}` in tempCells)) {
@@ -173,8 +222,8 @@ function nextGeneration() {
       }
     }
     //Check if the current cell will be alive in the next generation
-    if (inBounds(xPos, yPos)) {
-      neighbors = countLiveNeighbors([xPos, yPos], owner);
+    if (inBounds(xPos, yPos, room)) {
+      neighbors = countLiveNeighbors([xPos, yPos], owner, room);
       if (neighbors == 2 || neighbors == 3) {
             //If cell already exists in the next generation, it is either a collision or the cell has already been accounted for.
             if (!(`${xPos}:${yPos}` in tempCells)) {
@@ -203,7 +252,7 @@ function nextGeneration() {
       activePieces.push(tempCells[pos]);
     }
   }
-  setPlayerStats();
+  setPlayerStats(room);
 }
 
 
@@ -214,12 +263,12 @@ function getRandomInt(max) {
 
 //Precondish: takes a duble with x, y coords of a cell, the owner of the cell
 //Postcondish: the number of live neighbors to the specified cell
-function countLiveNeighbors(pos, player) {
+function countLiveNeighbors(pos, player, room) {
   neighbors = 0;
   for (let i = pos[0] - 1; i <= pos[0] + 1; i++) {
     for (let j = pos[1] - 1; j <= pos[1] + 1; j++) {
       //See if the cell has a neighbor that belongs to the same person, and is not itself.
-      if (isAlive([i,j]) == player && !(i == pos[0] && j == pos[1])) {
+      if (isAlive([i,j], room) == player && !(i == pos[0] && j == pos[1])) {
         neighbors ++;
       }
     }
@@ -230,10 +279,14 @@ function countLiveNeighbors(pos, player) {
 
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider, and a player object
 //Postcondish: doesn't return anything, adds appropriate active cells objects to active pieces array
-function makeGlider(gliderPos, orientation, player) {
-  let newPositions = makeGliderPos(gliderPos, orientation);
-  for (let i = 0; i < newPositions.length; i++) {
-    makeCell(newPositions[i], player);
+function makeGliders(gliders, player, room) {
+  for (let i = 0; i < gliders.length; i++) {
+    pos = gliders[i].pos;
+    orientation = gliders[i].orientation;
+    let newPositions = makeGliderPos(pos, orientation);
+    for (let j = 0; j < newPositions.length; j++) {
+      makeCell(newPositions[j], player, room);
+    }
   }
 }
 
@@ -242,8 +295,8 @@ function makeGlider(gliderPos, orientation, player) {
 function setPlayerStats() {
   for (let i = 0; i < players.length; i++) {
     strength = 0;
-    for (let j = 0; j < activePieces.length; j++) {
-      if (activePieces[j].getOwner() == players[i]) { 
+    for (let i = 0; i < activePieces.length; i++) {
+      if (activePieces[i].getOwner() == id) {
         strength ++;
       }
     }
@@ -283,10 +336,10 @@ function checkCollision(contestedPositions, cells) {
 }
 
 //Precondish: duble with x, y coords of a cell, an owner
-//Postcondish: doesn't return anything, makes a new cell object and appends it to the activePieces array
-function makeCell(pos, player) {
-  newCell = new ActivePiece(pos, player);
-  activePieces.push(newCell);
+//Postcondish: doesn't return anything, makes a new cell object and appends it to the activePieces array for the corresponding game session
+function makeCell(pos, id, room) {
+  newCell = new ActivePiece(pos, gameSessions[room].getPlayer(id));
+  gameSessions[room].addActivePiece(newCell);
 }
 
 //GET handler for sending client a JSON body of active cell objects
@@ -300,31 +353,60 @@ app.get("/cells", function(req, res) {
 });
 
 app.get("/step", function(req, res) {
-  nextGeneration();
+  let room = req.query.room;
+  nextGeneration(room);
   res.sendStatus(200);
 });
 
 app.get("/reset", function(req, res) {
   initTestBoard()
-  
 });
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
-app.get("/gliders", function(req, res) {
-  let x = req.query.x;
-  let y = req.query.y;
-  let orientation = req.query.orientation;
-  console.log("gliders sent: x = " + x + ", y = " + y);
-  let testPlayer = new Player("test", "background-color: black");
-  makeGlider([Number(x),Number(y)], orientation, testPlayer);
-  console.log({"orientation": orientation});
-  res.status(200);
-  res.json({"orientation": orientation});
+app.post("/gliders", function(req, res) {
+  console.log("/gliders received post");
+  let user = req.session.username;
+  let gliders = req.body.gliders;
+  let room = req.body.room;
+  if (gameSessions[room].playerIn(user)) {
+    makeGliders(gliders, user, room);
+    res.sendStatus(200);
+  }
+  else {
+    res.sendStatus(404);
+  }
+});
+
+//GET handler for giving the client the coordinates for the quadrant they are in, also adds that player to a game session
+app.get("/quadrant", async function(req, res) {
+  if (!req.session.loggedin) {
+    res.sendStatus(404);
+  }
+  else {
+    let id = req.session.username;
+    let player = await new Player(id);
+    let room = await addPlayer(player);
+    console.log(gameSessions[room]);
+    let resBody = {
+      "quadrant": gameSessions[room].getNumPlayers(),
+      "style": gameSessions[room].getPlayer(id).getStyle()
+    };
+    res.status(200);
+    res.json(resBody);
+  }
+});
+
+app.post("/updateUserStyle", (req, res) => {
+  let username = req.session.username;
+  database.setStyle(username, req.body.style);
+});
+
+io.on("connect", socket => {
+  console.log("Connected!");
+  socket.emit('next', 'hello');
 });
 
 
-
-app.listen(port, function() {
-  console.log(`Server listening on post: http://${hostname}:${port}`)
+server.listen(port, function() {
+  console.log(`Server listening on post: http://${hostname}:${port}`);
 });
-

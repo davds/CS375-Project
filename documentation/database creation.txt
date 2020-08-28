@@ -5,10 +5,20 @@ CREATE DATABASE cgod; // Create new database 'cgod'
 \c cgod // Load database cgod
 
 CREATE TABLE users ( 
+    id SERIAL,
     username VARCHAR(20),
-    email VARCHAR(254),
+    email VARCHAR(255),
     password CHAR(60),
-    PRIMARY KEY (username),
+    PRIMARY KEY (id),
+    UNIQUE (username),
     UNIQUE (email)
 );
  
+CREATE TABLE userData (
+    username VARCHAR(20),
+    style VARCHAR(999),
+    wins INT,
+    gamesplayed INT,
+    PRIMARY KEY (username),
+    CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users (username)
+)

@@ -2,17 +2,138 @@
 
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" type="text/css" href="style.css">
+  <meta charset="utf-8">  
+  <link rel="stylesheet" href="./source/bootstrap.min.css">
+  <link rel="stylesheet" href="./source/home.css">
+  <script src="./source/jquery-3.5.1.min.js"></script>
+  <script src="./source/popper.min.js"></script>
+  <script src="./source/bootstrap.min.js"></script>
+  <script src="https://kit.fontawesome.com/0ca6c3f327.js" crossorigin="anonymous"></script>
+  <script>$("#header").load("header.html");</script>
   <title>Home</title>
-
 </head>
 
 <body>
-  <h1>Conway's Game of Death</h1>
-  <a href="/game.html">play</a>
-  <a href="/login.html">login</a>
-  <a href="/memoir.html">memoir</a>
-  <script></script>
+  <div id="header"></div>
+  <div class="container-fluid row">
+    <div class="col-sm-10" style="text-align: center;">
+      <div class="jumbotron">
+        <h1 class="display-2">Conway's Game of Death</h1>
+        <hr class="my-4">
+        <div class="container">
+        </div>
+        <button type="button" class="btn btn-success btn-lg btn-block" id="play">Play</button>
+      </div>
+    </div>
+    <div class="col-sm-2" style="border: 1px solid black;"id="account">
+      <p id="message"></p>
+      <p><i class="fas fa-user"></i> Player: <strong id="username"></strong></p>
+      <p><i class="fas fa-envelope"></i> Email: <b id="email"></b></p>
+      <p><i class="fas fa-gamepad"></i> Games Played: <strong id="gamesplayed"></strong></p> 
+      <p><i class="fas fa-crown"></i> Wins: <strong id="wins"></strong></p>
+      
+      <div class="container p-3 my-3 radio" style="text-align: center;">
+        <h2 >Cell Color</h2>
+        <div class="row container-md" id="radio-colors">
+          <label class="col-sm" style="color: blue; font-size: 42px;">
+            <input type="radio" style="background-color: blue;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: orange; font-size: 42px;">
+            <input type="radio" style="background-color: orange;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: lightgreen; font-size: 42px;">
+            <input type="radio" style="background-color: lightgreen;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: tan; font-size: 42px;">
+            <input type="radio" style="background-color: tan;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: darkolivegreen; font-size: 42px;">
+            <input type="radio" style="background-color: darkolivegreen;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: darkslateblue; font-size: 42px;">
+            <input type="radio" style="background-color: darkslateblue;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: red; font-size: 42px;">
+            <input type="radio" style="background-color: red;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: hotpink; font-size: 42px">
+            <input type="radio" style="background-color: hotpink;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: yellow; font-size: 42px">
+            <input type="radio" style="background-color: yellow;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: purple; font-size: 42px">
+            <input type="radio" style="background-color: purple;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: cyan; font-size: 42px;">
+            <input type="radio" style="background-color: cyan;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: brown; font-size: 42px;">
+            <input type="radio" style="background-color: brown;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: deepskyblue; font-size: 42px;">
+            <input type="radio" style="background-color: deepskyblue;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+          <label class="col-sm" style="color: tomato; font-size: 42px;">
+            <input type="radio" style="background-color: tomato;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
+        </div>
+    </div>
+  </div>
+  <script src="./client.js"></script>
+  <script>  
+    function getRadio() {
+      return $("input[name=colorradio]:checked").css("color")
+    }
+
+    let message = document.getElementById("message");
+    let username = document.getElementById("username");
+    let email = document.getElementById("email");
+    let wins = document.getElementById("wins");
+    let gamesplayed = document.getElementById("gamesplayed");
+    let play = document.getElementById("play");
+    fetch("/home").then(function (response) {
+                return response.json();
+            }).then(function (data) {
+              console.log(data);
+              if (data.hasOwnProperty("message")){
+                message.textContent = data.message;
+              } else {
+                console.log(data)
+                username.textContent = data.username;
+                email.textContent = data.email;
+                wins.textContent = data.wins;
+                gamesplayed.textContent = data.gamesplayed;
+              }
+            });
+    $("#play").on("click", () => {
+      fetch("/user").then(res => {
+        return res.json();
+      }).then(data => {
+      if (data.loggedIn) {
+        location.assign("/game.html")
+        //send selected color to db
+        let style = ""
+        $("input[type='radio']").each(i => {
+          if ($("input[type='radio']")[i].checked) {
+            style = $("input[type='radio']")[i].style.cssText;
+          }
+        });
+
+        if (style !== "") 
+          fetch("/updateUserStyle", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ style: style })
+          });
+      } else {
+        location.assign("/login.html")
+      }
+      });
+      
+    });
+  </script>
 </body>
 </html>

@@ -40,10 +40,20 @@ app.get('/', function (req, res) {
 
 app.get('/home', (req, res) => {
   if (req.session.loggedin) {
-    res.json({username: req.session.username})
+    database.getGamesPlayed()
+    let u = req.session.username;
+    res.json({username: u,wins: database.getWins(u), gamesplayed: database.getGamesPlayed(u)})
   } else {
     res.json({message: "No user logged in"})
   }
+})
+
+app.get('/cellcolor', (req, res) => {
+  let cellcolor = req.query.color;
+  let user = req.session.username;
+  console.log(cellcolor,user)
+  database.setStyle(user,`background-color: ${cellcolor}`);
+  res.status(200).send("Color updated");
 })
 
 let tempEnv = require("../env.json");
@@ -78,7 +88,9 @@ app.post("/newUser", (req, res) => {
   //console.log(username + " " + plaintextPassword)
   bcrypt.hash(plaintextPassword, 10).then(password => {
     pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, email, password]).then(response => {
-      res.status(200).send("Account created");
+      pool.query("INSERT INTO userData (username, style, wins,gamesplayed) VALUES ($1,'',0,0)", [username]).then(response => {
+        res.status(200).send("Account created");
+      })
     }).catch(error => {
       console.log(`FAILED TO CREATE USER ${username}\n` + error);
       if (error.constraint === "users_email_key") {

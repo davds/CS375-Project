@@ -82,10 +82,16 @@
   </div>
   <script src="./client.js"></script>
   <script>  
-    let message = document.getElementById("message")
-    let username = document.getElementById("username")
-    let email = document.getElementById("email")
-    let play = document.getElementById("play")
+    function getRadio() {
+      return $("input[name=colorradio]:checked").css("color")
+    }
+
+    let message = document.getElementById("message");
+    let username = document.getElementById("username");
+    let email = document.getElementById("email");
+    let wins = document.getElementById("wins");
+    let gamesplayed = document.getElementById("gamesplayed");
+    let play = document.getElementById("play");
     fetch("/home").then(function (response) {
                 return response.json();
             }).then(function (data) {
@@ -93,38 +99,41 @@
               if (data.hasOwnProperty("message")){
                 message.textContent = data.message;
               } else {
+                console.log(data)
                 username.textContent = data.username;
                 email.textContent = data.email;
+                wins.textContent = data.wins;
+                gamesplayed.textContent = data.gamesplayed;
               }
             });
     $("#play").on("click", () => {
       fetch("/user").then(res => {
         return res.json();
       }).then(data => {
-      if (data.loggedIn) {
-        location.assign("/game.html")
-        //send selected color to db
-        let style = ""
-        $("input[type='radio']").each(i => {
-          if ($("input[type='radio']")[i].checked) {
-            style = $("input[type='radio']")[i].style.cssText;
-          }
-        });
-
-        if (style !== "") 
-          fetch("/updateUserStyle", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ style: style })
+        if (data.loggedIn) {
+          location.assign("/game.html")
+          //send selected color to db
+          let style = ""
+          $("input[type='radio']").each(i => {
+            if ($("input[type='radio']")[i].checked) {
+              style = $("input[type='radio']")[i].style.cssText;
+            }
           });
-      } else {
-        //location.assign("/login.html")
-      }
+
+          if (style !== "") 
+            fetch("/updateUserStyle", {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ style: style })
+            });
+        } else {
+          location.assign("/login.html")
+        }
       });
       
-    })
+    });
   </script>
 </body>
 </html>

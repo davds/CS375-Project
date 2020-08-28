@@ -110,13 +110,38 @@
     const socket = io();
 
     socket.on('connect', () => {
-      addPlayer();
+      let room = addPlayer();
+      if (room != null) {
+        socket.emit('joinRoom', room);
+      }
+    });
+
+    socket.on('countdown', () => {
+      console.log("Game started, countdown starting.");
+      startCountdown();
     });
 
     socket.on('phaseOne', (data) => {
       console.log("Phase One Starting.");
       phaseOne();
     });
+
+    socket.on('sendGliders', () => {
+      sendGliders();
+    });
+
+    socket.on('nextGeneration', () => {
+      getNextGeneration();
+    });
+
+    socket.on('newZone', () => {
+      getNewZone();
+    });
+
+    socket.on('gameOver', () => {
+      gameOver();
+    });
+
   </script>
 </body>
 

@@ -1,20 +1,28 @@
-let tempEnv = require("../env.json");
-const { request, response } = require("express");
-if (process.env._ && process.env._.indexOf("heroku"))
-  tempEnv = require("../heroku.json");
-const env = tempEnv;
-
 const pg = require("pg");
 const Pool = pg.Pool;
-const pool = new Pool(env);
 
-//const dbGetStyle = (name) => pool.query("SELECT style FROM userData WHERE username = $1", [name]).then(response => response.rows);
+class Database {
+  connect(env) {
+    this.pool = new Pool(env);
+    this.pool.on('error', err => {
+      console.log("Failed to connect to Database.");
+    });
+  }
 
-var methods = {
-    setStyle: (name, style) => {pool.query("UPDATE userData SET style = $2 WHERE username = $1", [name, style])},
+  setStyle(name, style) {
+    this.pool.query("UPDATE userData SET style = $2 WHERE username = $1", [name, style]);
+  }
 
-    getStyle: name => pool.query("SELECT style FROM userData WHERE username = $1", [name]),
-    
+  async loadStyle(name) {
+    let style = await this.pool.query("SELECT style FROM userData WHERE username = $1", [name]).then(response => {
+      return response.rows[0].style;
+    });
+    return style;
+  }
+}
+
+
+var methods = {    
     addWin: name => pool.query("UPDATE userData SET wins = wins + 1 WHERE username = $1", [name]),
 
     getWins: name => pool.query("SELECT wins FROM userData WHERE username = $1", [name]),
@@ -25,5 +33,4 @@ var methods = {
 }
 
 
-
-module.exports = methods;
+module.exports = new Database();

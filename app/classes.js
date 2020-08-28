@@ -1,12 +1,23 @@
 const database = require("./database.js");
+let tempEnv = require("../env.json");
+const { request, response } = require("express");
+if (process.env._ && process.env._.indexOf("heroku"))
+  tempEnv = require("../heroku.json");
+const env = tempEnv;
+database.connect(env);
 class Player {
 	constructor(id, style="", strength=0) {
-		this.id = id;
-		if (style === "")
-			this.style = database.getStyle(id)
-		else
+		return (async () => {
+			this.id = id;
+			this.strength = strength;
 			this.style = style;
-		this.strength = strength;
+			if (style === "") {
+				this.style = await database.loadStyle(this.id).then(response => {
+					return response;
+				});	
+			}
+            return this;
+        })();
 	}
 	getStyle() {
 		return this.style;
@@ -46,7 +57,6 @@ class ActivePiece {
 
 class GameSession {
 	constructor(roomName, coords=[[0,99],[0,99]]) {
-		this.colors = ["background-color: red;", "background-color: blue;", "background-color: green;", "background-color: yellow;"];
 		this.roomName = roomName;
 		this.players = {};
 		this.activePieces = [];
@@ -63,8 +73,7 @@ class GameSession {
 		return this.players[id];
 	}
 	addPlayer(player) {
-		player.setStyle(this.colors[this.getNumPlayers()]);
-		this.players[player.getId()] = player;
+		this.players[player.id] = player;
 	}
 	getNumPlayers() {
 		return Object.keys(this.players).length;

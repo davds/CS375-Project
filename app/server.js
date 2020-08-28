@@ -15,8 +15,6 @@ const options = {
 };
 const io = require('socket.io').listen(server, options);
 let gameSessions = {"test": new GameSession("test")};
-gameSessions["test"].addPlayer(new Player("davd"));
-gameSessions["test"].addPlayer(new Player("hoff", "background-color: red;"));
 
 app.use(express.json());
 app.use(express.static("../public_html"));
@@ -128,9 +126,7 @@ app.post("/auth", (req, res) => {
 
 //Precondish: takes a username and the css styling of their cells
 //Postcondish: adds the player to an existing session object or creates a new one for them, returns room name
-function addPlayer(username) {
-  //Create player object
-  let player = new Player(username);
+async function addPlayer(player) {
   //See if a game session exists
   if (Object.keys(gameSessions).length == 0) {
     let session = new GameSession('room1');
@@ -385,13 +381,14 @@ app.post("/gliders", function(req, res) {
 });
 
 //GET handler for giving the client the coordinates for the quadrant they are in, also adds that player to a game session
-app.get("/quadrant", function(req, res) {
+app.get("/quadrant", async function(req, res) {
   if (!req.session.loggedin) {
     res.sendStatus(404);
   }
   else {
-    let id = req.session.username;
-    let room = addPlayer(id);
+    let id = req.session.username;    
+    let player = await new Player(id);    
+    let room = await addPlayer(player);
     console.log(gameSessions[room]);
     let resBody = {
       "quadrant": gameSessions[room].getNumPlayers(),
@@ -402,13 +399,18 @@ app.get("/quadrant", function(req, res) {
   }
 });
 
+app.post("/updateUserStyle", (req, res) => {
+  let username = req.session.username;
+  database.setStyle(username, req.body.style);
+});
+
 io.on("connect", socket => {
   console.log("Connected!");
-  socket.emit('next', 'hello');
+  socket.emit('next', 'hello');  
 });
 
 
 server.listen(port, function() {
-  console.log(`Server listening on post: http://${hostname}:${port}`)
+  console.log(`Server listening on post: http://${hostname}:${port}`);  
 });
 

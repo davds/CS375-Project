@@ -432,7 +432,6 @@ function startCountdown() {
             //phaseOne();
         }
     }, 1000);
-    
 }
 
 

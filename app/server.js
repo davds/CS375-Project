@@ -14,6 +14,108 @@ const options = {
 };
 const io = require('socket.io').listen(server, options);
 const gameSessions = {};
+const obstacleDims = {
+  "1" : {
+    "cornerCoord": [21,0],
+    "dims": [16, 19]
+  },
+  "2" : {
+    "cornerCoord": [38,0],
+    "dims": [22, 19]
+  },
+  "3" : {
+    "cornerCoord": [61,0],
+    "dims": [16, 19]
+  },
+  "4" : {
+    "cornerCoord": [0,21],
+    "dims": [19, 16]
+  },
+  "5" : {
+    "cornerCoord": [20,20],
+    "dims": [17, 17]
+  },
+  "6" : {
+    "cornerCoord": [38,21],
+    "dims": [22, 8]
+  },
+  "7" : {
+    "cornerCoord": [38,30],
+    "dims": [22, 8]
+  },
+  "8" : {
+    "cornerCoord": [61,20],
+    "dims": [17, 17]
+  },
+  "9" : {
+    "cornerCoord": [79,21],
+    "dims": [19, 16]
+  },
+  "10" : {
+    "cornerCoord": [0,38],
+    "dims": [19, 22]
+  },
+  "11" : {
+    "cornerCoord": [20,38],
+    "dims": [8, 22]
+  },
+  "12" : {
+    "cornerCoord": [29,38],
+    "dims": [8, 22]
+  },
+  "13" : {
+    "cornerCoord": [38,38],
+    "dims": [22, 22]
+  },
+  "14" : {
+    "cornerCoord": [61,38],
+    "dims": [8, 22]
+  },
+  "15" : {
+    "cornerCoord": [70,38],
+    "dims": [8, 22]
+  },
+  "16" : {
+    "cornerCoord": [79,38],
+    "dims": [19, 22]
+  },
+  "17" : {
+    "cornerCoord": [0,61],
+    "dims": [19, 16]
+  },
+  "18" : {
+    "cornerCoord": [20,61],
+    "dims": [17, 17]
+  },
+  "19" : {
+    "cornerCoord": [38,61],
+    "dims": [22, 8]
+  },
+  "20" : {
+    "cornerCoord": [38,70],
+    "dims": [22, 8]
+  },
+  "21" : {
+    "cornerCoord": [61,61],
+    "dims": [17, 17]
+  },
+  "22" : {
+    "cornerCoord": [79,61],
+    "dims": [19, 16]
+  },
+  "23" : {
+    "cornerCoord": [21,79],
+    "dims": [16, 19]
+  },
+  "24" : {
+    "cornerCoord": [38,79],
+    "dims": [22, 19]
+  },
+  "25" : {
+    "cornerCoord": [61,79],
+    "dims": [16, 19]
+  }
+};
 
 
 app.use(express.json());

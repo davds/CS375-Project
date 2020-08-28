@@ -553,6 +553,46 @@
     ];
     return positions;
   }
+  //Precondish: [pos[0], pos[1]] is the top left of the cyclic
+  //Postcondish: returns a cyclic pattern
+  //type: oscillator, size: 10x10
+  function makeCyclicPos(pos) {
+    positions = [
+      [pos[0] + 4, pos[1]],
+      [pos[0] + 5, pos[1]],
+      [pos[0] + 3, pos[1] + 1],
+      [pos[0] + 6, pos[1] + 1],
+      [pos[0] + 3, pos[1] + 2],
+      [pos[0] + 5, pos[1] + 2],
+      [pos[0] + 6, pos[1] + 2],
+      [pos[0] + 1, pos[1] + 3],
+      [pos[0] + 2, pos[1] + 3],
+      [pos[0] + 5, pos[1] + 3],
+      [pos[0] + 7, pos[1] + 3],
+      [pos[0] + 8, pos[1] + 3],
+      [pos[0] + 0, pos[1] + 4],
+      [pos[0] + 6, pos[1] + 4],
+      [pos[0] + 7, pos[1] + 4],
+      [pos[0] + 9, pos[1] + 4],
+      [pos[0] + 0, pos[1] + 5],
+      [pos[0] + 2, pos[1] + 5],
+      [pos[0] + 3, pos[1] + 5],
+      [pos[0] + 9, pos[1] + 5],
+      [pos[0] + 1, pos[1] + 6],
+      [pos[0] + 2, pos[1] + 6],
+      [pos[0] + 4, pos[1] + 6],
+      [pos[0] + 7, pos[1] + 6],
+      [pos[0] + 8, pos[1] + 6],
+      [pos[0] + 3, pos[1] + 7],
+      [pos[0] + 4, pos[1] + 7],
+      [pos[0] + 6, pos[1] + 7],
+      [pos[0] + 3, pos[1] + 8],
+      [pos[0] + 6, pos[1] + 8],
+      [pos[0] + 4, pos[1] + 9],
+      [pos[0] + 5, pos[1] + 9],
+    ];
+    return positions;
+  }
   //Precondish: [pos[0], pos[1]] is the top left of the Cthulhu
   //Postcondish: returns a Cthulhu pattern
   //type: still life, size: 11x13

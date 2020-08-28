@@ -4,6 +4,7 @@ class Player {
 		this.style = style;
 		this.strength = strength;
 		this.alive = true;
+		this.cellsConquered = 0;
 	}
 	getStyle() {
 		return this.style;
@@ -16,6 +17,9 @@ class Player {
 	}
 	getStrength() {
 		return this.strength;
+	}
+	setCellsConquered(cell_num) {
+		this.cellsConquered = cell_num;
 	}
 	getId() {
 		return this.id;
@@ -59,6 +63,8 @@ class GameSession {
 		this.aliveLastRound = [];
 		this.closingCell = closingCell;
 		this.winners = {};
+		this.glidersReceived = 0;
+		this.obstacles = new Player("board", "background-color: black;");
 	}
 	getRoom() {
 		return this.roomName;
@@ -123,6 +129,15 @@ class GameSession {
 	}
 	getWinners() {
 		return this.winners;
+	}
+	addGlider() {
+		this.glidersReceived += 1;
+	}
+	getGlidersReceived() {
+		return this.glidersReceived;
+	}
+	getObstacles() {
+		return this.obstacles;
 	}
 
 }

@@ -5,7 +5,7 @@ const express = require("express");
 const session = require("express-session");
 const app = express();
 const {Player, ActivePiece, GameSession} = require("./classes.js");
-const obstacles = require("./obstacles.js");
+const obstacle = require("./obstacles.js");
 const hostname = "localhost";
 const port = process.env.PORT || 3000;
 const server = require('http').createServer(app);
@@ -14,9 +14,134 @@ const options = {
 };
 const io = require('socket.io').listen(server, options);
 const gameSessions = {};
+const obstacleDims = [
+  {
+    "cornerCoord": [21,0],
+    "dims": [16, 19]
+  },
+  {
+    "cornerCoord": [38,0],
+    "dims": [22, 19]
+  },
+  {
+    "cornerCoord": [61,0],
+    "dims": [16, 19]
+  },
+  {
+    "cornerCoord": [0,21],
+    "dims": [19, 16]
+  },
+  {
+    "cornerCoord": [20,20],
+    "dims": [17, 17]
+  },
+  {
+    "cornerCoord": [38,21],
+    "dims": [22, 8]
+  },
+  {
+    "cornerCoord": [38,30],
+    "dims": [22, 8]
+  },
+  {
+    "cornerCoord": [61,20],
+    "dims": [17, 17]
+  },
+  {
+    "cornerCoord": [79,21],
+    "dims": [19, 16]
+  },
+  {
+    "cornerCoord": [0,38],
+    "dims": [19, 22]
+  },
+  {
+    "cornerCoord": [20,38],
+    "dims": [8, 22]
+  },
+  {
+    "cornerCoord": [29,38],
+    "dims": [8, 22]
+  },
+  {
+    "cornerCoord": [38,38],
+    "dims": [22, 22]
+  },
+  {
+    "cornerCoord": [61,38],
+    "dims": [8, 22]
+  },
+  {
+    "cornerCoord": [70,38],
+    "dims": [8, 22]
+  },
+  {
+    "cornerCoord": [79,38],
+    "dims": [19, 22]
+  },
+  {
+    "cornerCoord": [0,61],
+    "dims": [19, 16]
+  },
+  {
+    "cornerCoord": [20,61],
+    "dims": [17, 17]
+  },
+  {
+    "cornerCoord": [38,61],
+    "dims": [22, 8]
+  },
+  {
+    "cornerCoord": [38,70],
+    "dims": [22, 8]
+  },
+  {
+    "cornerCoord": [61,61],
+    "dims": [17, 17]
+  },
+  {
+    "cornerCoord": [79,61],
+    "dims": [19, 16]
+  },
+  {
+    "cornerCoord": [21,79],
+    "dims": [16, 19]
+  },
+  {
+    "cornerCoord": [38,79],
+    "dims": [22, 19]
+  },
+  {
+    "cornerCoord": [61,79],
+    "dims": [16, 19]
+  }
+];
+
+const obstacles = {
+  "makeBlinkerPos" : [3, 3],
+  "makeSquarePos" : [2, 2],
+  "makeBargePos" : [4, 4],
+  "makeHivePos" : [4, 3],
+  "makeHatPos" : [5, 4],
+  "makeBoatPos" : [3, 3],
+  "makeLongBoatPos" : [5, 5],
+  "makeBeaconPos" : [4, 4],
+  "makeToadPos" : [4, 4],
+  "makeBipolePos" : [5, 5],
+  "makeP11Pos" : [22, 22],
+  "makeP16Pos" : [15, 15],
+  "makeCirclePos" : [11, 11],
+  "makeEurekaPos" : [18, 15],
+  "makeClipPos" : [9, 8],
+  "make31Dot4Pos" : [13, 8],
+  "makeCenturyEaterPos" : [8, 7],
+  "makeLongShipPos" : [13, 13],
+  "makeCyclicPos" : [10, 10],
+  "makeCthulhuPos" : [11, 13],
+};
 
 // syntax for hussn
-//console.log(obstacles.makeBargePos([5,5]));
+//console.log(obstacle.makeBargePos([5,5]));
 
 app.use(express.json());
 app.use(express.static("../public_html"));
@@ -136,6 +261,7 @@ function addPlayer(username) {
     let session = new GameSession('room1', [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
+    populateBoard(session.getRoom());
     return session.getRoom();
   }
   //See if a new session needs to be made
@@ -143,6 +269,7 @@ function addPlayer(username) {
     let session = new GameSession(`room${gameSessions.length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
+    populateBoard(session.getRoom());
     return session.getRoom();
   }
   else {
@@ -221,6 +348,27 @@ function inBounds(xPos, yPos, room) {
     }
   }
   return false;
+}
+
+function populateBoard(room) {
+  let gameBoard = gameSessions[room].getObstacles();
+  for (let i = 0; i < obstacleDims.length; i++) {
+    let possibleObstacles = [];
+    for (let functionName in obstacles) {
+      if (obstacles[functionName][0] <= obstacleDims[i]["dims"][0] && obstacles[functionName][1] <= obstacleDims[i]["dims"][1]) {
+        possibleObstacles.push(functionName);
+      }
+    }
+    let pickedObstacle = possibleObstacles[getRandomInt(possibleObstacles.length)];
+    let cornerPos = [obstacleDims[i]["cornerCoord"[0]] + getRandomInt(obstacleDims[i]["dims"][0] - obstacles[pickedObstacle][0]), obstacleDims[i]["cornerCoord"[1]] + getRandomInt(obstacleDims[i]["dims"][1] - obstacles[pickedObstacle][1])];
+    let functionString =  `${pickedObstacle}(${cornerPos})`;
+    let cellsToAdd = eval(functionString);
+    for (cell in cellsToAdd) {
+      let newPiece = new ActivePiece(cell, gameBoard);
+      gameSessions[room].addActivePiece(newPiece);
+    }
+  }
+
 }
 
 //Precondish: array of current active cell objects must be initialized
@@ -486,8 +634,8 @@ function phaseOne(room) {
   io.to(room).emit('phaseOne', room);
   let generations = 0;
   let generationInterval = setInterval(function() {
-    io.to(room).emit('nextGeneration', room);
     nextGeneration(room);
+    io.to(room).emit('nextGeneration', room);
     if (++generations % 10 == 0) {
       closeZone(room);
       io.to(room).emit('newZone', room);
@@ -504,11 +652,14 @@ app.post("/gliders", function(req, res) {
   console.log("/gliders received post");
   let user = req.session.username;
   let gliders = req.body.gliders;
-  let room = req.body.room;
+  let room = req.session.room;
   if (gameSessions[room].playerIn(user)) {
     makeGliders(gliders, user, room);
+    gameSessions[room].addGlider();
     res.sendStatus(200);
-    phaseOne();
+    if (gameSessions[room].getGlidersReceived() == 4) {
+      phaseOne();
+    }
   }
   else {
     res.sendStatus(404);
@@ -532,7 +683,8 @@ app.get("/quadrant", function(req, res) {
     }
     let resBody = {
       "quadrant": gameSessions[room].getNumPlayers(),
-      "style": gameSessions[room].getPlayer(id).getStyle()
+      "style": gameSessions[room].getPlayer(id).getStyle(),
+      "room" : room
     };
     res.status(200);
     res.json(resBody);
@@ -555,7 +707,10 @@ app.get("/zone", function(req, res) {
 
 io.on("connect", socket => {
   console.log("Connected!");
-  socket.emit('next', 'hello');
+  socket.on('joinRoom', room => {
+    console.log('player joined room');
+    socket.join(room);
+  });
 });
 
 server.listen(port, function() {

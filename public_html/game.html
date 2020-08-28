@@ -108,13 +108,17 @@
     const socket = io();
 
     socket.on('connect', () => {
-      addPlayer();
+      let room = addPlayer();
+      if (room != null) {
+        socket.emit('joinRoom', room);
+        getBoard();
+      }
     });
 
     socket.on('countdown', () => {
       console.log("Game started, countdown starting.");
       startCountdown();
-    })
+    });
 
     socket.on('phaseOne', (data) => {
       console.log("Phase One Starting.");
@@ -133,7 +137,7 @@
       getNewZone();
     });
 
-    socket.on('newZone', () => {
+    socket.on('gameOver', () => {
       gameOver();
     });
 

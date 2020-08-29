@@ -20,6 +20,7 @@ class Player {
         })();
 	}
 	getStyle() {
+		console.log("AAAAAAAAAAAAAAAAAAA");
 		return this.style;
 	}
 	setStyle(style) {
@@ -57,6 +58,7 @@ class ActivePiece {
 		this.owner = owner;
 	}
 	getStyle() {
+		console.log(this.owner);
 		return this.owner.getStyle();
 	}
 	getPos() {
@@ -65,7 +67,7 @@ class ActivePiece {
 }
 
 class GameSession {
-	constructor(roomName, coords=[[0,99],[0,99]]) {
+	constructor(roomName, closingCell, coords=[[0,99],[0,99]]) {
 		this.roomName = roomName;
 		this.players = {};
 		this.activePieces = [];
@@ -155,3 +157,4 @@ class GameSession {
 
 exports.Player = Player;
 exports.ActivePiece = ActivePiece;
+exports.GameSession = GameSession;

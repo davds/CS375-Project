@@ -268,6 +268,7 @@ app.post("/auth", (req, res) => {
 //Precondish: takes a username and the css styling of their cells
 //Postcondish: adds the player to an existing session object or creates a new one for them, returns room name
 async function addPlayer(player) {
+  console.log(player);
   //See if a game session exists
   if (Object.keys(gameSessions).length == 0) {
     let session = new GameSession('room1', [getRandomInt(10) + 45, getRandomInt(10) + 45]);
@@ -292,7 +293,6 @@ async function addPlayer(player) {
     return gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getRoom();
   }
 }
-setDimensions([[0,24],[0,24]]);
 
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider
 //Postcondish: returns positions of cells needed to make glider
@@ -608,6 +608,7 @@ function makeCell(pos, id, room) {
 app.get("/cells", function(req, res) {
   console.log("GET request received.");
   let room = req.session.room;
+  console.log(gameSessions['room1'].activePieces);
   let activePieces = gameSessions[room].getActivePieces();
   //console.log(activePieces);
   let resActivePieces = [];
@@ -693,6 +694,7 @@ app.get("/quadrant", async function(req, res) {
     if (!gameSessions[room].playerIn(id)) {
       req.session.room = await addPlayer(player);
     }
+    console.log(player.getStyle() + " test");
     let resBody = {
       "quadrant": gameSessions[room].getNumPlayers(),
       "style": gameSessions[room].getPlayer(id).getStyle(),
@@ -707,6 +709,7 @@ app.get("/quadrant", async function(req, res) {
 app.post("/updateUserStyle", (req, res) => {
   let username = req.session.username;
   database.setStyle(username, req.body.style);
+});
 
 //GET handler for getting the winner(s) of the game
 app.get("/winners", function(req, res) {
@@ -720,17 +723,15 @@ app.get("/zone", function(req, res) {
   let room = req.session.room;
   res.status(200);
   res.json(gameSessions[room].getDimensions());
-
 });
 
 io.on("connect", socket => {
   console.log("Connected!");
   socket.on('joinRoom', room => {
-    console.log('player joined room');
+    console.log('player joined room' + room);
     socket.join(room);
   });
 });
-
 
 server.listen(port, function() {
   console.log(`Server listening on post: http://${hostname}:${port}`);

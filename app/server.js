@@ -608,9 +608,7 @@ function makeCell(pos, id, room) {
 app.get("/cells", function(req, res) {
   console.log("GET request received.");
   let room = req.session.room;
-  console.log(gameSessions['room1'].activePieces);
   let activePieces = gameSessions[room].getActivePieces();
-  //console.log(activePieces);
   let resActivePieces = [];
   for (i in activePieces) {
     resActivePieces.push({ "pos": activePieces[i].getPos(), "style": activePieces[i].getStyle() });
@@ -691,8 +689,8 @@ app.get("/quadrant", async function(req, res) {
       req.session.room = await addPlayer(player);
     }
     let room = req.session.room;
-    let player = gameSessions[room].getPlayer(id);
-    console.log(player.getStyle() + " test");
+    console.log(room);
+    console.log(gameSessions);
     let resBody = {
       "quadrant": gameSessions[room].getNumPlayers(),
       "style": gameSessions[room].getPlayer(id).getStyle(),
@@ -726,7 +724,7 @@ app.get("/zone", function(req, res) {
 io.on("connect", socket => {
   console.log("Connected!");
   socket.on('joinRoom', room => {
-    console.log('player joined room' + room);
+    console.log('player joined room: ' + room);
     socket.join(room);
   });
 });

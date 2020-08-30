@@ -404,7 +404,7 @@ function sendGliders() {
     });    
     placedGliders = [];
     $("td").removeClass("solid");
-    getBoard('test');
+    getBoard();
 }
 
 function rotateGlider() {
@@ -433,25 +433,10 @@ function showGliders() {
     }
 }
 
-//Add player to a game session object and get the quadrant player is in
-function addPlayer() {
-    fetch("/quadrant").then(response => {
-        if (response.status == 200) {
-            response.json().then(data => {
-                console.log("Quadrant:" + data.quadrant);
-                console.log("style:" + data.style);
-                activeCoords = quadrants[data.quadrant];
-                clientColor = data.style;
-                createBoard();
-                return data.room;
-            });
-        }
-        else {
-            alert("Please log in.");
-            return null;
-        }
-    });
-    getBoard();
+function setBoard(quadrant, style) {
+    activeCoords = quadrants[quadrant];
+    clientColor = style;
+    createBoard();
 }
 
 function updateGliderText() {

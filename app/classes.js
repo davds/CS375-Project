@@ -20,7 +20,6 @@ class Player {
         })();
 	}
 	getStyle() {
-		console.log("AAAAAAAAAAAAAAAAAAA");
 		return this.style;
 	}
 	setStyle(style) {
@@ -58,7 +57,6 @@ class ActivePiece {
 		this.owner = owner;
 	}
 	getStyle() {
-		console.log(this.owner);
 		return this.owner.getStyle();
 	}
 	getPos() {

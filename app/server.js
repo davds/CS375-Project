@@ -187,8 +187,8 @@ app.get('/cellcolor', (req, res) => {
 
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
-//if (process.env._ && process.env._.indexOf("heroku"))
-//  tempEnv = require("../heroku.json");
+if (process.env._ && process.env._.indexOf("heroku"))
+  tempEnv = require("../heroku.json");
 const env = tempEnv
 
 const Pool = pg.Pool;

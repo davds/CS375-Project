@@ -68,17 +68,21 @@ class ActivePiece {
 
 class GameSession {
 	constructor(roomName, closingCell, coords=[[0,99],[0,99]]) {
-		this.roomName = roomName;
-		this.players = {};
-		this.activePieces = [];
-		this.dimensions = {};
-		this.setDimensions(coords);
-		this.livingPlayers = [];
-		this.aliveLastRound = [];
-		this.closingCell = closingCell;
-		this.winners = {};
-		this.glidersReceived = 0;
-		this.obstacles = new Player("board", "background-color: black;");
+		return (async () => {
+			this.roomName = roomName;
+			this.players = {};
+			this.activePieces = [];
+			this.dimensions = {};
+			this.setDimensions(coords);
+			this.livingPlayers = [];
+			this.aliveLastRound = [];
+			this.closingCell = closingCell;
+			this.winners = {};
+			this.glidersReceived = 0;
+			this.obstacles = await new Player("board", "background-color: black;");
+            return this;
+        })();
+		
 	}
 	getRoom() {
 		return this.roomName;

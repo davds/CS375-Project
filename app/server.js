@@ -187,8 +187,8 @@ app.get('/cellcolor', (req, res) => {
 
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
-if (process.env._ && process.env._.indexOf("heroku"))
-  tempEnv = require("../heroku.json");
+//if (process.env._ && process.env._.indexOf("heroku"))
+//  tempEnv = require("../heroku.json");
 const env = tempEnv
 
 const Pool = pg.Pool;
@@ -271,7 +271,7 @@ async function addPlayer(player) {
   console.log(player);
   //See if a game session exists
   if (Object.keys(gameSessions).length == 0) {
-    let session = new GameSession('room1', [getRandomInt(10) + 45, getRandomInt(10) + 45]);
+    let session = await new GameSession('room1', [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
     populateBoard(session.getRoom());
@@ -279,7 +279,7 @@ async function addPlayer(player) {
   }
   //See if a new session needs to be made
   else if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4){
-    let session = new GameSession(`room${gameSessions.length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
+    let session = await new GameSession(`room${gameSessions.length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
     gameSessions[session.getRoom()] = session;
     populateBoard(session.getRoom());
@@ -686,14 +686,12 @@ app.get("/quadrant", async function(req, res) {
   else {
     //Check if player connecting is already in a game
     let id = req.session.username;
-    let player = await new Player(id);
     if (!req.session.room) {
+      let player = await new Player(id);
       req.session.room = await addPlayer(player);
     }
     let room = req.session.room;
-    if (!gameSessions[room].playerIn(id)) {
-      req.session.room = await addPlayer(player);
-    }
+    let player = gameSessions[room].getPlayer(id);
     console.log(player.getStyle() + " test");
     let resBody = {
       "quadrant": gameSessions[room].getNumPlayers(),

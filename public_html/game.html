@@ -106,6 +106,9 @@
                 socket.emit('joinRoom', data.room);
                 setBoard(quadrant, style);
                 getBoard();
+                if (quadrant == 4) {
+                  startCountdown();
+                }
             });
         }
         else {
@@ -130,6 +133,7 @@
     });
 
     socket.on('nextGeneration', () => {
+      console.log("Next Generation Received.");
       getNextGeneration();
     });
 
@@ -138,6 +142,7 @@
     });
 
     socket.on('gameOver', () => {
+      console.log("game over");
       gameOver();
     });
 

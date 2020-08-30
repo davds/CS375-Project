@@ -233,7 +233,6 @@ function getBoard() {
             let y = data[i].pos[1];
             boardCells[`${x}:${y}`].style = data[i].style;
         }
-        console.log(boardCells);
         drawBoard();
     });
 }
@@ -389,17 +388,18 @@ function placeGlider(cell) {
 }
 
 function sendGliders() { 
+    let glidersBody = [];
+    for (let i = 0; i < placedGliders.length; i++) {
+        glidersBody.push({ pos: placedGliders[i].getCenterPos(), orientation: placedGliders[i].getOrientation() })
+    }
+    console.log(glidersBody);
     fetch("/gliders", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({  //TODO: if theres fewer than 3 placed gliders, this errors.
-            gliders: [ 
-                { pos: placedGliders[0].getCenterPos(), orientation: placedGliders[0].getOrientation() },
-                { pos: placedGliders[1].getCenterPos(), orientation: placedGliders[1].getOrientation() },
-                { pos: placedGliders[2].getCenterPos(), orientation: placedGliders[2].getOrientation() },
-            ]
+            gliders: glidersBody
         })
     });    
     placedGliders = [];
@@ -454,7 +454,7 @@ function updateGliderText() {
 //This signals the start of the game. A 30 second countdown timer should start (along with some basic instructions). This is the only time gliders should be allowed to be placed.
 function startCountdown() {
     console.log("countdown begun!");
-    let secondsLeft = 2;
+    let secondsLeft = 30;
     let timerElement = document.getElementById("generations");
     let oldSt = timerElement.textContent;
     updateGliderText();
@@ -466,12 +466,8 @@ function startCountdown() {
         }
         else {
             canPlaceGliders = false;
-            timerElement.textContent = oldSt
+            timerElement.textContent = oldSt;
             clearInterval(interval);
-            sendGliders(); //SEND GLIDERS FAILS!
-            phaseOne(); 
-            //getNewZone();
-            //phaseOne();
         }
     }, 1000);
 }
@@ -482,13 +478,10 @@ function startCountdown() {
 function phaseOne() {
     //3 2 1 timer?
      $("td").removeClass("outta-bounds");
-    activeCoords = startCoords;
     console.log("phase one...");
-    addQuadrant();
-    drawBounds();
+    getNewZone();
     removeTransCells();
     drawBoard();
-    //getNextGeneration();
 }
 
 
@@ -519,8 +512,11 @@ function gameOver() {
     fetch(`/winners`).then(response => {
         return response.json();
     }).then(data => {
-        winnerElement.textContent = "Winners: ";
-        console.log(data);
+        winnerText = "Winners: "
+        for (i = 0; i < data.length; i++) {
+            winnerText += `${data[i].id} `;
+        }
+        winnerElement.textContent = winnerText;
     });
 }
 

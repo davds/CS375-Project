@@ -217,6 +217,7 @@ function drawBounds() {
                 cell.classList.add("da-circle");
             }
             else {
+                $(cell).removeClass("outta-bounds");
                 $(cell).removeClass("da-circle");
             }
         }

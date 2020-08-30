@@ -726,7 +726,7 @@ app.post("/updateUserStyle", (req, res) => {
 });
 
 //GET handler for getting the winner(s) of the game
-app.get("/winners", async function(req, res) {
+app.get("/winners", function(req, res) {
   let room = req.session.room;
   res.status(200);
   

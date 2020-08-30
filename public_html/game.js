@@ -214,10 +214,10 @@ function drawBounds() {
             let cellId = [i, j]
             let cell = document.getElementById(cellId[0] + "," + cellId[1]);
             if (!boardCells[`${i}:${j}`].inBounds) {
-                cell.classList.add("outta-bounds");
+                cell.classList.add("da-circle");
             }
             else {
-                $(cell).removeClass("outta-bounds");
+                $(cell).removeClass("da-circle");
             }
         }
     }

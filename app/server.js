@@ -726,10 +726,20 @@ app.post("/updateUserStyle", (req, res) => {
 });
 
 //GET handler for getting the winner(s) of the game
-app.get("/winners", function(req, res) {
+app.get("/winners", async function(req, res) {
   let room = req.session.room;
   res.status(200);
-  res.json(gameSessions[room].getWinners());
+  
+  //Add game played for each player
+  let players = Object.keys(gameSessions[room].getPlayers());
+  for (let i = 0; i < players.length; i++)
+    database.addGamePlayed(players[i]);
+  //Add win for each winner
+  let winners = gameSessions[room].getWinners();
+  for (let i = 0; i < winners.length; i++)
+    database.addWin(winners[i]);
+
+  res.json(winners);
   gameSessions[room].removePlayer(req.session.username);
   delete req.session.room;
   if (gameSessions[room].getNumPlayers() == 0) {
@@ -756,6 +766,10 @@ io.on("connect", socket => {
     socket.leave(room);
   });
 });
+
+app.get("/games", (req, res) => {
+  res.json(gameSessions);
+})
 
 server.listen(port, function() {
   console.log(`Server listening on post: http://${hostname}:${port}`);

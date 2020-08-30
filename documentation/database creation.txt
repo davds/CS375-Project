@@ -21,4 +21,4 @@ CREATE TABLE userData (
     gamesplayed INT,
     PRIMARY KEY (username),
     CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users (username)
-)
+);

@@ -214,10 +214,10 @@ function drawBounds() {
             let cellId = [i, j]
             let cell = document.getElementById(cellId[0] + "," + cellId[1]);
             if (!boardCells[`${i}:${j}`].inBounds) {
-                cell.classList.add("outta-bounds");
+                cell.classList.add("da-circle");
             }
             else {
-                $(cell).removeClass("outta-bounds");
+                $(cell).removeClass("da-circle");
             }
         }
     }
@@ -233,6 +233,7 @@ function getBoard() {
             let y = data[i].pos[1];
             boardCells[`${x}:${y}`].style = data[i].style;
         }
+        console.log(boardCells);
         drawBoard();
     });
 }
@@ -388,23 +389,22 @@ function placeGlider(cell) {
 }
 
 function sendGliders() { 
-    let glidersBody = [];
-    for (let i = 0; i < placedGliders.length; i++) {
-        glidersBody.push({ pos: placedGliders[i].getCenterPos(), orientation: placedGliders[i].getOrientation() })
-    }
-    console.log(glidersBody);
     fetch("/gliders", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({  //TODO: if theres fewer than 3 placed gliders, this errors.
-            gliders: glidersBody
+            gliders: [ 
+                { pos: placedGliders[0].getCenterPos(), orientation: placedGliders[0].getOrientation() },
+                { pos: placedGliders[1].getCenterPos(), orientation: placedGliders[1].getOrientation() },
+                { pos: placedGliders[2].getCenterPos(), orientation: placedGliders[2].getOrientation() },
+            ]
         })
     });    
     placedGliders = [];
     $("td").removeClass("solid");
-    getBoard();
+    getBoard('test');
 }
 
 function rotateGlider() {
@@ -433,10 +433,25 @@ function showGliders() {
     }
 }
 
-function setBoard(quadrant, style) {
-    activeCoords = quadrants[quadrant];
-    clientColor = style;
-    createBoard();
+//Add player to a game session object and get the quadrant player is in
+function addPlayer() {
+    fetch("/quadrant").then(response => {
+        if (response.status == 200) {
+            response.json().then(data => {
+                console.log("Quadrant:" + data.quadrant);
+                console.log("style:" + data.style);
+                activeCoords = quadrants[data.quadrant];
+                clientColor = data.style;
+                createBoard();
+                return data.room;
+            });
+        }
+        else {
+            alert("Please log in.");
+            return null;
+        }
+    });
+    getBoard();
 }
 
 function updateGliderText() {
@@ -454,7 +469,7 @@ function updateGliderText() {
 //This signals the start of the game. A 30 second countdown timer should start (along with some basic instructions). This is the only time gliders should be allowed to be placed.
 function startCountdown() {
     console.log("countdown begun!");
-    let secondsLeft = 30;
+    let secondsLeft = 2;
     let timerElement = document.getElementById("generations");
     let oldSt = timerElement.textContent;
     updateGliderText();
@@ -466,8 +481,12 @@ function startCountdown() {
         }
         else {
             canPlaceGliders = false;
-            timerElement.textContent = oldSt;
+            timerElement.textContent = oldSt
             clearInterval(interval);
+            sendGliders(); //SEND GLIDERS FAILS!
+            phaseOne(); 
+            //getNewZone();
+            //phaseOne();
         }
     }, 1000);
 }
@@ -478,10 +497,13 @@ function startCountdown() {
 function phaseOne() {
     //3 2 1 timer?
      $("td").removeClass("outta-bounds");
+    activeCoords = startCoords;
     console.log("phase one...");
-    getNewZone();
+    addQuadrant();
+    drawBounds();
     removeTransCells();
     drawBoard();
+    //getNextGeneration();
 }
 
 
@@ -512,11 +534,8 @@ function gameOver() {
     fetch(`/winners`).then(response => {
         return response.json();
     }).then(data => {
-        winnerText = "Winners: "
-        for (i = 0; i < data.length; i++) {
-            winnerText += `${data[i].id} `;
-        }
-        winnerElement.textContent = winnerText;
+        winnerElement.textContent = "Winners: ";
+        console.log(data);
     });
 }
 

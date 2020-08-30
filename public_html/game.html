@@ -35,7 +35,11 @@
       background-color: black;
       opacity: 0.5;
     }
-
+    .da-circle {
+      border: 1px solid rgba(255, 0, 0, .6);
+      background-color: red;
+      opacity: 0.5;
+    }
     .solid {
       border: 1px solid black;
       background-color: black;
@@ -84,7 +88,7 @@
   </div>
 
   <input type="button" value="Send Gliders" onclick="sendGliders()" />
-  <input type="button" value="Show" onclick="getBoard()" />
+  <input type="button" value="Show" onclick="getBoard('test')" />
   <input type="button" value="Next" onclick="nextGen()" />
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
@@ -96,26 +100,10 @@
     const socket = io();
 
     socket.on('connect', () => {
-      fetch("/quadrant").then(response => {
-        if (response.status == 200) {
-            response.json().then(data => {
-                console.log("Quadrant:" + data.quadrant);
-                console.log("style:" + data.style);
-                let quadrant = data.quadrant;
-                let style = data.style;
-                socket.emit('joinRoom', data.room);
-                setBoard(quadrant, style);
-                getBoard();
-                if (quadrant == 4) {
-                  startCountdown();
-                }
-            });
-        }
-        else {
-            alert("Please log in.");
-        }
-    });
-    
+      let room = addPlayer();
+      if (room != null) {
+        socket.emit('joinRoom', room);
+      }
     });
 
     socket.on('countdown', () => {
@@ -133,7 +121,6 @@
     });
 
     socket.on('nextGeneration', () => {
-      console.log("Next Generation Received.");
       getNextGeneration();
     });
 
@@ -142,7 +129,6 @@
     });
 
     socket.on('gameOver', () => {
-      console.log("game over");
       gameOver();
     });
 

@@ -271,26 +271,31 @@ async function addPlayer(player) {
   console.log(player);
   //See if a game session exists
   if (Object.keys(gameSessions).length == 0) {
-    let session = new GameSession('room1', [getRandomInt(10) + 45, getRandomInt(10) + 45]);
+    let session = await new GameSession('room1', [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
+    player.setQuadrant(session.getNumPlayers());
     gameSessions[session.getRoom()] = session;
     populateBoard(session.getRoom());
     return session.getRoom();
   }
   //See if a new session needs to be made
   else if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4){
-    let session = new GameSession(`room${gameSessions.length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
+    let session = await new GameSession(`room${gameSessions.length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
     session.addPlayer(player);
+    player.setQuadrant(session.getNumPlayers());
     gameSessions[session.getRoom()] = session;
     populateBoard(session.getRoom());
     return session.getRoom();
   }
   else {
-    gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].addPlayer(player);
-    if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4) {
+    let session = gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]];
+    session.addPlayer(player);
+    player.setQuadrant(session.getNumPlayers());
+    if (session.getNumPlayers() == 4) {
+      console.log("Game starting.");
       startGame(Object.keys(gameSessions)[Object.keys(gameSessions).length-1]);
     }
-    return gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getRoom();
+    return session.getRoom();
   }
 }
 
@@ -341,7 +346,8 @@ function makeGliderPos(gliderPos, orientation) {
 
 //Precondish: duble with x, y coords of a cell
 //Postcondish: if cell is alive, return owner, otherwise returns Null
-function isAlive(pos) {
+function isAlive(pos, room) {
+  let activePieces = gameSessions[room].getActivePieces();
   for (let i = 0; i < activePieces.length; i++) {
     if (activePieces[i].getPos()[0] == pos[0] && activePieces[i].getPos()[1] == pos[1]) {
       return activePieces[i].getOwner();
@@ -352,7 +358,8 @@ function isAlive(pos) {
 
 //Precondish: takes an x, y coordinate
 //Postcondish: returns true if this is a valid cell in bounds of the table
-function inBounds(xPos, yPos) {
+function inBounds(xPos, yPos, room) {
+  let dimensions = gameSessions[room].getDimensions();
   if (xPos >= dimensions["xMin"] && xPos <= dimensions["xMax"]) {
     if (yPos >= dimensions["yMin"] && yPos <= dimensions["yMax"]) {
       return true;
@@ -385,7 +392,8 @@ function populateBoard(room) {
 
 //Precondish: array of current active cell objects must be initialized
 //Postcondish: doesn't return anything, replaces the activePieces array with the next generation of living cells
-function nextGeneration() {
+function nextGeneration(room) {
+  let activePieces = gameSessions[room].getActivePieces();
   let tempCells = {};
   let contestedPositions = {};
   for (let cell = 0; cell < activePieces.length; cell++) {
@@ -443,10 +451,10 @@ function nextGeneration() {
   }
   tempCells = checkCollision(contestedPositions, tempCells);
   //Replace current generation with next.
-  activePieces.length = 0;
+  gameSessions[room].clearActivePieces();
   for (var pos in tempCells) {
     if (tempCells[pos] != null) {
-      activePieces.push(tempCells[pos]);
+      gameSessions[room].addActivePiece(tempCells[pos]);
     }
   }
   setPlayerStats(room);
@@ -465,7 +473,7 @@ function countLiveNeighbors(pos, player, room) {
   for (let i = pos[0] - 1; i <= pos[0] + 1; i++) {
     for (let j = pos[1] - 1; j <= pos[1] + 1; j++) {
       //See if the cell has a neighbor that belongs to the same person, and is not itself.
-      if (isAlive([i,j], room) == player && !(i == pos[0] && j == pos[1])) {
+      if (isAlive([i,j], room) != null && !(i == pos[0] && j == pos[1])) {
         neighbors ++;
       }
     }
@@ -489,11 +497,14 @@ function makeGliders(gliders, player, room) {
 
 //Precondish: must be active cells in activePieces array
 //Postcondish: sets the strength stats for all players with active cells
-function setPlayerStats() {
+function setPlayerStats(room) {
+  let players = gameSessions[room].getLivingPlayers();
+  let activePieces = gameSessions[room].getActivePieces();
   for (let i = 0; i < players.length; i++) {
-    strength = 0;
+    let strength = 0;
+    let player = gameSessions[room].getPlayer(players[i]);
     for (let i = 0; i < activePieces.length; i++) {
-      if (activePieces[i].getOwner() == id) {
+      if (activePieces[i].getOwner().getId() == player.getId()) {
         strength ++;
       }
     }
@@ -540,17 +551,17 @@ function checkCollision(contestedPositions, cells) {
 //Postcondish: returns true if winner(s) are determined, false if no one has won yet. If there is a tie (no players have any cells), all players alive in the previous generation are the winners.
 //Updates the game session with the winners
 function checkWinner(room) {
-  let winningPlayers = {};
+  let winningPlayers = [];
   if (gameSessions[room].getLivingPlayers().length == 0) {
     let winners = gameSessions[room].getAliveLastRound();
     for (let i = 0; i < winners; i++) {
-      winningPlayers[winners[i]] = gameSessions[room].getPlayer(winners[i]);
+      winningPlayers.push(gameSessions[room].getPlayer(winners[i]));
     }
     gameSessions[room].setWinners(winningPlayers);
     return true;
   }
   else if (gameSessions[room].getLivingPlayers().length == 1) {
-    winningPlayers[gameSessions[room].getLivingPlayers()[0]] = gameSessions[room].getPlayer(getLivingPlayers()[0]);
+    winningPlayers.push(gameSessions[room].getPlayer(gameSessions[room].getLivingPlayers()[0]));
     gameSessions[room].setWinners(winningPlayers);
     return true;
   }
@@ -565,33 +576,33 @@ function checkWinner(room) {
 function closeZone(room) {
   let closingCell = gameSessions[room].getClosingCell();
   let currentDimensions =  gameSessions[room].getDimensions();
-  let newDimensions = [[],[]];
+  let newDimensions = {};
   if (closingCell[0] - currentDimensions["xMin"] <= 2) {
-    newDimensions[0].push(closingCell[0] - 1);
+    newDimensions["xMin"] = closingCell[0] - 1;
   }
   else {
-    newDimensions[0].push(currentDimensions["xMin"] + getRandomInt(1) + 1);
+    newDimensions["xMin"] = currentDimensions["xMin"] + getRandomInt(1) + 1;
   }
 
   if (currentDimensions["xMax"] - closingCell[0] <= 2) {
-    newDimensions[0].push(closingCell[0] + 1);
+    newDimensions["xMax"] = closingCell[0] + 1;
   }
   else {
-    newDimensions[0].push(currentDimensions["xMax"] - getRandomInt(1) + 1);
+    newDimensions["xMax"] = currentDimensions["xMax"] - (getRandomInt(1) + 1);
   }
 
   if (closingCell[1] - currentDimensions["yMin"] <= 2) {
-    newDimensions[1].push(closingCell[0] - 1);
+    newDimensions["yMin"] = closingCell[0] - 1;
   }
   else {
-    newDimensions[1].push(currentDimensions["yMin"] + getRandomInt(1) + 1);
+    newDimensions["yMin"] = currentDimensions["yMin"] + getRandomInt(1) + 1;
   }
 
-  if (currentDimensions["yMax"] - closingCell[0] <= 2) {
-    newDimensions[0].push(closingCell[0] + 1);
+  if (currentDimensions["yMax"] - closingCell[1] <= 2) {
+    newDimensions["yMax"] = closingCell[1] + 1;
   }
   else {
-    newDimensions[0].push(currentDimensions["yMax"] - getRandomInt(1) + 1);
+    newDimensions["yMax"] = currentDimensions["yMax"] - (getRandomInt(1) + 1);
   }
 
   gameSessions[room].setDimensions(newDimensions);
@@ -600,7 +611,7 @@ function closeZone(room) {
 //Precondish: duble with x, y coords of a cell, an owner
 //Postcondish: doesn't return anything, makes a new cell object and appends it to the activePieces array for the corresponding game session
 function makeCell(pos, id, room) {
-  newCell = new ActivePiece(pos, gameSessions[room].getPlayer(id));
+  let newCell = new ActivePiece(pos, gameSessions[room].getPlayer(id));
   gameSessions[room].addActivePiece(newCell);
 }
 
@@ -608,9 +619,7 @@ function makeCell(pos, id, room) {
 app.get("/cells", function(req, res) {
   console.log("GET request received.");
   let room = req.session.room;
-  console.log(gameSessions['room1'].activePieces);
   let activePieces = gameSessions[room].getActivePieces();
-  //console.log(activePieces);
   let resActivePieces = [];
   for (i in activePieces) {
     resActivePieces.push({ "pos": activePieces[i].getPos(), "style": activePieces[i].getStyle() });
@@ -634,6 +643,7 @@ app.get("/reset", function(req, res) {
 //Sequence of game events
 function startGame(room) {
   gameSessions[room].setLivingPlayers();
+  console.log(gameSessions[room].getLivingPlayers());
   io.to(room).emit('countdown', room);
   timer = setTimeout(getClientGliders, 30000, room);
 }
@@ -648,7 +658,7 @@ function phaseOne(room) {
   let generationInterval = setInterval(function() {
     nextGeneration(room);
     io.to(room).emit('nextGeneration', room);
-    if (++generations % 10 == 0) {
+    if (++generations % 5 == 0) {
       closeZone(room);
       io.to(room).emit('newZone', room);
     }
@@ -656,7 +666,7 @@ function phaseOne(room) {
       io.to(room).emit('gameOver', room);
       clearInterval(generationInterval);
     }
-  }, 500);
+  }, 250);
 }
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
@@ -670,7 +680,7 @@ app.post("/gliders", function(req, res) {
     gameSessions[room].addGlider();
     res.sendStatus(200);
     if (gameSessions[room].getGlidersReceived() == 4) {
-      phaseOne();
+      phaseOne(room);
     }
   }
   else {
@@ -686,17 +696,18 @@ app.get("/quadrant", async function(req, res) {
   else {
     //Check if player connecting is already in a game
     let id = req.session.username;
-    let player = await new Player(id);
     if (!req.session.room) {
+      let player = await new Player(id);
       req.session.room = await addPlayer(player);
     }
     let room = req.session.room;
     if (!gameSessions[room].playerIn(id)) {
-      req.session.room = await addPlayer(player);
+      let player = await new Player(id);
+      await addPlayer(player);
     }
-    console.log(player.getStyle() + " test");
+    console.log(room);
     let resBody = {
-      "quadrant": gameSessions[room].getNumPlayers(),
+      "quadrant": gameSessions[room].getPlayer(id).getQuadrant(),
       "style": gameSessions[room].getPlayer(id).getStyle(),
       "room" : room
     };
@@ -716,6 +727,7 @@ app.get("/winners", function(req, res) {
   let room = req.session.room;
   res.status(200);
   res.json(gameSessions[room].getWinners());
+  delete gameSessions[room];
 });
 
 //GET handler for updating the zone
@@ -728,7 +740,7 @@ app.get("/zone", function(req, res) {
 io.on("connect", socket => {
   console.log("Connected!");
   socket.on('joinRoom', room => {
-    console.log('player joined room' + room);
+    console.log('player joined room: ' + room);
     socket.join(room);
   });
 });

@@ -11,6 +11,8 @@ class Player {
 			this.id = id;
 			this.strength = strength;
 			this.style = style;
+			this.quadrant = 0;
+			this.alive = true;
 			if (style === "") {
 				this.style = await database.loadStyle(this.id).then(response => {
 					return response;
@@ -20,11 +22,16 @@ class Player {
         })();
 	}
 	getStyle() {
-		console.log("AAAAAAAAAAAAAAAAAAA");
 		return this.style;
 	}
 	setStyle(style) {
 		this.style = style;
+	}
+	setQuadrant(quadrant) {
+		this.quadrant = quadrant;
+	}
+	getQuadrant() {
+		return this.quadrant;
 	}
 	setStrength(strength) {
 		this.strength = strength;
@@ -58,7 +65,6 @@ class ActivePiece {
 		this.owner = owner;
 	}
 	getStyle() {
-		console.log(this.owner);
 		return this.owner.getStyle();
 	}
 	getPos() {
@@ -67,18 +73,22 @@ class ActivePiece {
 }
 
 class GameSession {
-	constructor(roomName, closingCell, coords=[[0,99],[0,99]]) {
-		this.roomName = roomName;
-		this.players = {};
-		this.activePieces = [];
-		this.dimensions = {};
-		this.setDimensions(coords);
-		this.livingPlayers = [];
-		this.aliveLastRound = [];
-		this.closingCell = closingCell;
-		this.winners = {};
-		this.glidersReceived = 0;
-		this.obstacles = new Player("board", "background-color: black;");
+	constructor(roomName, closingCell) {
+		return (async () => {
+			this.roomName = roomName;
+			this.players = {};
+			this.activePieces = [];
+			this.dimensions = {};
+			this.setDimensions({"xMin":0,"xMax":99,"yMin":0,"yMax":99});
+			this.livingPlayers = [];
+			this.aliveLastRound = [];
+			this.closingCell = closingCell;
+			this.winners = [];
+			this.glidersReceived = 0;
+			this.obstacles = await new Player("board", "background-color: black;");
+            return this;
+        })();
+		
 	}
 	getRoom() {
 		return this.roomName;
@@ -92,9 +102,9 @@ class GameSession {
 	setLivingPlayers() {
 		this.aliveLastRound = this.livingPlayers;
 		this.livingPlayers = [];
-		for (let id in players) {
-			if (players[id].getLiving()) {
-				this.livingPlayers.push(id);
+		for (let user in this.players) {
+			if (this.players[user].getLiving()) {
+				this.livingPlayers.push(user);
 			}
 		}
 	}
@@ -126,10 +136,10 @@ class GameSession {
 		this.activePieces.length = 0;
 	}
 	setDimensions(coords) {
-		this.dimensions["xMin"] = coords[0][0];
-		this.dimensions["xMax"] = coords[0][1];
-		this.dimensions["yMin"] = coords[1][0];
-		this.dimensions["yMax"] = coords[1][1];
+		this.dimensions["xMin"] = coords["xMin"];
+		this.dimensions["xMax"] = coords["xMax"];
+		this.dimensions["yMin"] = coords["yMin"];
+		this.dimensions["yMax"] = coords["yMax"];
 	}
 	getDimensions() {
 		return this.dimensions;

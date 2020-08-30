@@ -98,9 +98,9 @@
   <script src="game.js" type="text/javascript"></script>
   <script>
     const socket = io();
-
+    let room = null;
     socket.on('connect', () => {
-      let room = addPlayer();
+      room = addPlayer();
       if (room != null) {
         socket.emit('joinRoom', room);
       }
@@ -130,6 +130,7 @@
 
     socket.on('gameOver', () => {
       gameOver();
+      socket.emit('leaveRoom', room);
     });
 
   </script>

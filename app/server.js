@@ -700,6 +700,10 @@ app.get("/quadrant", async function(req, res) {
       let player = await new Player(id);
       req.session.room = await addPlayer(player);
     }
+    else if (req.session.room == null) {
+      let player = await new Player(id);
+      req.session.room = await addPlayer(player);
+    }
     let room = req.session.room;
     if (!gameSessions[room].playerIn(id)) {
       let player = await new Player(id);
@@ -727,7 +731,11 @@ app.get("/winners", function(req, res) {
   let room = req.session.room;
   res.status(200);
   res.json(gameSessions[room].getWinners());
-  delete gameSessions[room];
+  gameSessions[room].removePlayer(req.session.username);
+  req.session.room = null;
+  if (gameSessions[room].getNumPlayers() == 0) {
+    delete gameSessions[room];
+  }
 });
 
 //GET handler for updating the zone
@@ -742,6 +750,10 @@ io.on("connect", socket => {
   socket.on('joinRoom', room => {
     console.log('player joined room: ' + room);
     socket.join(room);
+  });
+  socket.on('leaveRoom', room => {
+    console.log('player left room: ' + room);
+    socket.leave(room);
   });
 });
 

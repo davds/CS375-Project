@@ -187,8 +187,8 @@ app.get('/cellcolor', (req, res) => {
 
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
-if (process.env._ && process.env._.indexOf("heroku"))
-  tempEnv = require("../heroku.json");
+//if (process.env._ && process.env._.indexOf("heroku"))
+//  tempEnv = require("../heroku.json");
 const env = tempEnv
 
 const Pool = pg.Pool;
@@ -700,11 +700,12 @@ app.get("/quadrant", async function(req, res) {
       let player = await new Player(id);
       req.session.room = await addPlayer(player);
     }
-    else if (req.session.room == null) {
+    else if (req.session.room == "gameEnded") {
       let player = await new Player(id);
       req.session.room = await addPlayer(player);
     }
     let room = req.session.room;
+    console.log(room);
     if (!gameSessions[room].playerIn(id)) {
       let player = await new Player(id);
       await addPlayer(player);
@@ -732,9 +733,10 @@ app.get("/winners", function(req, res) {
   res.status(200);
   res.json(gameSessions[room].getWinners());
   gameSessions[room].removePlayer(req.session.username);
-  req.session.room = null;
+  req.session.room = "gameEnded";
   if (gameSessions[room].getNumPlayers() == 0) {
     delete gameSessions[room];
+    console.log(gameSessions);
   }
 });
 

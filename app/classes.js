@@ -121,7 +121,7 @@ class GameSession {
 		return Object.keys(this.players).length;
 	}
 	removePlayer(id) {
-		delete players[id];
+		delete this.players[id];
 	}
 	playerIn(id) {
 		return (id in this.players);

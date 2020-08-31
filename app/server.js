@@ -190,8 +190,8 @@ app.get('/cellcolor', (req, res) => {
 
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
-if (process.env._ && process.env._.indexOf("heroku"))
-  tempEnv = require("../heroku.json");
+//if (process.env._ && process.env._.indexOf("heroku"))
+//  tempEnv = require("../heroku.json");
 const env = tempEnv
 
 const Pool = pg.Pool;
@@ -730,7 +730,7 @@ app.get("/winners", function(req, res) {
   //Add win for each winner
   let winners = gameSessions[room].getWinners();
   for (let i = 0; i < winners.length; i++)
-    database.addWin(winners[i]);
+    database.addWin(winners[i].getId());
 
   res.json(winners);
   gameSessions[room].removePlayer(req.session.username);

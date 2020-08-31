@@ -13,6 +13,7 @@ class Player {
 			this.style = style;
 			this.quadrant = 0;
 			this.alive = true;
+			this.collisionsWon = 0;
 			if (style === "") {
 				this.style = await database.loadStyle(this.id).then(response => {
 					return response;
@@ -44,6 +45,12 @@ class Player {
 	}
 	getId() {
 		return this.id;
+	}
+	incrementCollisionsWon() {
+		this.collisionsWon += 1;
+	}
+	getCollisionsWon() {
+		return this.collisionsWon;
 	}
 	getLiving() {
 		return this.alive;

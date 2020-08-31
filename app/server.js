@@ -171,9 +171,12 @@ app.get('/home', async (req, res) => {
     let u = req.session.username;
     let w = await database.getWins(u);
     let gp = await database.getGamesPlayed(u);
-    res.json({username: u,wins: w, gamesplayed: gp})
+    //let s = await database.getStrength(u); ADD TO JSON => strength: s
+    let userData = await database.getuserData();
+    res.json({username: u,wins: w, gamesplayed: gp, users: userData})
   } else {
-    res.json({message: "No user logged in"})
+    let userData = await database.getuserData();
+    res.json({message: "No user logged in", users: userData})
   }
 })
 

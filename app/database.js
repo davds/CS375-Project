@@ -43,6 +43,17 @@ class Database {
     return games;
   }
 
+  addStrength(name,strength) {
+    this.pool.query(`UPDATE userData SET strength = strength + ${strength} WHERE username = $1`, [name])
+  }
+
+  async getStrength(name) { 
+    let games = await this.pool.query("SELECT strength FROM userData WHERE username = $1", [name]).then(response => {
+      return response.rows[0].strength;
+    });
+    return strength;
+  }
+
   async getuserData() {
     let userData = await this.pool.query("SELECT * FROM userData ORDER BY wins DESC").then(response => {
       return response.rows;

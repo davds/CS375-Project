@@ -171,9 +171,12 @@ app.get('/home', async (req, res) => {
     let u = req.session.username;
     let w = await database.getWins(u);
     let gp = await database.getGamesPlayed(u);
-    res.json({username: u,wins: w, gamesplayed: gp})
+    //let s = await database.getStrength(u); ADD TO JSON => strength: s
+    let userData = await database.getuserData();
+    res.json({username: u,wins: w, gamesplayed: gp, users: userData})
   } else {
-    res.json({message: "No user logged in"})
+    let userData = await database.getuserData();
+    res.json({message: "No user logged in", users: userData})
   }
 })
 
@@ -264,40 +267,6 @@ app.post("/auth", (req, res) => {
     res.status(500).send(error);
   });
 });
-
-//Precondish: takes a username and the css styling of their cells
-//Postcondish: adds the player to an existing session object or creates a new one for them, returns room name
-async function addPlayer(player) {
-  console.log(player);
-  //See if a game session exists
-  if (Object.keys(gameSessions).length == 0) {
-    let session = await new GameSession('room1', [getRandomInt(10) + 45, getRandomInt(10) + 45]);
-    session.addPlayer(player);
-    player.setQuadrant(session.getNumPlayers());
-    gameSessions[session.getRoom()] = session;
-    populateBoard(session.getRoom());
-    return session.getRoom();
-  }
-  //See if a new session needs to be made
-  else if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4){
-    let session = await new GameSession(`room${gameSessions.length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
-    session.addPlayer(player);
-    player.setQuadrant(session.getNumPlayers());
-    gameSessions[session.getRoom()] = session;
-    populateBoard(session.getRoom());
-    return session.getRoom();
-  }
-  else {
-    let session = gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]];
-    session.addPlayer(player);
-    player.setQuadrant(session.getNumPlayers());
-    if (session.getNumPlayers() == 4) {
-      console.log("Game starting.");
-      startGame(Object.keys(gameSessions)[Object.keys(gameSessions).length-1]);
-    }
-    return session.getRoom();
-  }
-}
 
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider
 //Postcondish: returns positions of cells needed to make glider
@@ -543,6 +512,7 @@ function checkCollision(contestedPositions, cells) {
     winner = winners[getRandomInt(winners.length)];
     //Set cell at pos to winner
     cells[pos].setOwner(winner);
+    winner.incrementCollisionsWon();
   }
   return cells;
 }
@@ -669,6 +639,35 @@ function phaseOne(room) {
   }, 250);
 }
 
+function playerInRoom(username) {
+  for (let room in gameSessions) {
+    if (gameSessions[room].playerIn(username)) {
+      return room;
+    }
+  }
+  return null;
+}
+
+async function fillRoom(username) {
+  let newPlayer = await new Player(username);
+  for (let room in gameSessions) {
+    if (gameSessions[room].getNumPlayers() < 4) {
+      gameSessions[room].addPlayer(newPlayer);
+      if (gameSessions[room].getNumPlayers() == 4){
+        gameSessions[room].addPlayer(newPlayer);
+        console.log("Game starting.");
+        startGame(room);
+      }
+      return room;
+    }
+  }
+  let session = await new GameSession(`room${Object.keys(gameSessions).length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
+  session.addPlayer(newPlayer);
+  gameSessions[session.getRoom()] = session;
+  populateBoard(session.getRoom());
+  return session.getRoom();
+}
+
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
 app.post("/gliders", function(req, res) {
   console.log("/gliders received post");
@@ -696,19 +695,8 @@ app.get("/quadrant", async function(req, res) {
   else {
     //Check if player connecting is already in a game
     let id = req.session.username;
-    if (!req.session.room) {
-      let player = await new Player(id);
-      req.session.room = await addPlayer(player);
-    }
-    else if (!(req.session.room in gameSessions)) {
-      let player = await new Player(id);
-      req.session.room = await addPlayer(player);
-    }
-    let room = req.session.room;
-    if (!gameSessions[room].playerIn(id)) {
-      let player = await new Player(id);
-      await addPlayer(player);
-    }
+    let room = await fillRoom(id);
+    req.session.room = room;
     let resBody = {
       "quadrant": gameSessions[room].getPlayer(id).getQuadrant(),
       "style": gameSessions[room].getPlayer(id).getStyle(),
@@ -732,13 +720,18 @@ app.get("/winners", function(req, res) {
   
   //Add game played for each player
   let players = Object.keys(gameSessions[room].getPlayers());
-  for (let i = 0; i < players.length; i++)
-    database.addGamePlayed(players[i]);
+  for (let i = 0; i < players.length; i++) {
+    if (players[i] == req.session.username){
+      database.addGamePlayed(players[i]);
+    }
+  }
   //Add win for each winner
   let winners = gameSessions[room].getWinners();
-  for (let i = 0; i < winners.length; i++)
-    database.addWin(winners[i]);
-
+  for (let i = 0; i < winners.length; i++) {
+    if (req.session.username == winners[i].getId()) {
+      database.addWin(winners[i].getId());
+    }
+  }
   res.json(winners);
   gameSessions[room].removePlayer(req.session.username);
   delete req.session.room;

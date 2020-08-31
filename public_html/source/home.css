@@ -10,3 +10,15 @@
 [type=radio]:checked + i {
     outline: 1px dashed black;
 }
+/* Gold */
+#leaderboardBody tr:nth-child(1) {
+    background: gold;
+}
+/* Silver */
+#leaderboardBody tr:nth-child(2) {
+    background: #c0c0c0;
+}
+/* Bronze */
+#leaderboardBody tr:nth-child(3) {
+    background: #cd7f32;
+}

@@ -1,4 +1,5 @@
 const pg = require("pg");
+const { response } = require("express");
 const Pool = pg.Pool;
 
 class Database {
@@ -40,6 +41,13 @@ class Database {
       return response.rows[0].gamesplayed;
     });
     return games;
+  }
+
+  async getuserData() {
+    let userData = await this.pool.query("SELECT * FROM userData ORDER BY wins DESC").then(response => {
+      return response.rows;
+    });
+    return userData;
   }
 }
 

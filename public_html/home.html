@@ -24,19 +24,52 @@
         </div>
         <button type="button" class="btn btn-success btn-lg btn-block" id="play">Play</button>
       </div>
+      <div class="jumbotron">
+        <h3 class="display-8">Leaderboard</h3>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">User</th>
+              <th scope="col">Wins</th>
+              <th scope="col">Games Played</th>
+              <th scope="col">Strength (Total)</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody">
+          </tbody>
+        </table>
+      </div>
     </div>
     <div class="col-sm-2" style="border: 1px solid black;"id="account">
       <p id="message"></p>
-      <p><i class="fas fa-user"></i> Player: <strong id="username"></strong></p>
-      <p><i class="fas fa-envelope"></i> Email: <b id="email"></b></p>
-      <p><i class="fas fa-gamepad"></i> Games Played: <strong id="gamesplayed"></strong></p> 
-      <p><i class="fas fa-crown"></i> Wins: <strong id="wins"></strong></p>
-      
+      <table class="table">
+        <tr>
+          <td><i class="fas fa-user"></i>  Player: </td>
+          <td><strong id="username"></strong></td>
+        </tr>
+        <tr>
+          <td><i class="fas fa-crown"></i> Wins: </td>
+          <td><strong id="wins"></strong></td>
+        </tr>
+        <tr>
+          <td><i class="fas fa-gamepad"></i> Games Played: </td>
+          <td><strong id="gamesplayed"></strong></td>
+        </tr>
+        <tr>
+          <td><i class="fas fa-dumbbell"></i> Strength (Total): </td>
+          <td><strong id="strength"></strong></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+        </tr>
+      </table>
       <div class="container p-3 my-3 radio" style="text-align: center;">
         <h2 >Cell Color</h2>
         <div class="row container-md" id="radio-colors">
           <label class="col-sm" style="color: blue; font-size: 42px;">
-            <input type="radio" style="background-color: blue;" name="colorradio"> <i class="fas fa-circle"></i>
+            <input type="radio" style="background-color: blue;" name="colorradio" checked> <i class="fas fa-circle"></i>
           </label>
           <label class="col-sm" style="color: orange; font-size: 42px;">
             <input type="radio" style="background-color: orange;" name="colorradio"> <i class="fas fa-circle"></i>
@@ -77,6 +110,9 @@
           <label class="col-sm" style="color: tomato; font-size: 42px;">
             <input type="radio" style="background-color: tomato;" name="colorradio"> <i class="fas fa-circle"></i>
           </label>
+          <label class="col-sm" style="color: chartreuse; font-size: 42px;">
+            <input type="radio" style="background-color: chartreuse;" name="colorradio"> <i class="fas fa-circle"></i>
+          </label>
         </div>
     </div>
   </div>
@@ -85,27 +121,51 @@
     function getRadio() {
       return $("input[name=colorradio]:checked").css("color")
     }
-
+    function createLeaderbord(users) {
+      let leaderboard = document.getElementById("leaderboardBody")
+      for (let i = 0; i < users.length; i++){
+        let row = document.createElement("tr");
+        let th = document.createElement("th")
+        th.scope = "row";
+        th.textContent = i+1;
+        let u = document.createElement("td");
+        u.textContent = users[i].username;
+        let w = document.createElement("td");
+        w.textContent = users[i].wins;
+        let gp = document.createElement("td");
+        gp.textContent = users[i].gamesplayed;
+        let s = document.createElement("td");
+        //s.textContent = users[i].strength;
+        row.append(th)
+        row.append(u)
+        row.append(w)
+        row.append(gp)
+        row.append(s)
+        leaderboard.append(row)
+      }
+    }
     let message = document.getElementById("message");
     let username = document.getElementById("username");
-    let email = document.getElementById("email");
     let wins = document.getElementById("wins");
     let gamesplayed = document.getElementById("gamesplayed");
+    let strength = document.getElementById("strength")
     let play = document.getElementById("play");
     fetch("/home").then(function (response) {
                 return response.json();
             }).then(function (data) {
-              console.log(data);
+              createLeaderbord(data.users);
               if (data.hasOwnProperty("message")){
+                console.log(data)
                 message.textContent = data.message;
               } else {
                 console.log(data)
                 username.textContent = data.username;
-                email.textContent = data.email;
                 wins.textContent = data.wins;
                 gamesplayed.textContent = data.gamesplayed;
+
               }
             });
+
     $("#play").on("click", () => {
       fetch("/user").then(res => {
         return res.json();

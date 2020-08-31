@@ -234,7 +234,6 @@ function getBoard() {
             let y = data[i].pos[1];
             boardCells[`${x}:${y}`].style = data[i].style;
         }
-        console.log(boardCells);
         drawBoard();
     });
 }
@@ -251,13 +250,14 @@ function addQuadrant() {
     }
 }
 
-function drawBoard() {
+function drawBoard() {    
+    console.log("drawing board");
     let rows = gameBoard.querySelectorAll("tr");
     for (let i = 0; i < baseTableDim[1]; i++) {
         let cells = rows[i].querySelectorAll("td");
         for (let j = 0; j < baseTableDim[0]; j++) {
             cells[j].style = boardCells[`${j}:${i}`].style;
-            if (!boardCells[`${j}:${i}`].inBounds && boardCells[`${j}:${i}`].style == "") {
+            if (!boardCells[`${j}:${i}`].inBounds && boardCells[`${j}:${i}`].style == "" && canPlaceGliders) {
                 cells[j].classList.add("outta-bounds");
             }
         }
@@ -268,18 +268,6 @@ function clearBoard() {
     for (let coord in boardCells) {
         boardCells[coord].style = "";
     }
-}
-
-function resetBoard() {
-    fetch("/reset").then(response => {
-        drawBoard();
-    });
-}
-//testing (for now)
-function nextGen() {
-    fetch("/step").then(response => {
-        getBoard("test");
-    });
 }
 
 //#endregion
@@ -404,7 +392,7 @@ function sendGliders() {
         })
     });    
     placedGliders = [];
-    $("td").removeClass("solid");
+    $("td").removeClass("outta-bounds");
     getBoard('test');
 }
 
@@ -445,26 +433,35 @@ function updateGliderText() {
     }
 }
 
+function test() {
+    canPlaceGliders = false;
+}
+function test1() {
+    drawBoard();
+}
+
 //These are for Hoff
 //This signals the start of the game. A 30 second countdown timer should start (along with some basic instructions). This is the only time gliders should be allowed to be placed.
 function startCountdown() {
     console.log("countdown begun!");
     let secondsLeft = 30;
-    let timerElement = document.getElementById("generations");
-    let oldSt = timerElement.textContent;
+    let timerElement = $('#countdown h1');
     updateGliderText();
-    canPlaceGliders = true;
     let interval = setInterval(() => {
-        if(secondsLeft>0) {
-            timerElement.textContent = "" + secondsLeft + " seconds remain";
-            secondsLeft -= 1;
+        if(secondsLeft>0) {            
+            timerElement.addClass('pop-animation')
+            timerElement.text(secondsLeft);
+            secondsLeft -= 1;            
+            timerElement.on('animationend', () => {
+                $('#countdown h1').removeClass('pop-animation')
+            });
         }
         else {
             canPlaceGliders = false;
-            timerElement.textContent = oldSt;
             clearInterval(interval);
+            timerElement.text("");
         }
-    }, 1000);
+    }, 1000);       
 }
 
 function setBoard(quadrant, style) {
@@ -476,7 +473,7 @@ function setBoard(quadrant, style) {
 //The board should be redrawn here so the out of bounds cells are removed from the board, and all players gliders should be recieved from the server, then drawn on the board
 function phaseOne() {
     //3 2 1 timer?
-     $("td").removeClass("outta-bounds");
+    canPlaceGliders = false;
     console.log("phase one...");
     getNewZone();
     removeTransCells();
@@ -495,7 +492,6 @@ function getNewZone() {
     fetch(`/zone`).then(response => {
         return response.json();
     }).then(data => {
-        console.log(data)
         activeCoords["xMax"] = data["xMax"]
         activeCoords["yMax"] = data["yMax"]
         activeCoords["xMin"] = data["xMin"]
@@ -544,7 +540,6 @@ function addListeners() {
             previewGlider();
             cell.preventDefault();
         });
-        //startCountdown();
     });
 }
 

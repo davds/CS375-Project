@@ -36,9 +36,8 @@
       opacity: 0.5;
     }
     .da-circle {
-      border: 1px solid rgba(255, 0, 0, .6);
-      background-color: red;
-      opacity: 0.5;
+      border: 1px solid #ff3535;
+      background-color: #ff3535;
     }
     .solid {
       border: 1px solid black;
@@ -65,6 +64,34 @@
       margin: auto;
       width: fit-content;
     }
+    #countdown {
+      position: relative;
+    }
+    #countdown-bg {
+      border-radius: 5px;
+      color: white;
+      height: 0px;
+      width: 100%;
+      position: relative;
+      top: 225px;
+      text-align: center;
+      z-index: 999;
+    }
+    #countdown h1 {      
+      text-align: center;
+      font-size: 80px;
+
+    }
+
+    .pop-animation {
+      animation-name: pop;
+      animation-duration: .5s;
+    }
+
+    @keyframes pop {
+      0%   {font-size: 0px;}
+      100% {font-size: 80px;}
+    }
   </style>
 </head>
 
@@ -82,6 +109,9 @@
     </div>
   </div>
   <div class="game-board">
+    <div id="countdown">
+      <div id="countdown-bg"><h1></h1></div>
+    </div>
     <table>
       <tbody id="game-of-life"></tbody>
     </table>

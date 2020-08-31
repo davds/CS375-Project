@@ -723,7 +723,7 @@ app.get("/winners", function(req, res) {
   for (let i = 0; i < players.length; i++) {
     if (players[i] == req.session.username){
       database.addGamePlayed(players[i]);
-      database.addStrength(players[i], gameSessions[room].getPlayer(players[i].getCollisionsWon()));
+      database.addStrength(players[i], gameSessions[room].getPlayer(players[i]).getCollisionsWon());
     }
   }
   //Add win for each winner

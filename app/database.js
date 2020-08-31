@@ -48,7 +48,7 @@ class Database {
   }
 
   async getStrength(name) { 
-    let games = await this.pool.query("SELECT strength FROM userData WHERE username = $1", [name]).then(response => {
+    let strength = await this.pool.query("SELECT strength FROM userData WHERE username = $1", [name]).then(response => {
       return response.rows[0].strength;
     });
     return strength;

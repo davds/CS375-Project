@@ -190,8 +190,8 @@ app.get('/cellcolor', (req, res) => {
 
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
-//if (process.env._ && process.env._.indexOf("heroku"))
-//  tempEnv = require("../heroku.json");
+if (process.env._ && process.env._.indexOf("heroku"))
+  tempEnv = require("../heroku.json");
 const env = tempEnv
 
 const Pool = pg.Pool;
@@ -512,6 +512,7 @@ function checkCollision(contestedPositions, cells) {
     winner = winners[getRandomInt(winners.length)];
     //Set cell at pos to winner
     cells[pos].setOwner(winner);
+    winner.incrementCollisionsWon();
   }
   return cells;
 }
@@ -637,6 +638,7 @@ function phaseOne(room) {
     }
   }, 250);
 }
+
 function playerInRoom(username) {
   for (let room in gameSessions) {
     if (gameSessions[room].playerIn(username)) {

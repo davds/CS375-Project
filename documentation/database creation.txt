@@ -19,6 +19,7 @@ CREATE TABLE userData (
     style VARCHAR(999),
     wins INT,
     gamesplayed INT,
+    strength INT,
     PRIMARY KEY (username),
     CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users (username)
 );

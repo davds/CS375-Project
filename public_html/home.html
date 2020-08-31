@@ -33,6 +33,7 @@
               <th scope="col">User</th>
               <th scope="col">Wins</th>
               <th scope="col">Games Played</th>
+              <th scope="col">Winrate</th>
               <th scope="col">Strength (Total)</th>
             </tr>
           </thead>
@@ -134,12 +135,21 @@
         w.textContent = users[i].wins;
         let gp = document.createElement("td");
         gp.textContent = users[i].gamesplayed;
+        let wr = document.createElement("td")
+        if (users[i].gamesplayed == 0){
+          wr.textContent = "0%"
+        } else {
+          let winrate =  users[i].wins / users[i].gamesplayed;
+          winrate = (winrate*100).toFixed(2).toString()
+          wr.textContent = winrate + "%"
+        }
         let s = document.createElement("td");
-        //s.textContent = users[i].strength;
+        s.textContent = users[i].strength;
         row.append(th)
         row.append(u)
         row.append(w)
         row.append(gp)
+        row.append(wr)
         row.append(s)
         leaderboard.append(row)
       }

@@ -649,20 +649,15 @@ function playerInRoom(username) {
 }
 
 async function fillRoom(username) {
-  let inRoom = playerInRoom(username);
-  if (inRoom != null) {
-    return inRoom;
-  }
   let newPlayer = await new Player(username);
   for (let room in gameSessions) {
-    if (gameSessions[room].getNumPlayers() < 3) {
+    if (gameSessions[room].getNumPlayers() < 4) {
       gameSessions[room].addPlayer(newPlayer);
-      return room;
-    }
-    else if (gameSessions[room].getNumPlayers() == 3){
-      gameSessions[room].addPlayer(newPlayer);
-      console.log("Game starting.");
-      startGame(room);
+      if (gameSessions[room].getNumPlayers() == 4){
+        gameSessions[room].addPlayer(newPlayer);
+        console.log("Game starting.");
+        startGame(room);
+      }
       return room;
     }
   }

@@ -116,6 +116,8 @@ class GameSession {
 	}
 	addPlayer(player) {
 		this.players[player.id] = player;
+		this.players[player.id].setQuadrant(this.getNumPlayers());
+		
 	}
 	getNumPlayers() {
 		return Object.keys(this.players).length;

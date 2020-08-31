@@ -187,8 +187,8 @@ app.get('/cellcolor', (req, res) => {
 
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
-if (process.env._ && process.env._.indexOf("heroku"))
-  tempEnv = require("../heroku.json");
+//if (process.env._ && process.env._.indexOf("heroku"))
+//  tempEnv = require("../heroku.json");
 const env = tempEnv
 
 const Pool = pg.Pool;
@@ -264,40 +264,6 @@ app.post("/auth", (req, res) => {
     res.status(500).send(error);
   });
 });
-
-//Precondish: takes a username and the css styling of their cells
-//Postcondish: adds the player to an existing session object or creates a new one for them, returns room name
-async function addPlayer(player) {
-  console.log(player);
-  //See if a game session exists
-  if (Object.keys(gameSessions).length == 0) {
-    let session = await new GameSession('room1', [getRandomInt(10) + 45, getRandomInt(10) + 45]);
-    session.addPlayer(player);
-    player.setQuadrant(session.getNumPlayers());
-    gameSessions[session.getRoom()] = session;
-    populateBoard(session.getRoom());
-    return session.getRoom();
-  }
-  //See if a new session needs to be made
-  else if (gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]].getNumPlayers() == 4){
-    let session = await new GameSession(`room${gameSessions.length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
-    session.addPlayer(player);
-    player.setQuadrant(session.getNumPlayers());
-    gameSessions[session.getRoom()] = session;
-    populateBoard(session.getRoom());
-    return session.getRoom();
-  }
-  else {
-    let session = gameSessions[Object.keys(gameSessions)[Object.keys(gameSessions).length-1]];
-    session.addPlayer(player);
-    player.setQuadrant(session.getNumPlayers());
-    if (session.getNumPlayers() == 4) {
-      console.log("Game starting.");
-      startGame(Object.keys(gameSessions)[Object.keys(gameSessions).length-1]);
-    }
-    return session.getRoom();
-  }
-}
 
 //Precondish: duble with x, y coords of center of a glider, a string representing orientation of glider
 //Postcondish: returns positions of cells needed to make glider
@@ -668,6 +634,39 @@ function phaseOne(room) {
     }
   }, 250);
 }
+function playerInRoom(username) {
+  for (let room in gameSessions) {
+    if (gameSessions[room].playerIn(username)) {
+      return room;
+    }
+  }
+  return null;
+}
+
+async function fillRoom(username) {
+  let inRoom = playerInRoom(username);
+  if (inRoom != null) {
+    return inRoom;
+  }
+  let newPlayer = await new Player(username);
+  for (let room in gameSessions) {
+    if (gameSessions[room].getNumPlayers() < 3) {
+      gameSessions[room].addPlayer(newPlayer);
+      return room;
+    }
+    else if (gameSessions[room].getNumPlayers() == 3){
+      gameSessions[room].addPlayer(newPlayer);
+      console.log("Game starting.");
+      startGame(room);
+      return room;
+    }
+  }
+  let session = await new GameSession(`room${Object.keys(gameSessions).length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
+  session.addPlayer(newPlayer);
+  gameSessions[session.getRoom()] = session;
+  populateBoard(session.getRoom());
+  return session.getRoom();
+}
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
 app.post("/gliders", function(req, res) {
@@ -696,19 +695,8 @@ app.get("/quadrant", async function(req, res) {
   else {
     //Check if player connecting is already in a game
     let id = req.session.username;
-    if (!req.session.room) {
-      let player = await new Player(id);
-      req.session.room = await addPlayer(player);
-    }
-    else if (!(req.session.room in gameSessions)) {
-      let player = await new Player(id);
-      req.session.room = await addPlayer(player);
-    }
-    let room = req.session.room;
-    if (!gameSessions[room].playerIn(id)) {
-      let player = await new Player(id);
-      await addPlayer(player);
-    }
+    let room = await fillRoom(id);
+    req.session.room = room;
     let resBody = {
       "quadrant": gameSessions[room].getPlayer(id).getQuadrant(),
       "style": gameSessions[room].getPlayer(id).getStyle(),

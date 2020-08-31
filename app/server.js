@@ -725,13 +725,18 @@ app.get("/winners", function(req, res) {
   
   //Add game played for each player
   let players = Object.keys(gameSessions[room].getPlayers());
-  for (let i = 0; i < players.length; i++)
-    database.addGamePlayed(players[i]);
+  for (let i = 0; i < players.length; i++) {
+    if (players[i] == req.session.username){
+      database.addGamePlayed(players[i]);
+    }
+  }
   //Add win for each winner
   let winners = gameSessions[room].getWinners();
-  for (let i = 0; i < winners.length; i++)
-    database.addWin(winners[i]);
-
+  for (let i = 0; i < winners.length; i++) {
+    if (req.session.username == winners[i].getId()) {
+      database.addWin(winners[i].getId());
+    }
+  }
   res.json(winners);
   gameSessions[room].removePlayer(req.session.username);
   delete req.session.room;

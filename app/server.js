@@ -143,6 +143,7 @@ const obstacles = {
 
 // syntax for hussn
 //console.log(obstacle.makeBargePos([5,5]));
+let roomId = 0;
 
 app.use(express.json());
 app.use(express.static("../public_html"));
@@ -649,6 +650,10 @@ function playerInRoom(username) {
 }
 
 async function fillRoom(username) {
+  let inRoom = playerInRoom(username);
+  if (inRoom != null) {
+    return inRoom;
+  }
   let newPlayer = await new Player(username);
   for (let room in gameSessions) {
     if (gameSessions[room].getNumPlayers() < 4) {
@@ -661,7 +666,7 @@ async function fillRoom(username) {
       return room;
     }
   }
-  let session = await new GameSession(`room${Object.keys(gameSessions).length + 1}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
+  let session = await new GameSession(`room${roomId++}`, [getRandomInt(10) + 45, getRandomInt(10) + 45]);
   session.addPlayer(newPlayer);
   gameSessions[session.getRoom()] = session;
   populateBoard(session.getRoom());

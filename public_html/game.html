@@ -11,6 +11,9 @@
   <script src="https://kit.fontawesome.com/0ca6c3f327.js" crossorigin="anonymous"></script>
   <script>$("#header").load("header.html");</script>
   <style>
+    body {
+      background-color: white !important;
+    }
     table {
       border-collapse: collapse;
     }
@@ -45,10 +48,13 @@
     }
 
     .game-header {
-      background-color: grey;
-      height: 70px;
-      margin: auto;
-      width: 604px;
+      border-radius: 5px 0 0 5px;
+      background-color: #e9ecef;
+      display: inline-block;
+      height: inherit;
+      padding: 10px;
+      width: 200px;
+      vertical-align: top;
     }
     .game-header #message {
       display: inline-block;
@@ -58,14 +64,49 @@
       display: inline-block;
     }
 
-    .game-board {
-      border: 5px solid grey;
-      border-radius: 0 0 5px 5px;
+    .content {
+      border: 5px solid transparent;
+      height: 595px;
       margin: auto;
       width: fit-content;
     }
+
+    
+    #players {
+      border-radius: 0 5px 5px 0;
+      background-color: #e9ecef;
+      display: inline-block;
+      height: inherit;
+      padding: 10px;
+      width: 200px;
+      vertical-align: top;
+    }
+    .player-icon {
+      border: 1px solid black;
+      border-radius: 50%;
+      display: inline-block;
+      height: 30px;
+      width: 30px;
+    }
+    .player-name, .player-strength {
+      display: inline-block;
+      font-size: 20px;
+      vertical-align: top;
+    }
+
+    .game-board {
+      display: inline-block;
+      vertical-align: top;
+    }
+    #game-of-life {      
+      background-color: #e9ecef;
+      vertical-align: top;
+    }
     #countdown {
       position: relative;
+    }
+    #countdown-label {
+      font-size: 20px;
     }
     #countdown-bg {
       border-radius: 5px;
@@ -78,43 +119,49 @@
       z-index: 999;
     }
     #countdown h1 {      
-      text-align: center;
       font-size: 80px;
-
+      margin: 0px;
+      text-align: center;
     }
 
-    .pop-animation {
-      animation-name: pop;
+    .spin-animation {
+      animation-name: spin;
       animation-duration: .5s;
     }
 
-    @keyframes pop {
-      0%   {font-size: 0px;}
-      100% {font-size: 80px;}
+    @keyframes spin {
+      0%   {transform: rotate(0deg);}
+      100% {transform: rotate(360deg);}
     }
   </style>
 </head>
 
 <body>
-  <div id="header"></div>
-  <div class="game-header">
-    <div id="message"></div>
-    <div id="times">
-      <div id="phase">
-        <h3>Phase:</h3>
-      </div>
-      <div id="generations">
-        <h3>Generations:</h3>
+  <div id="header"></div>  
+  <div class="content">
+    <div class="game-header">
+      <div id="message"></div>
+      <div id="times">
+        <div id="phase">
+          <h3></h3>
+        </div>
+        <!--div id="generations">
+          <h3>Generations:</h3>
+        </div-->
       </div>
     </div>
-  </div>
-  <div class="game-board">
-    <div id="countdown">
-      <div id="countdown-bg"><h1></h1></div>
+    <div class="game-board">
+      <div id="countdown">
+        <div id="countdown-bg">
+          <div id="countdown-label"></div>
+          <h1></h1>
+        </div>
+      </div>
+      <table>
+        <tbody id="game-of-life"></tbody>
+      </table>
     </div>
-    <table>
-      <tbody id="game-of-life"></tbody>
-    </table>
+    <div id="players"></div>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -136,6 +183,7 @@
                 room = data.room;
                 let style = data.style;
                 socket.emit('joinRoom', room);
+                updatePlayers();
                 setBoard(quadrant, style);
                 getBoard();
                 if (quadrant == 4) {
@@ -169,6 +217,10 @@
 
     socket.on('newZone', () => {
       getNewZone();
+    });
+
+    socket.on('updatePlayers', () => {
+      updatePlayers();
     });
 
     socket.on('gameOver', () => {

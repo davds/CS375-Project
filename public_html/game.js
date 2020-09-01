@@ -433,6 +433,20 @@ function updateGliderText() {
     }
 }
 
+function updatePlayers() {
+    fetch('/players?').then(response => {
+        return response.json();
+    }).then(data => {
+        let html = "";
+        for (user in data) {
+            html += data[user].alive ? `<div class='player'>` : `<div class='dead player'>`;
+            html += `<div class='player-icon' style='${data[user].style}'></div><div class='player-name'>: ${user}`// </div><div class='player-strength'>${data[user].strength}</div>`;
+            html += `</div>`;
+        }
+        $('#players').html(html);
+    });
+}
+
 function test() {
     canPlaceGliders = false;
 }
@@ -446,20 +460,23 @@ function startCountdown() {
     console.log("countdown begun!");
     let secondsLeft = 30;
     let timerElement = $('#countdown h1');
+    let timerLabel = $('#countdown-label');
     updateGliderText();
+    timerLabel.text("Game Begins In...");
     let interval = setInterval(() => {
         if(secondsLeft>0) {            
-            timerElement.addClass('pop-animation')
+            timerElement.addClass('spin-animation');
             timerElement.text(secondsLeft);
             secondsLeft -= 1;            
             timerElement.on('animationend', () => {
-                $('#countdown h1').removeClass('pop-animation')
+                $('#countdown h1').removeClass('spin-animation');
             });
         }
         else {
             canPlaceGliders = false;
             clearInterval(interval);
             timerElement.text("");
+            timerLabel.text("");
         }
     }, 1000);       
 }

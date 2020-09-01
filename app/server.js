@@ -748,15 +748,26 @@ app.get("/zone", function(req, res) {
   res.json(gameSessions[room].getDimensions());
 });
 
+//GET handler for players in room 
+app.get("/players", function(req, res) {
+  let room = req.session.room;
+  res.status(200);
+  res.json(gameSessions[room].getPlayers());
+});
+
 io.on("connect", socket => {
   console.log("Connected!");
   socket.on('joinRoom', room => {
     console.log('player joined room: ' + room);
     socket.join(room);
+    console.log("update players");
+    socket.to(room).emit('updatePlayers', room);
   });
   socket.on('leaveRoom', room => {
     console.log('player left room: ' + room);
     socket.leave(room);
+    console.log("update players");
+    socket.to(room).emit('updatePlayers', room);
   });
 });
 

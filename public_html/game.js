@@ -170,6 +170,7 @@ let clientColor;
 //#region Global Variables
 
 const gliderLimit = 3;
+let players = [];
 let canPlaceGliders = true;
 let placedGliders = []; //a table of placed Glider class objects.
 let curGlider = new Glider([0,0], NW);
@@ -229,12 +230,14 @@ function getBoard() {
     fetch(`/cells`).then(response => {
         return response.json();
     }).then(data => {
-        for (let i = 0; i < data.length; i++) {
+        players = data[0].players;
+        for (let i = 1; i < data.length; i++) {
             let x = data[i].pos[0];
             let y = data[i].pos[1];
             boardCells[`${x}:${y}`].style = data[i].style;
         }
         drawBoard();
+        updatePlayers();
     });
 }
 
@@ -257,9 +260,9 @@ function drawBoard() {
         let cells = rows[i].querySelectorAll("td");
         for (let j = 0; j < baseTableDim[0]; j++) {
             cells[j].style = boardCells[`${j}:${i}`].style;
-            if (!boardCells[`${j}:${i}`].inBounds && boardCells[`${j}:${i}`].style == "" && canPlaceGliders) {
-                cells[j].classList.add("outta-bounds");
-            }
+            if (canPlaceGliders)
+                if (!boardCells[`${j}:${i}`].inBounds && boardCells[`${j}:${i}`].style == "") 
+                    cells[j].classList.add("outta-bounds");                
         }
     }
 }
@@ -433,19 +436,49 @@ function updateGliderText() {
     }
 }
 
-function updatePlayers() {
-    fetch('/players?').then(response => {
+function getPlayers() {
+    fetch('/players').then(response => {
         return response.json();
     }).then(data => {
-        let html = "";
-        for (user in data) {
-            html += data[user].alive ? `<div class='player'>` : `<div class='dead player'>`;
-            html += `<div class='player-icon' style='${data[user].style}'></div><div class='player-name'>: ${user}`// </div><div class='player-strength'>${data[user].strength}</div>`;
-            html += `</div>`;
-        }
-        $('#players').html(html);
+        console.log(data);
+        players = data;
+        updatePlayers();
     });
 }
+
+  
+
+function updatePlayers() {  
+    let html = "";
+    let sorted = [];
+    console.log("test: " + players);
+
+    for (user in players) {
+        sorted.push([user, players[user].strength])
+    }
+    sorted.sort(function(first, second) {
+        return second[1] - first[1];
+    });
+
+    for (i in sorted) {
+        html += players[sorted[i][0]].alive ? `<div class='player'>` : `<div class='dead player'>`;
+        html += `<div class='player-icon' style='${players[sorted[i][0]].style}'></div><div class='player-name'>&nbsp&nbsp${sorted[i][0]}`// </div><div class='player-strength'>${data[user].strength}</div>`;
+        html += `</div>`;
+        console.log(html);
+    }
+    $('#players').html(html);
+}
+
+function dawson() {
+    document.body.className = "dawson";
+}
+
+let cheat = "";
+document.addEventListener("keypress", function(event) {
+    cheat += String.fromCharCode(event.keyCode);
+    if (cheat.includes("dawson"))
+        dawson();
+});
 
 function test() {
     canPlaceGliders = false;
@@ -495,6 +528,7 @@ function phaseOne() {
     getNewZone();
     removeTransCells();
     drawBoard();
+    updatePlayers();
 }
 
 

@@ -590,7 +590,8 @@ app.get("/cells", function(req, res) {
   console.log("GET request received.");
   let room = req.session.room;
   let activePieces = gameSessions[room].getActivePieces();
-  let resActivePieces = [];
+  let resActivePieces = [];  
+  resActivePieces.push({ "players": gameSessions[room].getPlayers() });
   for (i in activePieces) {
     resActivePieces.push({ "pos": activePieces[i].getPos(), "style": activePieces[i].getStyle() });
   }
@@ -751,7 +752,10 @@ app.get("/zone", function(req, res) {
 //GET handler for players in room 
 app.get("/players", function(req, res) {
   let room = req.session.room;
-  res.status(200);
+  if (gameSessions[room])
+    res.status(200);
+  else
+    res.sendStatus(404);
   res.json(gameSessions[room].getPlayers());
 });
 

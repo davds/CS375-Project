@@ -133,6 +133,10 @@
       0%   {transform: rotate(0deg);}
       100% {transform: rotate(360deg);}
     }
+
+    .dawson {
+      cursor: url('./dawson.png'), auto !important;
+    }
   </style>
 </head>
 
@@ -183,7 +187,7 @@
                 room = data.room;
                 let style = data.style;
                 socket.emit('joinRoom', room);
-                updatePlayers();
+                getPlayers();
                 setBoard(quadrant, style);
                 getBoard();
                 if (quadrant == 4) {
@@ -220,13 +224,15 @@
     });
 
     socket.on('updatePlayers', () => {
-      updatePlayers();
+      getPlayers();
     });
 
     socket.on('gameOver', () => {
       gameOver();
       socket.emit('leaveRoom', room);
     });
+
+    
 
   </script>
 </body>

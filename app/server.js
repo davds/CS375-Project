@@ -221,7 +221,7 @@ app.post("/newUser", (req, res) => {
   //console.log(username + " " + plaintextPassword)
   bcrypt.hash(plaintextPassword, 10).then(password => {
     pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, email, password]).then(response => {
-      pool.query("INSERT INTO userData (username, style, wins, gamesplayed, strength) VALUES ($1,'',0,0,0)", [username]).then(response => {
+      pool.query("INSERT INTO userData (username, style, wins, gamesplayed, strength) VALUES ($1,'background-color: blue;',0,0,0)", [username]).then(response => {
         res.status(200).send("Account created");
       })
     }).catch(error => {

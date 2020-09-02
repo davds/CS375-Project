@@ -173,10 +173,10 @@ app.get('/home', async (req, res) => {
     let w = await database.getWins(u);
     let gp = await database.getGamesPlayed(u);
     let s = await database.getStrength(u);
-    let userData = await database.getuserData();
+    let userData = await database.getUserData();
     res.json({username: u,wins: w, gamesplayed: gp, users: userData, strength: s})
   } else {
-    let userData = await database.getuserData();
+    let userData = await database.getUserData();
     res.json({message: "No user logged in", users: userData})
   }
 })
@@ -591,7 +591,8 @@ app.get("/cells", function(req, res) {
   console.log("GET request received.");
   let room = req.session.room;
   let activePieces = gameSessions[room].getActivePieces();
-  let resActivePieces = [];
+  let resActivePieces = [];  
+  resActivePieces.push({ "players": gameSessions[room].getPlayers() });
   for (i in activePieces) {
     resActivePieces.push({ "pos": activePieces[i].getPos(), "style": activePieces[i].getStyle() });
   }
@@ -754,15 +755,29 @@ app.get("/zone", function(req, res) {
   res.json(gameSessions[room].getDimensions());
 });
 
+//GET handler for players in room 
+app.get("/players", function(req, res) {
+  let room = req.session.room;
+  if (gameSessions[room])
+    res.status(200);
+  else
+    res.sendStatus(404);
+  res.json(gameSessions[room].getPlayers());
+});
+
 io.on("connect", socket => {
   console.log("Connected!");
   socket.on('joinRoom', room => {
     console.log('player joined room: ' + room);
     socket.join(room);
+    console.log("update players");
+    socket.to(room).emit('updatePlayers', room);
   });
   socket.on('leaveRoom', room => {
     console.log('player left room: ' + room);
     socket.leave(room);
+    console.log("update players");
+    socket.to(room).emit('updatePlayers', room);
   });
 });
 

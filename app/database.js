@@ -54,8 +54,8 @@ class Database {
     return strength;
   }
 
-  async getuserData() {
-    let userData = await this.pool.query("SELECT * FROM userData ORDER BY wins DESC").then(response => {
+  async getUserData() {
+    let userData = await this.pool.query("SELECT * FROM userData ORDER BY wins DESC FETCH FIRST 10 ROWS ONLY").then(response => {
       return response.rows;
     });
     return userData;

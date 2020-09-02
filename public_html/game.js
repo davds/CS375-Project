@@ -463,7 +463,6 @@ function updatePlayers() {
         html += players[sorted[i][0]].alive ? `<div class='player'>` : `<div class='dead player'>`;
         html += `<div class='player-icon' style='${players[sorted[i][0]].style}'></div><div class='player-name'>&nbsp&nbsp${sorted[i][0]}</div>`//<div class='player-strength'>${data[user].strength}</div>`;
         html += `</div>`;
-        console.log(html);
     }
     $('#players').html(html);
 }
@@ -553,15 +552,19 @@ function getNewZone() {
 
 //Get the winner(s) from the server. Display a message about who won, clear the board. Special message if this client is one of the winners
 function gameOver() {
-    let winnerElement = document.getElementById("generations");
+    let winners = $('#winners #winners-bg');
+    let crown = $('#crown');
     fetch(`/winners`).then(response => {
         return response.json();
     }).then(data => {
-        winnerText = "Winners: "
+        let winnersHTML = "";
+        crown.attr("src", "./crown.png");
         for (i = 0; i < data.length; i++) {
-            winnerText += `${data[i].id} `;
+            winnersHTML += `<h1>${data[i].id}</h1>`;
         }
-        winnerElement.textContent = winnerText;
+        crown.addClass('win-animation');
+        $("#winners-bg").css("display", "block")
+        winners.html(winners.html() + winnersHTML);
     });
 }
 

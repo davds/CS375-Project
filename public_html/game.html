@@ -129,6 +129,36 @@
       margin: 0px;
       text-align: center;
     }
+    #end-screen {      
+      position: relative;
+    }
+    #winners {
+      background-color: white;
+      border-radius: 5px;
+      color: white;
+      height: 0px;
+      position: relative;
+      top: 175px;
+      text-align: center;
+      z-index: 999;
+    }
+    #winners-bg {
+      background: grey;
+      border-radius: 15px;
+      display: none;
+      margin: auto;
+      padding: 10px 40px;
+      height: 250px;
+      width: 50%;
+    }
+    #crown {
+      height: 150px;
+    }
+    #winners #h1 {
+      font-size: 80px;
+      margin: 0px;
+      text-align: center;
+    }
 
     .spin-animation {
       animation-name: spin;
@@ -138,6 +168,22 @@
     @keyframes spin {
       0%   {transform: rotate(0deg);}
       100% {transform: rotate(360deg);}
+    }
+
+    .win-animation {
+      animation-name: win;
+      animation-duration: 2s;
+    }
+
+    @keyframes win {
+      0%   {height: 0px; transform: rotate(0deg)}
+      10%  {transform: rotate(360deg);}
+      20%  {transform: rotate(0deg);}
+      30%  {transform: rotate(360deg);}
+      40%  {transform: rotate(0deg);}
+      50%  {height: 170px; transform: rotate(360deg);}
+      60%  {transform: rotate(0deg);}
+      100% {height: 150px; transform: rotate(360deg);}
     }
 
     .dawson {
@@ -166,6 +212,13 @@
           <div id="countdown-label"></div>
           <h1></h1>
         </div>
+      </div>
+      <div id="end-screen">
+        <div id="winners">
+          <div id="winners-bg">
+            <img id="crown" src="" />   
+          </div>       
+        </div>  
       </div>
       <table>
         <tbody id="game-of-life"></tbody>

@@ -93,6 +93,12 @@
       font-size: 20px;
       vertical-align: top;
     }
+    .dead {
+      color: grey;
+    }
+    .dead .player-icon {
+      opacity: .5;
+    }
 
     .game-board {
       display: inline-block;
@@ -230,9 +236,7 @@
     socket.on('gameOver', () => {
       gameOver();
       socket.emit('leaveRoom', room);
-    });
-
-    
+    });    
 
   </script>
 </body>

@@ -451,7 +451,6 @@ function getPlayers() {
 function updatePlayers() {  
     let html = "";
     let sorted = [];
-    console.log("test: " + players);
 
     for (user in players) {
         sorted.push([user, players[user].strength])
@@ -462,7 +461,7 @@ function updatePlayers() {
 
     for (i in sorted) {
         html += players[sorted[i][0]].alive ? `<div class='player'>` : `<div class='dead player'>`;
-        html += `<div class='player-icon' style='${players[sorted[i][0]].style}'></div><div class='player-name'>&nbsp&nbsp${sorted[i][0]}`// </div><div class='player-strength'>${data[user].strength}</div>`;
+        html += `<div class='player-icon' style='${players[sorted[i][0]].style}'></div><div class='player-name'>&nbsp&nbsp${sorted[i][0]}</div>`//<div class='player-strength'>${data[user].strength}</div>`;
         html += `</div>`;
         console.log(html);
     }

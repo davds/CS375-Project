@@ -173,10 +173,10 @@ app.get('/home', async (req, res) => {
     let w = await database.getWins(u);
     let gp = await database.getGamesPlayed(u);
     let s = await database.getStrength(u);
-    let userData = await database.getuserData();
+    let userData = await database.getUserData();
     res.json({username: u,wins: w, gamesplayed: gp, users: userData, strength: s})
   } else {
-    let userData = await database.getuserData();
+    let userData = await database.getUserData();
     res.json({message: "No user logged in", users: userData})
   }
 })

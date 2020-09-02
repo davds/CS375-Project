@@ -122,7 +122,7 @@
     function getRadio() {
       return $("input[name=colorradio]:checked").css("color")
     }
-    function createLeaderbord(users) {
+    function createLeaderboard(users) {
       let leaderboard = document.getElementById("leaderboardBody")
       for (let i = 0; i < users.length; i++){
         let row = document.createElement("tr");
@@ -163,7 +163,7 @@
     fetch("/home").then(function (response) {
                 return response.json();
             }).then(function (data) {
-              createLeaderbord(data.users);
+              createLeaderboard(data.users);
               if (data.hasOwnProperty("message")){
                 console.log(data)
                 message.textContent = data.message;

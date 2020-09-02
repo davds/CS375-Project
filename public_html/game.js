@@ -387,7 +387,7 @@ function sendGliders() {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({  //TODO: if theres fewer than 3 placed gliders, this errors.
+        body: JSON.stringify({  
             gliders: glidersBody
         })
     });    

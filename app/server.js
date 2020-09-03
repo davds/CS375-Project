@@ -708,6 +708,15 @@ app.get("/quadrant", async function(req, res) {
   }
 });
 
+app.post("/chat", function(req, res) {
+  let id = req.session.username;
+  let room = req.session.room;
+  let message = req.body.chatMessage;
+  io.to(room).emit('sendingMessage', {'id':id, 'message':message});
+  console.log(req.body);
+  console.log(message);
+  res.sendStatus(200);
+});
 
 app.post("/updateUserStyle", (req, res) => {
   let username = req.session.username;

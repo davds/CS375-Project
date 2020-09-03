@@ -514,7 +514,12 @@ function gameOver() {
         winnerElement.textContent = winnerText;
     });
 }
-
+function addMessage(id, message) {
+    let display = document.getElementById("displayingMessage");
+    let div = document.createElement('div');
+    div.textContent = id + ": " + message;
+    display.append(div);
+}
 function addListeners() {
     $(document).ready(() => {
         $("#game-of-life td").on("click", cell => {
@@ -539,6 +544,23 @@ function addListeners() {
             rotateGlider();
             previewGlider();
             cell.preventDefault();
+        });
+        $("#sendMessage").on("click", e => {
+            //console.log("pop tard");
+            let myMessage = $("#myMessage").val();
+            console.log(myMessage);
+            if (myMessage != null) {
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({  //TODO: if theres fewer than 3 placed gliders, this errors.
+                         'chatMessage': myMessage 
+                    })
+                });
+            }
+                
         });
     });
 }

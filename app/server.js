@@ -727,15 +727,21 @@ app.get("/quadrant", async function(req, res) {
 app.post("/chat", function(req, res) {
   let id = req.session.username;
   let room = req.session.room;
-  let message = ''
+  let message = '';
+  let style = gameSessions[room].getPlayer(id).getStyle();
+  style = style.replace("background-color:", "color:");
+  style = style.substring(style.indexOf("color:"), style.indexOf(";", style.indexOf("color:")));
   let messageArray = req.body.chatMessage.trim().split(" ");
-  for(i=0; i < messageArray.length; i++){
-    if (isInappropriate(messageArray[i])){
-      messageArray[i] = "[REDACTED]"
+  for (i=0; i < messageArray.length; i++) {
+    if (isInappropriate(messageArray[i])) {
+      messageArray[i] = "[REDACTED]";
     }
-    message += messageArray[i] + ' '
+    message += messageArray[i] + ' ';
   }
-  io.to(room).emit('sendingMessage', {'id':id, 'message':message.trim()});
+  let joining = req.body.joining;
+  if (joining)
+    message = "joined the room";
+  io.to(room).emit('sendingMessage', {'id':id, 'message':message.trim(), 'style': style, 'joining': joining});
   console.log(req.body);
   console.log(message);
   res.sendStatus(200);

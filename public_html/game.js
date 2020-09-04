@@ -560,7 +560,8 @@ function gameOver() {
 function addMessage(id, message, style, joining) {
     let display = document.getElementById("displayingMessage");
     let div = document.createElement('div');
-    div.innerHTML =`<span style="${style}">${id}</span>`;
+    div.classList.add("message");
+    div.innerHTML =`<span style="font-weight: bold; ${style}">${id}</span>`;
     div.innerHTML += joining ? " " : ": ";
     div.innerHTML += message;
     display.append(div);

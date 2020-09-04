@@ -718,7 +718,10 @@ app.post("/chat", function(req, res) {
   let id = req.session.username;
   let room = req.session.room;
   let message = req.body.chatMessage;
-  io.to(room).emit('sendingMessage', {'id':id, 'message':message});
+  let joining = req.body.joining;
+  if (joining)
+    message = "joined the room";
+  io.to(room).emit('sendingMessage', {'id':id, 'message':message, 'joining': joining});
   console.log(req.body);
   console.log(message);
   res.sendStatus(200);

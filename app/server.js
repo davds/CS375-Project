@@ -194,8 +194,8 @@ app.get('/cellcolor', (req, res) => {
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
 const { fstat } = require("fs");
-if (process.env._ && process.env._.indexOf("heroku"))
-  tempEnv = require("../heroku.json");
+//if (process.env._ && process.env._.indexOf("heroku"))
+//  tempEnv = require("../heroku.json");
 const env = tempEnv
 
 const Pool = pg.Pool;
@@ -498,28 +498,29 @@ function setPlayerStats(room) {
 function checkCollision(contestedPositions, cells) {
   for (var pos in contestedPositions) {
     let players = contestedPositions[pos];
-
-    let winningStrength = 0;
-    //determine highest strength
-    for (var id in players) {
-      let contestant = players[id];
-      if (contestant.getStrength() > winningStrength) {
-        winningStrength = contestant.getStrength();
+    if (players.length > 1){
+      let winningStrength = 0;
+      //determine highest strength
+      for (var id in players) {
+        let contestant = players[id];
+        if (contestant.getStrength() > winningStrength) {
+          winningStrength = contestant.getStrength();
+        }
       }
-    }
-    //check for ties
-    winners = [];
-    for (var id in players) {
-      let contestant = players[id];
-      if (contestant.getStrength() == winningStrength) {
-        winners.push(contestant);
+      //check for ties
+      winners = [];
+      for (var id in players) {
+        let contestant = players[id];
+        if (contestant.getStrength() == winningStrength) {
+          winners.push(contestant);
+        }
       }
+      //Randomly determine winner
+      winner = winners[getRandomInt(winners.length)];
+      //Set cell at pos to winner
+      cells[pos].setOwner(winner);
+      winner.incrementCollisionsWon();
     }
-    //Randomly determine winner
-    winner = winners[getRandomInt(winners.length)];
-    //Set cell at pos to winner
-    cells[pos].setOwner(winner);
-    winner.incrementCollisionsWon();
   }
   return cells;
 }
@@ -763,6 +764,7 @@ app.get("/winners", function(req, res) {
     if (players[i] == req.session.username){
       database.addGamePlayed(players[i]);
       database.addStrength(players[i], gameSessions[room].getPlayer(players[i]).getCollisionsWon());
+      console.log(gameSessions[room].getPlayer(players[i]).getCollisionsWon());
     }
   }
   //Add win for each winner

@@ -171,6 +171,7 @@ let clientColor;
 
 const gliderLimit = 3;
 let players = [];
+let gameIsOver = false;
 let canPlaceGliders = true;
 let placedGliders = []; //a table of placed Glider class objects.
 let curGlider = new Glider([0,0], NW);
@@ -436,6 +437,9 @@ function updatePlayers() {
     let html = "";
     let sorted = [];
 
+    if (gameIsOver)
+        return;
+
     for (user in players) {
         sorted.push([user, players[user].strength])
     }
@@ -545,6 +549,7 @@ function gameOver() {
     fetch(`/winners`).then(response => {
         return response.json();
     }).then(data => {
+        gameIsOver = true;
         let phaseElement = document.getElementById("phase");
         phaseElement.textContent = "Game over!";
         let winnersHTML = "";

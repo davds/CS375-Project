@@ -316,7 +316,7 @@
     });    
 
     socket.on('sendingMessage', (data) => {
-      addMessage(data.id, data.message, data.joining);
+      addMessage(data.id, data.message, data.style, data.joining);
     });
   </script>
 </body>

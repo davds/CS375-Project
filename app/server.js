@@ -4,6 +4,7 @@ const pg = require("pg");
 const bcrypt = require("bcrypt");
 const express = require("express");
 const session = require("express-session");
+const badwords = require("naughty-words/en.json");
 const app = express();
 const {Player, ActivePiece, GameSession} = require("./classes.js");
 const database = require("./database.js");
@@ -192,6 +193,7 @@ app.get('/cellcolor', (req, res) => {
 
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
+const { fstat } = require("fs");
 if (process.env._ && process.env._.indexOf("heroku"))
   tempEnv = require("../heroku.json");
 const env = tempEnv
@@ -219,6 +221,9 @@ app.post("/newUser", (req, res) => {
     return res.status(401).send("Password exceeded maximum length (20).");
   else if (username.length <= 0)
     return res.status(401).send("Username did not meet minimum length (1).");
+  else if (isInappropriate(username)) {
+    return res.status(401).send("Username is innappropriate.");
+  }
   //console.log(username + " " + plaintextPassword)
   bcrypt.hash(plaintextPassword, 10).then(password => {
     pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, email, password]).then(response => {
@@ -674,6 +679,11 @@ async function fillRoom(username) {
   populateBoard(session.getRoom());
   return session.getRoom();
 }
+//Returns true if string is listed on the profanity list
+function isInappropriate(m) {
+  //https://stackoverflow.com/a/46337280
+  return badwords.some(w=>m.includes(w))
+}
 
 //POST handler for recieving a JSON body of center coordinates for gliders and their orientations
 app.post("/gliders", function(req, res) {
@@ -717,11 +727,21 @@ app.get("/quadrant", async function(req, res) {
 app.post("/chat", function(req, res) {
   let id = req.session.username;
   let room = req.session.room;
-  let message = req.body.chatMessage;
+  let message = '';
+  let style = gameSessions[room].getPlayer(id).getStyle();
+  style = style.replace("background-color:", "color:");
+  style = style.substring(style.indexOf("color:"), style.indexOf(";", style.indexOf("color:")));
+  let messageArray = req.body.chatMessage.trim().split(" ");
+  for (i=0; i < messageArray.length; i++) {
+    if (isInappropriate(messageArray[i])) {
+      messageArray[i] = "[REDACTED]";
+    }
+    message += messageArray[i] + ' ';
+  }
   let joining = req.body.joining;
   if (joining)
     message = "joined the room";
-  io.to(room).emit('sendingMessage', {'id':id, 'message':message, 'joining': joining});
+  io.to(room).emit('sendingMessage', {'id':id, 'message':message.trim(), 'style': style, 'joining': joining});
   console.log(req.body);
   console.log(message);
   res.sendStatus(200);

@@ -560,12 +560,12 @@ function gameOver() {
         winners.html(winners.html() + winnersHTML);
     });
 }
-function addMessage(id, message, joining) {
+function addMessage(id, message, style, joining) {
     let display = document.getElementById("displayingMessage");
     let div = document.createElement('div');
-    div.textContent = id;
-    div.textContent += joining ? " " : ": ";
-    div.textContent += message;
+    div.innerHTML =`<span style="${style}">${id}</span>`;
+    div.innerHTML += joining ? " " : ": ";
+    div.innerHTML += message;
     display.append(div);
     $('#messages').scrollTop($('#messages')[0].scrollHeight);
 }

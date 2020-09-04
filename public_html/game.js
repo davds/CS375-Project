@@ -179,7 +179,7 @@ let allowBoardInput = false;
 let baseTableDim = [99, 99];
 let gameBoard = document.getElementById("game-of-life");
 let boardCells = {};
-let cursorVisible = true;
+let body = $("body");
 const startCoords = {
     "xMin": 0,
     "xMax": baseTableDim[0],
@@ -333,13 +333,11 @@ function areCoordsTaken(coords) {
 }
 
 function showCursor(show) {
-    if(show) {
-        cursorVisible = true;
-        $("body").css('cursor', '');
+    if(show && body.css('cursor') == 'none') {
+        body.css('cursor', '');
     }
-    else if(cursorVisible) {
-        cursorVisible = false;
-        $("body").css('cursor', 'none');
+    else if(!show) {
+        body.css('cursor', 'none');
     }
 }
 
@@ -355,14 +353,15 @@ function previewGlider() {
                 removeTransCells();
                 showCursor(true);
                 //$("td").removeClass("transparent");
-                break;
+                return;
             }
             cell.classList.add("transparent");
-            showCursor(false);
+            
             if(isTaken) {
                 $(cell).addClass("invalid");
             }
         }
+        showCursor(false);
     }
 }
 
@@ -644,7 +643,6 @@ function addListeners() {
             $("body").css('cursor', '');
             removeTransCells();
         });
-    
         $("#game-of-life").on("contextmenu", cell => {
             removeTransCells();
             curGlider.setCenterPos(getCellCoords(cell.target))

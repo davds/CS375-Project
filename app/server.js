@@ -498,7 +498,6 @@ function setPlayerStats(room) {
 function checkCollision(contestedPositions, cells) {
   for (var pos in contestedPositions) {
     let players = contestedPositions[pos];
-
     let winningStrength = 0;
     //determine highest strength
     for (var id in players) {
@@ -623,7 +622,7 @@ function startGame(room) {
   gameSessions[room].setLivingPlayers();
   console.log(gameSessions[room].getLivingPlayers());
   io.to(room).emit('countdown', room);
-  timer = setTimeout(getClientGliders, 30000, room);
+  timer = setTimeout(getClientGliders, 31000, room);
 }
 
 function getClientGliders(room) {
@@ -727,15 +726,21 @@ app.get("/quadrant", async function(req, res) {
 app.post("/chat", function(req, res) {
   let id = req.session.username;
   let room = req.session.room;
-  let message = ''
+  let message = '';
+  let style = gameSessions[room].getPlayer(id).getStyle();
+  style = style.replace("background-color:", "color:");
+  style = style.substring(style.indexOf("color:"), style.indexOf(";", style.indexOf("color:")));
   let messageArray = req.body.chatMessage.trim().split(" ");
   for(i=0; i < messageArray.length; i++){
     if (isInappropriate(messageArray[i].toLowerCase())){
-      messageArray[i] = "[REDACTED]"
+      messageArray[i] = "[REDACTED]";
     }
-    message += messageArray[i] + ' '
+    message += messageArray[i] + ' ';
   }
-  io.to(room).emit('sendingMessage', {'id':id, 'message':message.trim()});
+  let joining = req.body.joining;
+  if (joining)
+    message = "joined the room";
+  io.to(room).emit('sendingMessage', {'id':id, 'message':message.trim(), 'style': style, 'joining': joining});
   console.log(req.body);
   console.log(message);
   res.sendStatus(200);
@@ -757,6 +762,7 @@ app.get("/winners", function(req, res) {
     if (players[i] == req.session.username){
       database.addGamePlayed(players[i]);
       database.addStrength(players[i], gameSessions[room].getPlayer(players[i]).getCollisionsWon());
+      console.log(gameSessions[room].getPlayer(players[i]).getCollisionsWon());
     }
   }
   //Add win for each winner
@@ -785,11 +791,11 @@ app.get("/zone", function(req, res) {
 //GET handler for players in room 
 app.get("/players", function(req, res) {
   let room = req.session.room;
-  if (gameSessions[room])
+  if (gameSessions[room]) {
     res.status(200);
-  else
+    res.json(gameSessions[room].getPlayers());
+  } else
     res.sendStatus(404);
-  res.json(gameSessions[room].getPlayers());
 });
 
 io.on("connect", socket => {

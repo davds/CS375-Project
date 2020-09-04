@@ -171,6 +171,7 @@ let clientColor;
 
 const gliderLimit = 3;
 let players = [];
+let gameIsOver = false;
 let canPlaceGliders = true;
 let placedGliders = []; //a table of placed Glider class objects.
 let curGlider = new Glider([0,0], NW);
@@ -314,20 +315,6 @@ function removeTransCells() {
     }
 }
 
-//checks to see if the coordinate is being used by another glider
-//inefficient.
-// function isCoordTaken(coords) {
-//     for(i=0; i<placedGliders.length; i++) {
-//         let occupyingCoords = placedGliders[i].getOccupyingCoords();
-//         for(j=0; j<occupyingCoords.length; j++) {
-//             if(occupyingCoords[j][0] === coords[0] && occupyingCoords[j][1] === coords[1]) {
-//                 return true;
-//             }
-//         }
-//     }
-//     return false;
-// }
-
 function getCenterDiff(coord1, coord2) {
     let xDiff = Math.abs(coord1[0] - coord2[0]);
     let yDiff = Math.abs(coord1[1] - coord2[1]);
@@ -354,10 +341,12 @@ function previewGlider() {
             let cell = document.getElementById(cellId[0] + "," + cellId[1]);
             if (cell == null  || !validPos(cellId)) {
                 removeTransCells();
+                $("body").css('cursor', '');
                 //$("td").removeClass("transparent");
                 break;
             }
             cell.classList.add("transparent");
+            $("body").css('cursor', 'none');
             if(isTaken) {
                 $(cell).addClass("invalid");
             }
@@ -431,8 +420,8 @@ function updateGliderText() {
         numRemaining = 0;
     } 
     if(canPlaceGliders) {
-        let phaseElement = document.getElementById("phase");
-        phaseElement.textContent = "Phase: Placing Gliders. Left click: place, Right click: rotate. " +numRemaining+ " glider(s) remaining.";
+        let countElement = document.getElementById("gliderCount");
+        countElement.textContent = "" + numRemaining + " glider(s) remaining.";
     }
 }
 
@@ -446,11 +435,12 @@ function getPlayers() {
     });
 }
 
-  
-
 function updatePlayers() {  
     let html = "";
     let sorted = [];
+
+    if (gameIsOver)
+        return;
 
     for (user in players) {
         sorted.push([user, players[user].strength])
@@ -478,20 +468,40 @@ document.addEventListener("keypress", function(event) {
         dawson();
 });
 
-function test() {
-    canPlaceGliders = false;
-}
-function test1() {
-    drawBoard();
-}
-
 //These are for Hoff
 //This signals the start of the game. A 30 second countdown timer should start (along with some basic instructions). This is the only time gliders should be allowed to be placed.
+function setLeftText(phase) { 
+    let ctrl1 = $("#ctrl1"); 
+    let ctrl2 = $("#ctrl2");
+    let phaseElement = $("#phase");
+    let countElement = $("#gliderCount");
+    if(phase === 0 && canPlaceGliders) {
+        phaseElement.text("Waiting for players...");
+        ctrl1.text("Left Click: Place");
+        ctrl2.text("Right Click: Rotate");
+        ctrl1.show();
+        ctrl2.show();
+        countElement.show();
+        updateGliderText();
+    }
+    else if(phase === 1) {
+        phaseElement.text("Place your gliders!");
+    }
+    else if(phase === 2) {
+        phaseElement.text("Game begin!");
+        ctrl1.hide();
+        ctrl2.hide();
+        countElement.hide();
+    }
+}
+
 function startCountdown() {
     console.log("countdown begun!");
     let secondsLeft = 30;
     let timerElement = $('#countdown h1');
     let timerLabel = $('#countdown-label');
+    let countElement = document.getElementById("gliderCount");
+    setLeftText(1);
     updateGliderText();
     timerLabel.text("Game Begins In...");
     let interval = setInterval(() => {
@@ -508,6 +518,8 @@ function startCountdown() {
             clearInterval(interval);
             timerElement.text("");
             timerLabel.text("");
+            setLeftText(2);
+            $("body").css('cursor', '');
         }
     }, 1000);       
 }
@@ -523,6 +535,7 @@ function phaseOne() {
     //3 2 1 timer?
     canPlaceGliders = false;
     console.log("phase one...");
+    $("body").css('cursor', '');
     getNewZone();
     removeTransCells();
     drawBoard();
@@ -557,6 +570,9 @@ function gameOver() {
     fetch(`/winners`).then(response => {
         return response.json();
     }).then(data => {
+        gameIsOver = true;
+        let phaseElement = document.getElementById("phase");
+        phaseElement.textContent = "Game over!";
         let winnersHTML = "";
         crown.attr("src", "./crown.png");
         for (i = 0; i < data.length; i++) {
@@ -567,12 +583,34 @@ function gameOver() {
         winners.html(winners.html() + winnersHTML);
     });
 }
-function addMessage(id, message) {
+function addMessage(id, message, style, joining) {
     let display = document.getElementById("displayingMessage");
     let div = document.createElement('div');
-    div.textContent = id + ": " + message;
+    div.classList.add("message");
+    div.innerHTML =`<span style="font-weight: bold; ${style}">${id}</span>`;
+    div.innerHTML += joining ? " " : ": ";
+    div.innerHTML += message;
     display.append(div);
+    $('#messages').scrollTop($('#messages')[0].scrollHeight);
 }
+function sendMessage(joining=false) {
+    let myMessage = $("#myMessage").val();
+    $("#myMessage").val("");
+    if (myMessage != null && myMessage.trim() != "" || joining) {
+        fetch('/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                'chatMessage': myMessage, 
+                'joining': joining
+            })
+        });
+    }
+}
+
+
 function addListeners() {
     $(document).ready(() => {
         $("#game-of-life td").on("click", cell => {
@@ -590,6 +628,10 @@ function addListeners() {
                 previewGlider();
             }
         });
+        $("#game-of-life").on("mouseleave", () => {
+            $("body").css('cursor', '');
+            removeTransCells();
+        });
     
         $("#game-of-life").on("contextmenu", cell => {
             removeTransCells();
@@ -599,22 +641,9 @@ function addListeners() {
             cell.preventDefault();
         });
         $("#sendMessage").on("click", e => {
-            //console.log("pop tard");
-            let myMessage = $("#myMessage").val();
-            console.log(myMessage);
-            if (myMessage != null) {
-                fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({  //TODO: if theres fewer than 3 placed gliders, this errors.
-                         'chatMessage': myMessage 
-                    })
-                });
-            }
-                
+            sendMessage();                
         });
+        setLeftText(0);
     });
 }
 

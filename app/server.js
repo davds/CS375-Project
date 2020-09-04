@@ -731,8 +731,8 @@ app.post("/chat", function(req, res) {
   style = style.replace("background-color:", "color:");
   style = style.substring(style.indexOf("color:"), style.indexOf(";", style.indexOf("color:")));
   let messageArray = req.body.chatMessage.trim().split(" ");
-  for (i=0; i < messageArray.length; i++) {
-    if (isInappropriate(messageArray[i])) {
+  for(i=0; i < messageArray.length; i++){
+    if (isInappropriate(messageArray[i].toLowerCase())){
       messageArray[i] = "[REDACTED]";
     }
     message += messageArray[i] + ' ';
@@ -791,11 +791,11 @@ app.get("/zone", function(req, res) {
 //GET handler for players in room 
 app.get("/players", function(req, res) {
   let room = req.session.room;
-  if (gameSessions[room])
+  if (gameSessions[room]) {
     res.status(200);
-  else
+    res.json(gameSessions[room].getPlayers());
+  } else
     res.sendStatus(404);
-  res.json(gameSessions[room].getPlayers());
 });
 
 io.on("connect", socket => {

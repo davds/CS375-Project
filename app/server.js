@@ -730,7 +730,7 @@ app.post("/chat", function(req, res) {
   let message = ''
   let messageArray = req.body.chatMessage.trim().split(" ");
   for(i=0; i < messageArray.length; i++){
-    if (isInappropriate(messageArray[i])){
+    if (isInappropriate(messageArray[i].toLowerCase())){
       messageArray[i] = "[REDACTED]"
     }
     message += messageArray[i] + ' '

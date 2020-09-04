@@ -179,6 +179,7 @@ let allowBoardInput = false;
 let baseTableDim = [99, 99];
 let gameBoard = document.getElementById("game-of-life");
 let boardCells = {};
+let cursorVisible = true;
 const startCoords = {
     "xMin": 0,
     "xMax": baseTableDim[0],
@@ -331,6 +332,17 @@ function areCoordsTaken(coords) {
     return false;
 }
 
+function showCursor(show) {
+    if(show) {
+        cursorVisible = true;
+        $("body").css('cursor', '');
+    }
+    else if(cursorVisible) {
+        cursorVisible = false;
+        $("body").css('cursor', 'none');
+    }
+}
+
 function previewGlider() {
     let cells = curGlider.getActiveCoords();
     let centerPos = curGlider.getCenterPos();
@@ -341,12 +353,12 @@ function previewGlider() {
             let cell = document.getElementById(cellId[0] + "," + cellId[1]);
             if (cell == null  || !validPos(cellId)) {
                 removeTransCells();
-                $("body").css('cursor', '');
+                showCursor(true);
                 //$("td").removeClass("transparent");
                 break;
             }
             cell.classList.add("transparent");
-            $("body").css('cursor', 'none');
+            showCursor(false);
             if(isTaken) {
                 $(cell).addClass("invalid");
             }
@@ -519,7 +531,7 @@ function startCountdown() {
             timerElement.text("");
             timerLabel.text("");
             setLeftText(2);
-            $("body").css('cursor', '');
+            showCursor(true);
         }
     }, 1000);       
 }
@@ -535,7 +547,7 @@ function phaseOne() {
     //3 2 1 timer?
     canPlaceGliders = false;
     console.log("phase one...");
-    $("body").css('cursor', '');
+    showCursor(true);
     getNewZone();
     removeTransCells();
     drawBoard();

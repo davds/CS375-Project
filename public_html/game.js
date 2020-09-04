@@ -462,13 +462,6 @@ document.addEventListener("keypress", function(event) {
         dawson();
 });
 
-function test() {
-    canPlaceGliders = false;
-}
-function test1() {
-    drawBoard();
-}
-
 //These are for Hoff
 //This signals the start of the game. A 30 second countdown timer should start (along with some basic instructions). This is the only time gliders should be allowed to be placed.
 function startCountdown() {
@@ -564,6 +557,32 @@ function gameOver() {
         winners.html(winners.html() + winnersHTML);
     });
 }
+function addMessage(id, message, style, joining) {
+    let display = document.getElementById("displayingMessage");
+    let div = document.createElement('div');
+    div.innerHTML =`<span style="${style}">${id}</span>`;
+    div.innerHTML += joining ? " " : ": ";
+    div.innerHTML += message;
+    display.append(div);
+    $('#messages').scrollTop($('#messages')[0].scrollHeight);
+}
+function sendMessage(joining=false) {
+    let myMessage = $("#myMessage").val();
+    $("#myMessage").val("");
+    if (myMessage != null && myMessage.trim() != "" || joining) {
+        fetch('/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                'chatMessage': myMessage, 
+                'joining': joining
+            })
+        });
+    }
+}
+
 
 function addListeners() {
     $(document).ready(() => {
@@ -589,6 +608,10 @@ function addListeners() {
             rotateGlider();
             previewGlider();
             cell.preventDefault();
+        });
+
+        $("#sendMessage").on("click", e => {
+            sendMessage();                
         });
     });
 }

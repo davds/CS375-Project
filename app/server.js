@@ -498,7 +498,6 @@ function setPlayerStats(room) {
 function checkCollision(contestedPositions, cells) {
   for (var pos in contestedPositions) {
     let players = contestedPositions[pos];
-
     let winningStrength = 0;
     //determine highest strength
     for (var id in players) {
@@ -623,7 +622,7 @@ function startGame(room) {
   gameSessions[room].setLivingPlayers();
   console.log(gameSessions[room].getLivingPlayers());
   io.to(room).emit('countdown', room);
-  timer = setTimeout(getClientGliders, 30000, room);
+  timer = setTimeout(getClientGliders, 31000, room);
 }
 
 function getClientGliders(room) {
@@ -763,6 +762,7 @@ app.get("/winners", function(req, res) {
     if (players[i] == req.session.username){
       database.addGamePlayed(players[i]);
       database.addStrength(players[i], gameSessions[room].getPlayer(players[i]).getCollisionsWon());
+      console.log(gameSessions[room].getPlayer(players[i]).getCollisionsWon());
     }
   }
   //Add win for each winner

@@ -47,20 +47,20 @@
       background-color: black;
     }
 
-    .game-header {
+    .left-side {
       border-radius: 5px 0 0 5px;
       background-color: #e9ecef;
       display: inline-block;
       height: inherit;
       padding: 10px;
-      width: 200px;
+      width: 250px;
       vertical-align: top;
     }
-    .game-header #message {
+    .left-side #message {
       display: inline-block;
       width: 50%;
     }
-    .game-header #times {
+    .left-side #times {
       display: inline-block;
     }
 
@@ -68,22 +68,30 @@
       border: 5px solid transparent;
       height: 595px;
       margin: auto;
-      width: 995px;
+      width: 1115px;
     }
 
     #chat {
-      bottom: 0px;
+      bottom: 10px;
       position: absolute;    
+      width: calc(100% - 20px);
     }
 
     #messages {  
+      background-color: whitesmoke;
       height: 300px;
       overflow-y: scroll;
     }
-    #displaying-message {
-      display: flex; 
-      flex-direction: column-reverse;
-      }
+    .message {
+      overflow-wrap: anywhere;
+    }
+    #myMessage {
+      height: 38px;
+      width: 70%;
+    }
+    #sendMessage {
+      vertical-align: top;
+    }
     .right-side {
       border-radius: 0 5px 5px 0;
       background-color: #e9ecef;
@@ -91,8 +99,12 @@
       height: inherit;
       padding: 10px;
       position: relative;    
-      width: 200px;
+      width: 250px;
       vertical-align: top;
+    }
+    .players-header {
+      padding-bottom: 5px; 
+      border-bottom: 1px solid lightgrey
     }
     .player-icon {
       border: 1px solid black;
@@ -208,7 +220,7 @@
 <body>
   <div id="header"></div>  
   <div class="content">
-    <div class="game-header">
+    <div class="left-side">
       <div id="message"></div>
       <div id="times">
         <div id="phase">
@@ -238,6 +250,7 @@
       </table>
     </div>
     <div class="right-side">
+      <h4 class="players-header">Players:</h4>
       <div id="players"></div>
       <div id="chat">
         <div id="messages">
@@ -245,7 +258,7 @@
         </div>
         <form onsubmit="return false;">
           <input id="myMessage">
-          <button type="submit" id="sendMessage">Send Message</button>
+          <button class="btn btn-primary" type="submit" id="sendMessage">Send</button>
         </form> 
       </div>
     </div>    

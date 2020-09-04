@@ -341,10 +341,12 @@ function previewGlider() {
             let cell = document.getElementById(cellId[0] + "," + cellId[1]);
             if (cell == null  || !validPos(cellId)) {
                 removeTransCells();
+                $("body").css('cursor', '');
                 //$("td").removeClass("transparent");
                 break;
             }
             cell.classList.add("transparent");
+            $("body").css('cursor', 'none');
             if(isTaken) {
                 $(cell).addClass("invalid");
             }
@@ -468,20 +470,40 @@ document.addEventListener("keypress", function(event) {
 
 //These are for Hoff
 //This signals the start of the game. A 30 second countdown timer should start (along with some basic instructions). This is the only time gliders should be allowed to be placed.
+function setLeftText(phase) { 
+    let ctrl1 = $("#ctrl1"); 
+    let ctrl2 = $("#ctrl2");
+    let phaseElement = $("#phase");
+    let countElement = $("#gliderCount");
+    if(phase === 0 && canPlaceGliders) {
+        phaseElement.text("Waiting for players...");
+        ctrl1.text("Left Click: Place");
+        ctrl2.text("Right Click: Rotate");
+        ctrl1.show();
+        ctrl2.show();
+        countElement.show();
+        updateGliderText();
+    }
+    else if(phase === 1) {
+        phaseElement.text("Place your gliders!");
+    }
+    else if(phase === 2) {
+        phaseElement.text("Game begin!");
+        ctrl1.hide();
+        ctrl2.hide();
+        countElement.hide();
+    }
+}
+
 function startCountdown() {
     console.log("countdown begun!");
     let secondsLeft = 30;
     let timerElement = $('#countdown h1');
     let timerLabel = $('#countdown-label');
-    let ctrl1 = document.getElementById("ctrl1"); 
-    let ctrl2 = document.getElementById("ctrl2");
-    let phaseElement = document.getElementById("phase");
     let countElement = document.getElementById("gliderCount");
-    phaseElement.textContent = "Phase: Placing Gliders";
+    setLeftText(1);
     updateGliderText();
     timerLabel.text("Game Begins In...");
-    ctrl1.textContent = "Left Click: Place";
-    ctrl2.textContent = "Right Click: Rotate";
     let interval = setInterval(() => {
         if(secondsLeft>0) {            
             timerElement.addClass('spin-animation');
@@ -496,10 +518,8 @@ function startCountdown() {
             clearInterval(interval);
             timerElement.text("");
             timerLabel.text("");
-            ctrl1.textContent = "";
-            ctrl2.textContent = "";
-            countElement.textContent = "";
-            phaseElement.textContent = "Game begin!";
+            setLeftText(2);
+            $("body").css('cursor', '');
         }
     }, 1000);       
 }
@@ -515,6 +535,7 @@ function phaseOne() {
     //3 2 1 timer?
     canPlaceGliders = false;
     console.log("phase one...");
+    $("body").css('cursor', '');
     getNewZone();
     removeTransCells();
     drawBoard();
@@ -607,6 +628,10 @@ function addListeners() {
                 previewGlider();
             }
         });
+        $("#game-of-life").on("mouseleave", () => {
+            $("body").css('cursor', '');
+            removeTransCells();
+        });
     
         $("#game-of-life").on("contextmenu", cell => {
             removeTransCells();
@@ -615,10 +640,10 @@ function addListeners() {
             previewGlider();
             cell.preventDefault();
         });
-
         $("#sendMessage").on("click", e => {
             sendMessage();                
         });
+        setLeftText(0);
     });
 }
 

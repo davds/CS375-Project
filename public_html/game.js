@@ -314,20 +314,6 @@ function removeTransCells() {
     }
 }
 
-//checks to see if the coordinate is being used by another glider
-//inefficient.
-// function isCoordTaken(coords) {
-//     for(i=0; i<placedGliders.length; i++) {
-//         let occupyingCoords = placedGliders[i].getOccupyingCoords();
-//         for(j=0; j<occupyingCoords.length; j++) {
-//             if(occupyingCoords[j][0] === coords[0] && occupyingCoords[j][1] === coords[1]) {
-//                 return true;
-//             }
-//         }
-//     }
-//     return false;
-// }
-
 function getCenterDiff(coord1, coord2) {
     let xDiff = Math.abs(coord1[0] - coord2[0]);
     let yDiff = Math.abs(coord1[1] - coord2[1]);
@@ -431,8 +417,8 @@ function updateGliderText() {
         numRemaining = 0;
     } 
     if(canPlaceGliders) {
-        let phaseElement = document.getElementById("phase");
-        phaseElement.textContent = "Phase: Placing Gliders. Left click: place, Right click: rotate. " +numRemaining+ " glider(s) remaining.";
+        let countElement = document.getElementById("gliderCount");
+        countElement.textContent = "" + numRemaining + " glider(s) remaining.";
     }
 }
 
@@ -445,8 +431,6 @@ function getPlayers() {
         updatePlayers();
     });
 }
-
-  
 
 function updatePlayers() {  
     let html = "";
@@ -492,8 +476,15 @@ function startCountdown() {
     let secondsLeft = 30;
     let timerElement = $('#countdown h1');
     let timerLabel = $('#countdown-label');
+    let ctrl1 = document.getElementById("ctrl1"); 
+    let ctrl2 = document.getElementById("ctrl2");
+    let phaseElement = document.getElementById("phase");
+    let countElement = document.getElementById("gliderCount");
+    phaseElement.textContent = "Phase: Placing Gliders";
     updateGliderText();
     timerLabel.text("Game Begins In...");
+    ctrl1.textContent = "Left Click: Place";
+    ctrl2.textContent = "Right Click: Rotate";
     let interval = setInterval(() => {
         if(secondsLeft>0) {            
             timerElement.addClass('spin-animation');
@@ -508,6 +499,10 @@ function startCountdown() {
             clearInterval(interval);
             timerElement.text("");
             timerLabel.text("");
+            ctrl1.textContent = "";
+            ctrl2.textContent = "";
+            countElement.textContent = "";
+            phaseElement.textContent = "Game begin!";
         }
     }, 1000);       
 }
@@ -557,6 +552,8 @@ function gameOver() {
     fetch(`/winners`).then(response => {
         return response.json();
     }).then(data => {
+        let phaseElement = document.getElementById("phase");
+        phaseElement.textContent = "Game over!";
         let winnersHTML = "";
         crown.attr("src", "./crown.png");
         for (i = 0; i < data.length; i++) {
@@ -567,12 +564,7 @@ function gameOver() {
         winners.html(winners.html() + winnersHTML);
     });
 }
-function addMessage(id, message) {
-    let display = document.getElementById("displayingMessage");
-    let div = document.createElement('div');
-    div.textContent = id + ": " + message;
-    display.append(div);
-}
+
 function addListeners() {
     $(document).ready(() => {
         $("#game-of-life td").on("click", cell => {
@@ -597,23 +589,6 @@ function addListeners() {
             rotateGlider();
             previewGlider();
             cell.preventDefault();
-        });
-        $("#sendMessage").on("click", e => {
-            //console.log("pop tard");
-            let myMessage = $("#myMessage").val();
-            console.log(myMessage);
-            if (myMessage != null) {
-                fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({  //TODO: if theres fewer than 3 placed gliders, this errors.
-                         'chatMessage': myMessage 
-                    })
-                });
-            }
-                
         });
     });
 }

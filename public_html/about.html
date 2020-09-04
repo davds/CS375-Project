@@ -5,17 +5,66 @@
   <meta charset="utf-8">
   <link rel="stylesheet" href="./source/bootstrap.min.css">
   <title>About</title>
-
 </head>
 
 <body>
   <div id="header"></div>
-  <div style="text-align: center;">
-    
-    <h1>Conway's Game of Death</h1>
-    <h2>A Cellularly Automated Battle Royale</h2>
-    <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Conway's Game of Life</a>
+  <div class="jumbotron">
+    <div class="container">
+      <h1 class="display-3">Conway's Game of Death</h1>
+      <p><a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Conway's Game of Life</a> is a simple automated cell simulation with only two rules:</p>
+      <ol class="list-group list-group-flush">
+        <li class="list-group-item">If a non-living cell has 2-3 living cell neighbors, it will be alive in the next “generation”.</li>
+        <li class="list-group-item">If a living cell has exactly 3 neighbors, it will stay alive in the next “generation”. If it has less than 3, it dies of “underpopulation”. If it has more, it dies of “overpopulation”.</li>
+      </ol>
+      <p>Conway’s Game of Death is a cell-automated battle royale based on Conway’s Game of
+        Life. The game uses the same life/death logic as CGOL, but with a competitive twist that
+        allows players to fight for cells. 
+        </p>
+    </div>
   </div>
+  <div class="container text-center">
+    <div class="container">
+      <h2 class="display-4">Placing Gliders</h2>
+        <ol class="list-group">
+          <li class="list-group-item">While waiting for 4 players to connect to a game, players are free to place up to 3 gliders. Right click to rotate a glider, left click to place it. When you have 3 gliders placed, placing another will remove your oldest placed glider. <br><br><img style="border: 1px solid black;" src="https://i.gyazo.com/1ac63b71d1304fc64e4ac30e1d0af90d.gif" width="400"/></li>
+          <li class="list-group-item">During the placing phase, players can view the “obstacles” on the board. These are a collection of still lifes and oscillators that either stay still or infinitely loop through a repeating pattern within a bounding box.<br><br><img style="border: 1px solid black;" src="https://i.gyazo.com/b086b186cf7f760d704b5025edea17fb.png" width="400"/></li>
+          <li class="list-group-item">When 4 players connect to a game, a 30 second countdown begins. When this countdown ends…</li>
+        </ol>
+        
+    </div>
+    <br><br>
+      <div class="container">
+        <h2 class="display-4">Game Start</h2>
+          <ul class="list-group">
+            <li class="list-group-item">After the game starts, players are no longer allowed to place gliders.<br><br><img style="border: 1px solid black;" src="https://i.gyazo.com/2dcbb16613f6e404a37b674ca36e939e.gif" width="600"/></li>
+            <li class="list-group-item">The rules of CGOL will dictate which cells live and die throughout the course of the game.</li>
+            <li class="list-group-item">Collisions with other players will initiate a strength check; the player with the most living cells on the board at the time of the collision will “conquer” a contested cell.</li>
+            <li class="list-group-item">Players will always win collisions with obstacles. However, cells with 3 or more neighbors die of “overpopulation” so colliding with an obstacle will not always result in a player’s benefit.</li>
+            <li class="list-group-item">Every 5 generations, a red zone closes in from every side of the board. Cells cannot survive inside of the red zone.</li>
+            <li class="list-group-item">Throughout the course of the game, the player names on the right will be sorted based on how many living cells they own on the board.<br><br><img style="border: 1px solid black;" src="https://i.gyazo.com/bb58542b03e72567b59c8070cbb5484a.gif" width="400"/></li>
+            <li class="list-group-item">The game ends when only one player has cells on the board. In the event of a tie, any players with living cells the generation before all cells “died” will be declared a winner.</li>
+          </ul>
+      </div>
+      <br><br>
+      <div class="container">
+        <h2 class="display-4">Post Game</h2>
+        <ul class="list-group">
+          <li class="list-group-item">When the game has ended, the winner is declared for everyone in the game.<br><br><img style="border: 1px solid black;" src="https://i.gyazo.com/063e9d48ac104fd4039b0d489ee253ef.png"width="600"/></li>
+          <li class="list-group-item">The stats accumulated from the game (games played, wins, total strength) will be updated on the leaderboard.</li>
+          <li class="list-group-item">Return to the home page after relishing your victory (or wallowing in defeat) to play again!</li>
+        </ul>
+      </div>
+      <br><br>
+    </div>
+  </div>
+  </div>
+  <footer class="card-footer">
+    <div class="container">
+        <a href="#">Back to top</a>
+      </p>
+    </div>
+  </footer>
   <script src="./source/jquery-3.5.1.min.js"></script>
   <script src="./source/popper.min.js"></script>
   <script src="./source/bootstrap.min.js"></script>

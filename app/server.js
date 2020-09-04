@@ -194,8 +194,8 @@ app.get('/cellcolor', (req, res) => {
 let tempEnv = require("../env.json");
 const { request, response } = require("express");
 const { fstat } = require("fs");
-//if (process.env._ && process.env._.indexOf("heroku"))
-//  tempEnv = require("../heroku.json");
+if (process.env._ && process.env._.indexOf("heroku"))
+  tempEnv = require("../heroku.json");
 const env = tempEnv
 
 const Pool = pg.Pool;
@@ -498,29 +498,27 @@ function setPlayerStats(room) {
 function checkCollision(contestedPositions, cells) {
   for (var pos in contestedPositions) {
     let players = contestedPositions[pos];
-    if (players.length > 1){
-      let winningStrength = 0;
-      //determine highest strength
-      for (var id in players) {
-        let contestant = players[id];
-        if (contestant.getStrength() > winningStrength) {
-          winningStrength = contestant.getStrength();
-        }
+    let winningStrength = 0;
+    //determine highest strength
+    for (var id in players) {
+      let contestant = players[id];
+      if (contestant.getStrength() > winningStrength) {
+        winningStrength = contestant.getStrength();
       }
-      //check for ties
-      winners = [];
-      for (var id in players) {
-        let contestant = players[id];
-        if (contestant.getStrength() == winningStrength) {
-          winners.push(contestant);
-        }
-      }
-      //Randomly determine winner
-      winner = winners[getRandomInt(winners.length)];
-      //Set cell at pos to winner
-      cells[pos].setOwner(winner);
-      winner.incrementCollisionsWon();
     }
+    //check for ties
+    winners = [];
+    for (var id in players) {
+      let contestant = players[id];
+      if (contestant.getStrength() == winningStrength) {
+        winners.push(contestant);
+      }
+    }
+    //Randomly determine winner
+    winner = winners[getRandomInt(winners.length)];
+    //Set cell at pos to winner
+    cells[pos].setOwner(winner);
+    winner.incrementCollisionsWon();
   }
   return cells;
 }
@@ -624,7 +622,7 @@ function startGame(room) {
   gameSessions[room].setLivingPlayers();
   console.log(gameSessions[room].getLivingPlayers());
   io.to(room).emit('countdown', room);
-  timer = setTimeout(getClientGliders, 30000, room);
+  timer = setTimeout(getClientGliders, 31000, room);
 }
 
 function getClientGliders(room) {
